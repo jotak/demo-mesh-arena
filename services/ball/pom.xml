@@ -27,6 +27,12 @@
     </dependency>
 
     <dependency>
+      <groupId>demo.mesh-arena</groupId>
+      <artifactId>demo-mesh-common</artifactId>
+      <version>0.0.1</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>
       <version>1.7.21</version>

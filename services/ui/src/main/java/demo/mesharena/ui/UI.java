@@ -1,5 +1,6 @@
 package demo.mesharena.ui;
 
+import demo.mesharena.stadium.Commons;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
@@ -46,7 +47,7 @@ public class UI extends AbstractVerticle {
     router.route().handler(StaticHandler.create());
 
     // Start the web server and tell it to use the router to handle requests.
-    vertx.createHttpServer().requestHandler(router::accept).listen(8080);
+    vertx.createHttpServer().requestHandler(router::accept).listen(Commons.UI_PORT, Commons.UI_HOST);
 
     EventBus eb = vertx.eventBus();
     eb.consumer("init-session", msg -> {

@@ -32,6 +32,12 @@
       <version>1.7.21</version>
     </dependency>
 
+    <dependency>
+      <groupId>demo.mesh-arena</groupId>
+      <artifactId>demo-mesh-common</artifactId>
+      <version>0.0.1</version>
+    </dependency>
+
   </dependencies>
 
   <build>

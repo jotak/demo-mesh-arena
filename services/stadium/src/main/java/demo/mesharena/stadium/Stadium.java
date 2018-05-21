@@ -10,6 +10,8 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
+import static demo.mesharena.stadium.Commons.*;
+
 public class Stadium extends AbstractVerticle {
 
   private static final int TOP = 50;
@@ -40,7 +42,7 @@ public class Stadium extends AbstractVerticle {
 
   @Override
   public void start() throws Exception {
-    HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost("localhost").setDefaultPort(8080));
+    HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost(UI_HOST).setDefaultPort(UI_PORT));
     HttpClientRequest request = client.request(HttpMethod.POST, "/creategameobject", response -> {});
 
     // Register stadium
@@ -87,7 +89,7 @@ public class Stadium extends AbstractVerticle {
     Router router = Router.router(vertx);
     router.put("/start").handler(this::startGame);
     router.post("/bounce").handler(this::bounce);
-    vertx.createHttpServer().requestHandler(router::accept).listen(8082);
+    vertx.createHttpServer().requestHandler(router::accept).listen(STADIUM_PORT, STADIUM_HOST);
   }
 
   private void startGame(RoutingContext ctx) {
@@ -109,10 +111,9 @@ public class Stadium extends AbstractVerticle {
   }
 
   private void resetBall() {
-    HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost("localhost").setDefaultPort(8081));
+    HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost(BALL_HOST).setDefaultPort(BALL_PORT));
     HttpClientRequest request = client.request(HttpMethod.PUT, "/setPosition", response -> {});
 
-    // Register game object
     String json = new JsonObject()
         .put("x", LEFT + WIDTH / 2)
         .put("y", TOP + HEIGHT / 2)
@@ -148,7 +149,7 @@ public class Stadium extends AbstractVerticle {
       Segment wall = ARENA_SEGMENTS[i];
       Point tempCollision = wall.getCrossingPoint(segment);
       if (tempCollision != null) {
-        double dist = tempCollision.diff(segment.start).size();
+        double dist = tempCollision.diff(segment.start()).size();
         // minDistance is used to keep only the first wall encountered; if any wall was encounted first, forget this one.
         if (minDistance < 0 || dist < minDistance) {
           minDistance = dist;
@@ -159,10 +160,8 @@ public class Stadium extends AbstractVerticle {
     }
     if (collision != null) {
       // Calculate bouncing vector and position of resulting position
-      Point d = segment.end.diff(collision);
-      d.normalize();
-      Point p = ARENA_SEGMENTS[bounceWall].start.diff(collision);
-      p.normalize();
+      Point d = segment.end().diff(collision).normalize();
+      Point p = ARENA_SEGMENTS[bounceWall].start().diff(collision).normalize();
       double dAngle = Math.acos(d.x);
       if (d.y > 0) {
         dAngle = 2 * Math.PI - dAngle;
@@ -177,14 +176,11 @@ public class Stadium extends AbstractVerticle {
       }
       Point result = collision.add(new Point(Math.cos(dpAngle), -Math.sin(dpAngle)).mult(segment.size() - minDistance));
       Segment resultVector = new Segment(collision, result);
-      System.out.println("Collision, old vector: " + segment);
-      System.out.println("Collision, new vector: " + resultVector);
       // Recursive call to check if the result vector itself is bouncing again
       JsonObject recResult = bounce(resultVector, bounceWall);
       if (recResult.isEmpty()) {
         // No bounce in recursive call => return new vector
-        Point normalized = resultVector.derivate();
-        normalized.normalize();
+        Point normalized = resultVector.derivate().normalize();
         return new JsonObject()
             .put("x", result.x)
             .put("y", result.y)
@@ -215,10 +211,9 @@ public class Stadium extends AbstractVerticle {
   }
 
   private void display() {
-    HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost("localhost").setDefaultPort(8080));
+    HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost(UI_HOST).setDefaultPort(UI_PORT));
     HttpClientRequest request = client.request(HttpMethod.POST, "/textgameobject", response -> {});
 
-    // Register game object
     String json = new JsonObject()
         .put("id", "score")
         .put("text", getScoreText())
@@ -227,107 +222,5 @@ public class Stadium extends AbstractVerticle {
     request.putHeader("content-length", String.valueOf(json.length()));
     request.write(json);
     request.end();
-  }
-
-  private static final class Point {
-    double x;
-    double y;
-
-    public Point(double x, double y) {
-      this.x = x;
-      this.y = y;
-    }
-
-    public Point add(Point other) {
-      return new Point(x + other.x, y + other.y);
-    }
-
-    public Point diff(Point other) {
-      return new Point(x - other.x, y - other.y);
-    }
-
-    public Point mult(double scalar) {
-      return new Point(x * scalar, y * scalar);
-    }
-
-    public double size() {
-      return Math.sqrt(x * x + y * y);
-    }
-
-    public void normalize() {
-      double size = size();
-      if (size != 0) {
-        x /= size;
-        y /= size;
-      } else {
-        x = 0;
-        y = 0;
-      }
-    }
-
-    @Override
-    public String toString() {
-      return "Point{" +
-          "x=" + x +
-          ", y=" + y +
-          '}';
-    }
-  }
-
-  private static final class Segment {
-    Point start;
-    Point end;
-
-    public Segment(Point start, Point end) {
-      this.start = start;
-      this.end = end;
-    }
-
-    public Point derivate() {
-      return end.diff(start);
-    }
-
-    public double size() {
-      return derivate().size();
-    }
-
-    public boolean isValid() {
-      return start.x != end.x || start.y != end.y;
-    }
-
-    public Point getCrossingPoint(Segment other) {
-      if (!isValid() || !other.isValid()) {
-        return null;
-      }
-
-      Point v1 = start.diff(other.start);
-      Point vA = derivate();
-      Point vB = other.derivate();
-
-      double fDenom = vA.x*vB.y - vA.y*vB.x;
-
-      if (fDenom == 0.0f) {
-        // Parallel
-        return null;
-      }
-
-      double t = (v1.y*vB.x-v1.x*vB.y) / fDenom;
-      double s = (v1.y*vA.x-v1.x*vA.y) / fDenom;
-
-      if (t < 0.0f || t > 1.0f || s < 0.0f || s > 1.0f) {
-        // Lines crossing outside of segment
-        return null;
-      } else {
-        return start.add(vA.mult(t));
-      }
-    }
-
-    @Override
-    public String toString() {
-      return "Segment{" +
-          "start=" + start +
-          ", end=" + end +
-          '}';
-    }
   }
 }
