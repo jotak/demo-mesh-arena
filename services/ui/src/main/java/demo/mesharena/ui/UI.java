@@ -13,49 +13,59 @@ import io.vertx.ext.web.handler.sockjs.SockJSHandler;
 
 public class UI extends AbstractVerticle {
 
-    private UI() {
-    }
+  private UI() {
+  }
 
-    public static void main(String[] args) {
-        Vertx.vertx().deployVerticle(new UI());
-    }
+  public static void main(String[] args) {
+    Vertx.vertx().deployVerticle(new UI());
+  }
 
-    @Override
-    public void start() throws Exception {
-        Router router = Router.router(vertx);
+  @Override
+  public void start() throws Exception {
+    Router router = Router.router(vertx);
 
-        // Allow events for the designated addresses in/out of the event bus bridge
-        BridgeOptions opts = new BridgeOptions()
-                .addOutboundPermitted(new PermittedOptions().setAddress("creategameobject"))
-                .addInboundPermitted(new PermittedOptions().setAddress("init-session"));
+    // Allow events for the designated addresses in/out of the event bus bridge
+    BridgeOptions opts = new BridgeOptions()
+        .addOutboundPermitted(new PermittedOptions().setAddress("creategameobject"))
+        .addOutboundPermitted(new PermittedOptions().setAddress("movegameobject"))
+        .addInboundPermitted(new PermittedOptions().setAddress("init-session"));
 
-        // Create the event bus bridge and add it to the router.
-        SockJSHandler sockJSHandler = SockJSHandler.create(vertx);
-        sockJSHandler.bridge(opts);
-        router.route("/eventbus/*").handler(sockJSHandler);
+    // Create the event bus bridge and add it to the router.
+    SockJSHandler sockJSHandler = SockJSHandler.create(vertx);
+    sockJSHandler.bridge(opts);
+    router.route("/eventbus/*").handler(sockJSHandler);
 
-        // TODO: replace http API with eventbus messages
-        // Listen to objects creation
-        router.post("/creategameobject").handler(this::createGameObject);
+    // TODO: replace http API with eventbus messages
+    // Listen to objects creation
+    router.post("/creategameobject").handler(this::createGameObject);
+    router.post("/movegameobject").handler(this::moveGameObject);
 
-        // Create a router endpoint for the static content.
-        router.route().handler(StaticHandler.create());
+    // Create a router endpoint for the static content.
+    router.route().handler(StaticHandler.create());
 
-        // Start the web server and tell it to use the router to handle requests.
-        vertx.createHttpServer().requestHandler(router::accept).listen(8080);
+    // Start the web server and tell it to use the router to handle requests.
+    vertx.createHttpServer().requestHandler(router::accept).listen(8080);
 
-        EventBus eb = vertx.eventBus();
-        eb.consumer("init-session", msg -> {
-        });
-    }
+    EventBus eb = vertx.eventBus();
+    eb.consumer("init-session", msg -> {
+    });
+  }
 
-    private void createGameObject(RoutingContext ctx) {
-        System.out.println("Create game object:");
-        ctx.request().bodyHandler(buf -> {
-            JsonObject json = buf.toJsonObject();
-            System.out.println(json);
-            vertx.eventBus().send("creategameobject", json);
-            ctx.response().end();
-        });
-    }
+  private void createGameObject(RoutingContext ctx) {
+    System.out.println("Create game object:");
+    ctx.request().bodyHandler(buf -> {
+      JsonObject json = buf.toJsonObject();
+      System.out.println(json);
+      vertx.eventBus().send("creategameobject", json);
+      ctx.response().end();
+    });
+  }
+
+  private void moveGameObject(RoutingContext ctx) {
+    ctx.request().bodyHandler(buf -> {
+      JsonObject json = buf.toJsonObject();
+      vertx.eventBus().send("movegameobject", json);
+      ctx.response().end();
+    });
+  }
 }
