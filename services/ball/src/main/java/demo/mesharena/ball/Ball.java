@@ -1,6 +1,7 @@
 package demo.mesharena.ball;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
@@ -31,9 +32,7 @@ public class Ball extends AbstractVerticle {
   @Override
   public void start() throws Exception {
     HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost("localhost").setDefaultPort(8080));
-    HttpClientRequest request = client.request(HttpMethod.POST, "/creategameobject", response -> {
-      System.out.println("Received response with status code " + response.statusCode());
-    });
+    HttpClientRequest request = client.request(HttpMethod.POST, "/creategameobject", response -> {});
 
     // Register game object
     String json = new JsonObject()
@@ -51,20 +50,20 @@ public class Ball extends AbstractVerticle {
     // Register ball API
     Router router = Router.router(vertx);
     router.put("/shoot").handler(this::shoot);
-    router.put("/set").handler(this::set);
+    router.put("/setPosition").handler(this::setPosition);
     vertx.createHttpServer().requestHandler(router::accept).listen(8081);
 
     // Start game loop
     vertx.setPeriodic(DELTA_MS, loopId -> this.update((double)DELTA_MS / 1000.0));
   }
 
-  private void set(RoutingContext ctx) {
+  private void setPosition(RoutingContext ctx) {
     ctx.request().bodyHandler(buf -> {
       JsonObject json = buf.toJsonObject();
-      System.out.println(json);
-      x = json.getInteger("x");
-      y = json.getInteger("y");
+      x = json.getDouble("x");
+      y = json.getDouble("y");
       dx = dy = 0;
+      isSticked = false;
       ctx.response().end();
       display();
     });
@@ -74,33 +73,75 @@ public class Ball extends AbstractVerticle {
     ctx.request().bodyHandler(buf -> {
       JsonObject json = buf.toJsonObject();
       System.out.println(json);
-      dx = json.getInteger("dx");
-      dy = json.getInteger("dy");
+      dx = json.getDouble("dx");
+      dy = json.getDouble("dy");
+      isSticked = false;
       ctx.response().end();
     });
   }
 
   private void update(double delta) {
-    double oldX = x;
-    double oldY = y;
     if (isSticked) {
       // TODO: special movement when a player owns the ball
-    } else if (delta > 0) {
-      x += delta * dx;
-      y += delta * dy;
-      double oldNorm = vecSize(dx, dy);
-      double newNorm = Math.max(0, oldNorm - RESISTANCE * delta);
-      // TODO: check wall collision
-      if (oldNorm == 0) {
-        dx = dy = 0;
-      } else {
-        dx = dx * newNorm / oldNorm;
-        dy = dy * newNorm / oldNorm;
+    } else {
+      double oldSpeed = vecSize(dx, dy);
+      if (oldSpeed > 0) {
+        double oldX = x;
+        double oldY = y;
+        double newX = x + delta * dx;
+        double newY = y + delta * dy;
+        double newSpeed = Math.max(0, oldSpeed - RESISTANCE * delta);
+        checkBounce(x, y, newX, newY, newSpeed, didBounce -> {
+          if (!didBounce) {
+            x = newX;
+            y = newY;
+            dx = dx * newSpeed / oldSpeed;
+            dy = dy * newSpeed / oldSpeed;
+          }
+          if (oldX != x || oldY != y) {
+            display();
+          }
+        });
       }
     }
-    if (oldX != x || oldY != y) {
-      display();
-    }
+  }
+
+  private void checkBounce(double oldX, double oldY, double newX, double newY, double newSpeed, Handler<Boolean> handler) {
+    HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost("localhost").setDefaultPort(8082));
+    HttpClientRequest request = client.request(HttpMethod.POST, "/bounce", response -> {
+      response.bodyHandler(buf -> {
+        JsonObject obj = buf.toJsonObject();
+        if (obj.containsKey("scored")) {
+          // Do not update position, Stadium will do it
+          isSticked = false;
+          dx = dy = 0;
+          handler.handle(true);
+        } else if (obj.containsKey("x")) {
+          // Contains bounce data
+          x = obj.getDouble("x");
+          y = obj.getDouble("y");
+          double normDx = obj.getDouble("dx");
+          double normDy = obj.getDouble("dy");
+          dx = normDx * newSpeed;
+          dy = normDy * newSpeed;
+          handler.handle(true);
+        } else {
+          handler.handle(false);
+        }
+      });
+    });
+
+    // Register game object
+    String json = new JsonObject()
+        .put("xStart", oldX)
+        .put("yStart", oldY)
+        .put("xEnd", newX)
+        .put("yEnd", newY)
+        .toString();
+    request.putHeader("content-type", "application/json");
+    request.putHeader("content-length", String.valueOf(json.length()));
+    request.write(json);
+    request.end();
   }
 
   private void display() {

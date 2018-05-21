@@ -28,6 +28,7 @@ public class UI extends AbstractVerticle {
     BridgeOptions opts = new BridgeOptions()
         .addOutboundPermitted(new PermittedOptions().setAddress("creategameobject"))
         .addOutboundPermitted(new PermittedOptions().setAddress("movegameobject"))
+        .addOutboundPermitted(new PermittedOptions().setAddress("textgameobject"))
         .addInboundPermitted(new PermittedOptions().setAddress("init-session"));
 
     // Create the event bus bridge and add it to the router.
@@ -39,6 +40,7 @@ public class UI extends AbstractVerticle {
     // Listen to objects creation
     router.post("/creategameobject").handler(this::createGameObject);
     router.post("/movegameobject").handler(this::moveGameObject);
+    router.post("/textgameobject").handler(this::textGameObject);
 
     // Create a router endpoint for the static content.
     router.route().handler(StaticHandler.create());
@@ -65,6 +67,15 @@ public class UI extends AbstractVerticle {
     ctx.request().bodyHandler(buf -> {
       JsonObject json = buf.toJsonObject();
       vertx.eventBus().send("movegameobject", json);
+      ctx.response().end();
+    });
+  }
+
+  private void textGameObject(RoutingContext ctx) {
+    System.out.println("text game object");
+    ctx.request().bodyHandler(buf -> {
+      JsonObject json = buf.toJsonObject();
+      vertx.eventBus().send("textgameobject", json);
       ctx.response().end();
     });
   }

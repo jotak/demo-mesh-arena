@@ -10,6 +10,10 @@ eb.onopen = function () {
     $('#' + msg.body.id).css('top', msg.body.y + 'px')
         .css('left', msg.body.x + 'px');
   });
+  eb.registerHandler('textgameobject', function (err, msg) {
+    console.log(msg);
+    $('#' + msg.body.id).text(msg.body.text);
+  });
 
   eb.send("init-session", "");
 };
