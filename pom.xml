@@ -10,22 +10,14 @@
   <version>0.0.1</version>
 
   <modules>
+    <module>parent</module>
     <module>common/common</module>
+    <!--<module>common/ai</module>-->
     <module>services/ui</module>
     <module>services/ball</module>
     <module>services/stadium</module>
+    <!--<module>services/ai-locals</module>-->
+    <!--<module>services/ai-visitors</module>-->
   </modules>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
 </project>

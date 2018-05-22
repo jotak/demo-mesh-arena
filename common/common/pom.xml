@@ -4,12 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>demo.mesh-arena</groupId>
+  <parent>
+    <groupId>demo.mesh-arena</groupId>
+    <artifactId>demo-mesh-parent</artifactId>
+    <version>1</version>
+  </parent>
+
   <artifactId>demo-mesh-common</artifactId>
   <version>0.0.1</version>
 
-  <properties>
-    <vertx.version>3.5.1</vertx.version>
-  </properties>
-  
 </project>
