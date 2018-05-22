@@ -1,6 +1,6 @@
 package demo.mesharena.ui;
 
-import demo.mesharena.stadium.Commons;
+import demo.mesharena.common.Commons;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;

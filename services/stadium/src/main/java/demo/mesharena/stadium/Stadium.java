@@ -1,5 +1,7 @@
 package demo.mesharena.stadium;
 
+import demo.mesharena.common.Point;
+import demo.mesharena.common.Segment;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
@@ -10,7 +12,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
-import static demo.mesharena.stadium.Commons.*;
+import static demo.mesharena.common.Commons.*;
 
 public class Stadium extends AbstractVerticle {
 
@@ -65,6 +67,7 @@ public class Stadium extends AbstractVerticle {
     Router router = Router.router(vertx);
     router.put("/start").handler(this::startGame);
     router.post("/bounce").handler(this::bounce);
+    router.get("/info").handler(this::info);
     vertx.createHttpServer().requestHandler(router::accept).listen(STADIUM_PORT, STADIUM_HOST);
 
     // First display
@@ -148,12 +151,12 @@ public class Stadium extends AbstractVerticle {
       // Calculate bouncing vector and position of resulting position
       Point d = segment.end().diff(collision).normalize();
       Point p = ARENA_SEGMENTS[bounceWall].start().diff(collision).normalize();
-      double dAngle = Math.acos(d.x);
-      if (d.y > 0) {
+      double dAngle = Math.acos(d.x());
+      if (d.y() > 0) {
         dAngle = 2 * Math.PI - dAngle;
       }
-      double pAngle = Math.acos(p.x);
-      if (p.y > 0) {
+      double pAngle = Math.acos(p.x());
+      if (p.y() > 0) {
         pAngle = 2 * Math.PI - pAngle;
       }
       double dpAngle = 2 * pAngle - dAngle;
@@ -168,14 +171,40 @@ public class Stadium extends AbstractVerticle {
         // No bounce in recursive call => return new vector
         Point normalized = resultVector.derivate().normalize();
         return new JsonObject()
-            .put("x", result.x)
-            .put("y", result.y)
-            .put("dx", normalized.x)
-            .put("dy", normalized.y);
+            .put("x", result.x())
+            .put("y", result.y())
+            .put("dx", normalized.x())
+            .put("dy", normalized.y());
       }
       return recResult;
     }
     return new JsonObject();
+  }
+
+  private void info(RoutingContext ctx) {
+    ctx.request().bodyHandler(buf -> {
+      JsonObject input = buf.toJsonObject();
+      boolean isVisitors = input.getBoolean("isVisitors");
+      JsonObject output = new JsonObject();
+      if (isVisitors) {
+        output
+            .put("goalX", LEFT)
+            .put("goalY", TOP + HEIGHT / 2)
+            .put("defendZoneTop", TOP)
+            .put("defendZoneBottom", TOP + HEIGHT)
+            .put("defendZoneLeft", LEFT + 2 * WIDTH / 3)
+            .put("defendZoneRight", LEFT + WIDTH);
+      } else {
+        output
+            .put("goalX", LEFT + WIDTH)
+            .put("goalY", TOP + HEIGHT / 2)
+            .put("defendZoneTop", TOP)
+            .put("defendZoneBottom", TOP + HEIGHT)
+            .put("defendZoneLeft", LEFT)
+            .put("defendZoneRight", LEFT + WIDTH / 3);
+      }
+      ctx.response().end(output.toString());
+    });
   }
 
   private void update() {

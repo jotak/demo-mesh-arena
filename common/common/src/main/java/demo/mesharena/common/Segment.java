@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package demo.mesharena.stadium;
+package demo.mesharena.common;
 
 /**
  * @author Joel Takvorian
@@ -42,6 +42,10 @@ public final class Segment {
 
   public double size() {
     return derivate().size();
+  }
+
+  public Point middle() {
+    return new Point((start.x + end.x) / 2, (start.y + end.y) / 2);
   }
 
   public boolean isValid() {

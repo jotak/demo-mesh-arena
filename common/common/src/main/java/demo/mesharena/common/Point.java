@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package demo.mesharena.stadium;
+package demo.mesharena.common;
 
 import java.util.Objects;
 
@@ -67,6 +67,12 @@ public final class Point {
       return div(size);
     }
     return ZERO;
+  }
+
+  public Point rotate(double angle) {
+    double cos = Math.cos(angle);
+    double sin = Math.sin(angle);
+    return new Point(x * cos - y * sin, x * sin + y * cos);
   }
 
   @Override

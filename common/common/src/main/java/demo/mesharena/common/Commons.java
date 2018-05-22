@@ -1,4 +1,4 @@
-package demo.mesharena.stadium;
+package demo.mesharena.common;
 
 public final class Commons {
 

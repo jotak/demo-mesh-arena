@@ -1,7 +1,7 @@
 package demo.mesharena.ball;
 
-import demo.mesharena.stadium.Commons;
-import demo.mesharena.stadium.Point;
+import demo.mesharena.common.Commons;
+import demo.mesharena.common.Point;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -13,17 +13,22 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
-import static demo.mesharena.stadium.Commons.UI_HOST;
-import static demo.mesharena.stadium.Commons.UI_PORT;
+import java.security.SecureRandom;
+import java.util.Random;
+
+import static demo.mesharena.common.Commons.UI_HOST;
+import static demo.mesharena.common.Commons.UI_PORT;
 
 public class Ball extends AbstractVerticle {
 
   private static final long DELTA_MS = 100;
   private static final double RESISTANCE = 80;
 
+  private final Random rnd = new SecureRandom();
   private final JsonObject json;
   private Point speed = Point.ZERO;
-  private boolean isSticked;
+  private String controllingPlayer;
+  private int controllingPlayerSkill;
   private Point pos = Point.ZERO;
 
   private Ball() {
@@ -42,6 +47,7 @@ public class Ball extends AbstractVerticle {
     // Register ball API
     Router router = Router.router(vertx);
     router.put("/shoot").handler(this::shoot);
+    router.get("/interact").handler(this::interact);
     router.put("/setPosition").handler(this::setPosition);
     vertx.createHttpServer().requestHandler(router::accept).listen(Commons.BALL_PORT, Commons.BALL_HOST);
 
@@ -52,6 +58,37 @@ public class Ball extends AbstractVerticle {
     vertx.setPeriodic(DELTA_MS, loopId -> this.update((double)DELTA_MS / 1000.0));
   }
 
+  private void interact(RoutingContext ctx) {
+    ctx.request().bodyHandler(buf -> {
+      JsonObject input = buf.toJsonObject();
+      double playerX = input.getDouble("playerX");
+      double playerY = input.getDouble("playerY");
+      double shootX = input.getDouble("shootX");
+      double shootY = input.getDouble("shootY");
+      String playerID = input.getString("playerID");
+      int playerSkill = input.getInteger("playerSkill");
+      JsonObject output = new JsonObject()
+          .put("x", pos.x())
+          .put("y", pos.y());
+
+      double distanceToBall = pos.diff(new Point(playerX, playerY)).size();
+      if (distanceToBall < 15) {
+        if (playerID.equals(controllingPlayer)) {
+          if (distanceToBall < 5) {
+            // Shoot
+            speed = new Point(shootX, shootY).diff(pos);
+          }
+        } else if (controllingPlayer == null || rnd.nextInt(2 * controllingPlayerSkill + playerSkill) < playerSkill) {
+          controllingPlayer = playerID;
+          controllingPlayerSkill = playerSkill;
+          // Shoot
+          speed = new Point(shootX, shootY).diff(pos);
+        }
+      }
+      ctx.response().end(output.toString());
+    });
+  }
+
   private void setPosition(RoutingContext ctx) {
     ctx.request().bodyHandler(buf -> {
       JsonObject json = buf.toJsonObject();
@@ -59,7 +96,7 @@ public class Ball extends AbstractVerticle {
       double y = json.getDouble("y");
       pos = new Point(x, y);
       speed = Point.ZERO;
-      isSticked = false;
+      controllingPlayer = null;
       ctx.response().end();
       display();
     });
@@ -71,30 +108,26 @@ public class Ball extends AbstractVerticle {
       double dx = json.getDouble("dx");
       double dy = json.getDouble("dy");
       speed = new Point(dx, dy);
-      isSticked = false;
+      controllingPlayer = null;
       ctx.response().end();
     });
   }
 
   private void update(double delta) {
-    if (isSticked) {
-      // TODO: special movement when a player owns the ball
-    } else {
-      double oldSpeed = speed.size();
-      if (oldSpeed > 0) {
-        Point oldPos = pos;
-        Point newPos = pos.add(speed.mult(delta));
-        double newSpeed = Math.max(0, oldSpeed - RESISTANCE * delta);
-        checkBounce(pos, newPos, newSpeed, didBounce -> {
-          if (!didBounce) {
-            pos = newPos;
-            speed = speed.mult(newSpeed / oldSpeed);
-          }
-          if (!oldPos.equals(pos)) {
-            display();
-          }
-        });
-      }
+    double oldSpeed = speed.size();
+    if (oldSpeed > 0) {
+      Point oldPos = pos;
+      Point newPos = pos.add(speed.mult(delta));
+      double newSpeed = Math.max(0, oldSpeed - RESISTANCE * delta);
+      checkBounce(pos, newPos, newSpeed, didBounce -> {
+        if (!didBounce) {
+          pos = newPos;
+          speed = speed.mult(newSpeed / oldSpeed);
+        }
+        if (!oldPos.equals(pos)) {
+          display();
+        }
+      });
     }
   }
 
@@ -105,7 +138,7 @@ public class Ball extends AbstractVerticle {
         JsonObject obj = buf.toJsonObject();
         if (obj.containsKey("scored")) {
           // Do not update position, Stadium will do it
-          isSticked = false;
+          controllingPlayer = null;
           speed = Point.ZERO;
           handler.handle(true);
         } else if (obj.containsKey("x")) {
@@ -121,6 +154,9 @@ public class Ball extends AbstractVerticle {
           handler.handle(false);
         }
       });
+    }).exceptionHandler(t -> {
+      // No stadium => no bounce
+      handler.handle(false);
     });
 
     String json = new JsonObject()
