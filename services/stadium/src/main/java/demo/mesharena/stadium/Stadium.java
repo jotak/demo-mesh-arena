@@ -73,7 +73,15 @@ public class Stadium extends AbstractVerticle {
 
   private void startGame(RoutingContext ctx) {
     scoreA = scoreB = elapsed = 0;
-    vertx.setPeriodic(1000, loopId -> this.update());
+    vertx.setPeriodic(1000, loopId -> {
+      if (elapsed >= MATCH_TIME) {
+        // End of game!
+        vertx.cancelTimer(loopId);
+        display();
+      } else {
+        this.update();
+      }
+    });
     resetBall();
     ctx.response().end();
   }
@@ -172,16 +180,20 @@ public class Stadium extends AbstractVerticle {
 
   private void update() {
     elapsed++;
-    if (elapsed >= MATCH_TIME) {
-      // End of game! TODO: notify game ended & winner
-    }
     display();
   }
 
   private String getScoreText() {
     int minutes = elapsed / 60;
     int seconds = elapsed % 60;
-    return "Local: " + scoreA + " - Visitors: " + scoreB + " ~~ Time: " + adjust(minutes) + ":" + adjust(seconds);
+    String text = "Local: " + scoreA + " - Visitors: " + scoreB + " ~~ Time: " + adjust(minutes) + ":" + adjust(seconds);
+    if (elapsed >= MATCH_TIME) {
+      if (scoreA == scoreB) {
+        return text + " ~~ Draw game!";
+      }
+      return text + " ~~ " + (scoreA > scoreB ? "Locals" : "Visitors") + " win!";
+    }
+    return text;
   }
 
   private static String adjust(int number) {
