@@ -16,8 +16,8 @@ public class Stadium extends AbstractVerticle {
 
   private static final int TOP = 50;
   private static final int LEFT = 20;
-  private static final int WIDTH = 800;
-  private static final int HEIGHT = 500;
+  private static final int WIDTH = 1000;
+  private static final int HEIGHT = 700;
   private static final int GOAL_SIZE = 100;
   private static final int MATCH_TIME = 60 * 5;
   private static final Segment GOAL_A = new Segment(new Point(LEFT, TOP + HEIGHT / 2 - GOAL_SIZE / 2), new Point(LEFT, TOP + HEIGHT / 2 + GOAL_SIZE / 2));
@@ -29,11 +29,30 @@ public class Stadium extends AbstractVerticle {
       new Segment(new Point(LEFT, TOP+HEIGHT), new Point(LEFT, TOP))
   };
 
+  private final JsonObject stadiumJson;
+  private final JsonObject goalsJson;
+  private final JsonObject scoreJson;
+
   private int scoreA = 0;
   private int scoreB = 0;
   private int elapsed = 0;
 
   private Stadium() {
+    stadiumJson = new JsonObject()
+        .put("id", "stadium")
+        .put("style", "position: absolute; top: " + TOP + "px; left: " + LEFT + "px; width: " + WIDTH + "px; height: " + HEIGHT + "px; border: 1px solid;")
+        .put("text", "");
+
+    int median = TOP + HEIGHT / 2;
+    goalsJson = new JsonObject()
+        .put("id", "goals")
+        .put("style", "position: absolute; top: " + (median - GOAL_SIZE/2) + "px; left: " + LEFT + "px; width: " + (WIDTH-6) + "px; height: " + GOAL_SIZE + "px; border-left: 4px solid red; border-right: 4px solid red;")
+        .put("text", "");
+
+    scoreJson = new JsonObject()
+        .put("id", "score")
+        .put("style", "position: absolute;")
+        .put("text", "");
   }
 
   public static void main(String[] args) {
@@ -42,54 +61,14 @@ public class Stadium extends AbstractVerticle {
 
   @Override
   public void start() throws Exception {
-    HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost(UI_HOST).setDefaultPort(UI_PORT));
-    HttpClientRequest request = client.request(HttpMethod.POST, "/creategameobject", response -> {});
-
-    // Register stadium
-    String json = new JsonObject()
-        .put("id", "stadium")
-        .put("style", "position: absolute; top: " + TOP + "px; left: " + LEFT + "px; width: " + WIDTH + "px; height: " + HEIGHT + "px; border: 1px solid;")
-        .put("text", "")
-        .toString();
-    request.putHeader("content-type", "application/json");
-    request.putHeader("content-length", String.valueOf(json.length()));
-    request.write(json);
-    request.end();
-
-    request = client.request(HttpMethod.POST, "/creategameobject", response -> {});
-
-    // Register goals
-    int median = TOP + HEIGHT / 2;
-    json = new JsonObject()
-        .put("id", "goals")
-        .put("style", "position: absolute; top: " + (median - GOAL_SIZE/2) + "px; left: " + LEFT + "px; width: " + (WIDTH-6) + "px; height: " + GOAL_SIZE + "px; border-left: 4px solid red; border-right: 4px solid red;")
-        .put("text", "")
-        .toString();
-    request.putHeader("content-type", "application/json");
-    request.putHeader("content-length", String.valueOf(json.length()));
-    request.write(json);
-    request.end();
-
-    request = client.request(HttpMethod.POST, "/creategameobject", response -> {});
-
-    // Register score board
-    json = new JsonObject()
-        .put("id", "score")
-        .put("style", "position: absolute;")
-        .put("text", "")
-        .toString();
-    request.putHeader("content-type", "application/json");
-    request.putHeader("content-length", String.valueOf(json.length()));
-    request.write(json);
-    request.end();
-
-    display();
-
     // Register stadium API
     Router router = Router.router(vertx);
     router.put("/start").handler(this::startGame);
     router.post("/bounce").handler(this::bounce);
     vertx.createHttpServer().requestHandler(router::accept).listen(STADIUM_PORT, STADIUM_HOST);
+
+    // First display
+    display();
   }
 
   private void startGame(RoutingContext ctx) {
@@ -102,7 +81,6 @@ public class Stadium extends AbstractVerticle {
   private void bounce(RoutingContext ctx) {
     ctx.request().bodyHandler(buf -> {
       JsonObject json = buf.toJsonObject();
-      System.out.println(json);
       JsonObject result = bounce(new Segment(
           new Point(json.getDouble("xStart"), json.getDouble("yStart")),
           new Point(json.getDouble("xEnd"), json.getDouble("yEnd"))), -1);
@@ -211,16 +189,36 @@ public class Stadium extends AbstractVerticle {
   }
 
   private void display() {
+    // Stadium
     HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost(UI_HOST).setDefaultPort(UI_PORT));
-    HttpClientRequest request = client.request(HttpMethod.POST, "/textgameobject", response -> {});
+    HttpClientRequest request = client.request(HttpMethod.POST, "/display", response -> {});
 
-    String json = new JsonObject()
-        .put("id", "score")
-        .put("text", getScoreText())
-        .toString();
+    String strJson = stadiumJson.toString();
+
     request.putHeader("content-type", "application/json");
-    request.putHeader("content-length", String.valueOf(json.length()));
-    request.write(json);
+    request.putHeader("content-length", String.valueOf(strJson.length()));
+    request.write(strJson);
+    request.end();
+
+    // Goals
+    request = client.request(HttpMethod.POST, "/display", response -> {});
+
+    strJson = goalsJson.toString();
+
+    request.putHeader("content-type", "application/json");
+    request.putHeader("content-length", String.valueOf(strJson.length()));
+    request.write(strJson);
+    request.end();
+
+    // Score
+    request = client.request(HttpMethod.POST, "/display", response -> {});
+
+    scoreJson.put("text", getScoreText());
+    strJson = scoreJson.toString();
+
+    request.putHeader("content-type", "application/json");
+    request.putHeader("content-length", String.valueOf(strJson.length()));
+    request.write(strJson);
     request.end();
   }
 }

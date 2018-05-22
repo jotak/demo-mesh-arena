@@ -13,16 +13,24 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
+import static demo.mesharena.stadium.Commons.UI_HOST;
+import static demo.mesharena.stadium.Commons.UI_PORT;
+
 public class Ball extends AbstractVerticle {
 
   private static final long DELTA_MS = 100;
   private static final double RESISTANCE = 80;
 
-  private Point pos = Point.ZERO;
+  private final JsonObject json;
   private Point speed = Point.ZERO;
   private boolean isSticked;
+  private Point pos = Point.ZERO;
 
   private Ball() {
+    json = new JsonObject()
+        .put("id", "ball")
+        .put("style", "position: absolute; background-color: red;")
+        .put("text", "ball");
   }
 
   public static void main(String[] args) {
@@ -31,27 +39,14 @@ public class Ball extends AbstractVerticle {
 
   @Override
   public void start() throws Exception {
-    HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost(Commons.UI_HOST).setDefaultPort(Commons.UI_PORT));
-    HttpClientRequest request = client.request(HttpMethod.POST, "/creategameobject", response -> {});
-
-    // Register game object
-    String json = new JsonObject()
-        .put("id", "ball")
-        .put("style", "position: absolute; background-color: red;")
-        .put("text", "ball")
-        .toString();
-    request.putHeader("content-type", "application/json");
-    request.putHeader("content-length", String.valueOf(json.length()));
-    request.write(json);
-    request.end();
-
-    display();
-
     // Register ball API
     Router router = Router.router(vertx);
     router.put("/shoot").handler(this::shoot);
     router.put("/setPosition").handler(this::setPosition);
     vertx.createHttpServer().requestHandler(router::accept).listen(Commons.BALL_PORT, Commons.BALL_HOST);
+
+    // First display
+    display();
 
     // Start game loop
     vertx.setPeriodic(DELTA_MS, loopId -> this.update((double)DELTA_MS / 1000.0));
@@ -141,17 +136,16 @@ public class Ball extends AbstractVerticle {
   }
 
   private void display() {
-    HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost("localhost").setDefaultPort(8080));
-    HttpClientRequest request = client.request(HttpMethod.POST, "/movegameobject", response -> {});
+    HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost(UI_HOST).setDefaultPort(UI_PORT));
+    HttpClientRequest request = client.request(HttpMethod.POST, "/display", response -> {});
 
-    String json = new JsonObject()
-        .put("id", "ball")
-        .put("x", pos.x())
-        .put("y", pos.y())
-        .toString();
+    json.put("x", pos.x())
+        .put("y", pos.y());
+    String strJson = json.toString();
+
     request.putHeader("content-type", "application/json");
-    request.putHeader("content-length", String.valueOf(json.length()));
-    request.write(json);
+    request.putHeader("content-length", String.valueOf(strJson.length()));
+    request.write(strJson);
     request.end();
   }
 }

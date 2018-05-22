@@ -1,21 +1,33 @@
 var eb = new EventBus('/eventbus/');
 
+function displayGameObject(obj) {
+  var rawElt = document.getElementById(obj.id);
+  if (!rawElt) {
+    $('#board').append('<div id="' + obj.id + '" style="' + obj.style + '">' + obj.text + '</div>');
+  } else {
+    if (obj.style) {
+      rawElt.style.cssText = obj.style;
+    }
+    if (obj.text) {
+      rawElt.innerHTML = obj.text;
+    }
+  }
+  if (obj.x) {
+    $('#' + obj.id).css('top', obj.y + 'px')
+      .css('left', obj.x + 'px');
+  }
+}
+
 eb.onopen = function () {
-  eb.registerHandler('creategameobject', function (err, msg) {
-    console.log('incomming EB message:');
-    console.log(msg);
-    $('#board').append('<div id="' + msg.body.id + '" style="' + msg.body.style + '">' + msg.body.text + '</div>');
-  });
-  eb.registerHandler('movegameobject', function (err, msg) {
-    $('#' + msg.body.id).css('top', msg.body.y + 'px')
-        .css('left', msg.body.x + 'px');
-  });
-  eb.registerHandler('textgameobject', function (err, msg) {
-    console.log(msg);
-    $('#' + msg.body.id).text(msg.body.text);
+  eb.registerHandler('displayGameObject', function (err, msg) {
+    displayGameObject(msg.body);
   });
 
-  eb.send("init-session", "");
+  eb.send("init-session", "", function (err, msg) {
+    msg.body.forEach(function(obj) {
+      displayGameObject(obj);
+    });
+  });
 };
 
 
