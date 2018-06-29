@@ -4,6 +4,10 @@ import demo.mesharena.common.Commons;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientOptions;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.bridge.PermittedOptions;
@@ -36,7 +40,8 @@ public class UI extends AbstractVerticle {
     // Allow events for the designated addresses in/out of the event bus bridge
     BridgeOptions opts = new BridgeOptions()
         .addOutboundPermitted(new PermittedOptions().setAddress("displayGameObject"))
-        .addInboundPermitted(new PermittedOptions().setAddress("init-session"));
+        .addInboundPermitted(new PermittedOptions().setAddress("init-session"))
+        .addInboundPermitted(new PermittedOptions().setAddress("on-start"));
 
     // Create the event bus bridge and add it to the router.
     SockJSHandler sockJSHandler = SockJSHandler.create(vertx);
@@ -71,12 +76,18 @@ public class UI extends AbstractVerticle {
       }).collect(Collectors.toList());
       msg.reply(new JsonArray(objects));
     });
+    eb.consumer("on-start", msg -> {
+      System.out.println("Starting new game!");
+      HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost(Commons.STADIUM_HOST).setDefaultPort(Commons.STADIUM_PORT));
+      HttpClientRequest request = client.request(HttpMethod.GET, "/start", response -> {
+      }).exceptionHandler(t -> System.out.println("Exception: " + t));
+      request.end();
+    });
   }
 
   private void displayGameObject(RoutingContext ctx) {
     ctx.request().bodyHandler(buf -> {
       JsonObject json = buf.toJsonObject();
-      System.out.println(json);
       ctx.response().end();
       gameObjects.compute(json.getString("id"), (key, go) -> {
         GameObject out = (go == null) ? new GameObject() : go;

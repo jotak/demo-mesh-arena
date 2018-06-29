@@ -1,5 +1,6 @@
 package demo.mesharena.stadium;
 
+import demo.mesharena.common.Commons;
 import demo.mesharena.common.Point;
 import demo.mesharena.common.Segment;
 import io.vertx.core.AbstractVerticle;
@@ -16,12 +17,14 @@ import static demo.mesharena.common.Commons.*;
 
 public class Stadium extends AbstractVerticle {
 
-  private static final int TOP = 50;
-  private static final int LEFT = 20;
-  private static final int WIDTH = 1000;
-  private static final int HEIGHT = 700;
-  private static final int GOAL_SIZE = 100;
-  private static final int MATCH_TIME = 60 * 5;
+  private static final String LOCALS = Commons.getStringEnv("STADIUM_LOCALS", "Locals");
+  private static final String VISITORS = Commons.getStringEnv("STADIUM_VISITORS", "Visitors");
+  private static final int TOP = Commons.getIntEnv("STADIUM_TOP", 50);
+  private static final int LEFT = Commons.getIntEnv("STADIUM_LEFT", 20);
+  private static final int WIDTH = Commons.getIntEnv("STADIUM_WIDTH", 1000);
+  private static final int HEIGHT = Commons.getIntEnv("STADIUM_HEIGHT", 700);
+  private static final int GOAL_SIZE = Commons.getIntEnv("STADIUM_GOAL_SIZE", 100);
+  private static final int MATCH_TIME = Commons.getIntEnv("STADIUM_MATCH_TIME", 60*5);
   private static final Segment GOAL_A = new Segment(new Point(LEFT, TOP + HEIGHT / 2 - GOAL_SIZE / 2), new Point(LEFT, TOP + HEIGHT / 2 + GOAL_SIZE / 2));
   private static final Segment GOAL_B = new Segment(new Point(LEFT + WIDTH, TOP + HEIGHT / 2 - GOAL_SIZE / 2), new Point(LEFT + WIDTH, TOP + HEIGHT / 2 + GOAL_SIZE / 2));
   private static final Segment[] ARENA_SEGMENTS = {
@@ -71,8 +74,8 @@ public class Stadium extends AbstractVerticle {
     router.get("/info").handler(this::info);
     vertx.createHttpServer().requestHandler(router::accept).listen(STADIUM_PORT, STADIUM_HOST);
 
-    // First display
-    display();
+    // Ping-display
+    vertx.setPeriodic(2000, loopId -> this.display());
   }
 
   private void startGame(RoutingContext ctx) {
@@ -216,12 +219,12 @@ public class Stadium extends AbstractVerticle {
   private String getScoreText() {
     int minutes = elapsed / 60;
     int seconds = elapsed % 60;
-    String text = "Local: " + scoreA + " - Visitors: " + scoreB + " ~~ Time: " + adjust(minutes) + ":" + adjust(seconds);
+    String text = LOCALS + ": " + scoreA + " - " + VISITORS + ": " + scoreB + " ~~ Time: " + adjust(minutes) + ":" + adjust(seconds);
     if (elapsed >= MATCH_TIME) {
       if (scoreA == scoreB) {
         return text + " ~~ Draw game!";
       }
-      return text + " ~~ " + (scoreA > scoreB ? "Locals" : "Visitors") + " win!";
+      return text + " ~~ " + (scoreA > scoreB ? LOCALS : VISITORS) + " win!";
     }
     return text;
   }

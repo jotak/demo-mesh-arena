@@ -31,5 +31,6 @@ eb.onopen = function () {
 };
 
 
-function init() {
+function onStart() {
+  eb.send("on-start", "");
 }

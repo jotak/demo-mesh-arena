@@ -3,19 +3,19 @@ kind: Deployment
 metadata:
   labels:
     app: stadium
-    version: v1
-  name: stadium
+    version: smaller
+  name: stadium-smaller
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: stadium
-      version: v1
+      version: smaller
   template:
     metadata:
       labels:
         app: stadium
-        version: v1
+        version: smaller
     spec:
       containers:
       - image: jotak/demo-mesh-arena-stadium:latest
@@ -47,13 +47,13 @@ spec:
         - name: STADIUM_LEFT
           value: 20
         - name: STADIUM_WIDTH
-          value: 1000
+          value: 500
         - name: STADIUM_HEIGHT
-          value: 700
+          value: 350
         - name: STADIUM_GOAL_SIZE
-          value: 100
+          value: 50
         - name: STADIUM_MATCH_TIME
-          value: 300
+          value: 60
         securityContext:
           privileged: false
         readinessProbe:

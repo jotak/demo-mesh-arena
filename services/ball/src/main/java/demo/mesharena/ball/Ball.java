@@ -53,8 +53,8 @@ public class Ball extends AbstractVerticle {
     router.put("/setPosition").handler(this::setPosition);
     vertx.createHttpServer().requestHandler(router::accept).listen(Commons.BALL_PORT, Commons.BALL_HOST);
 
-    // First display
-    display();
+    // Ping-display
+    vertx.setPeriodic(2000, loopId -> this.display());
 
     // Start game loop
     vertx.setPeriodic(DELTA_MS, loopId -> this.update((double)DELTA_MS / 1000.0));

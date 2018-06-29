@@ -12,7 +12,7 @@ public final class Commons {
   private Commons() {
   }
 
-  private static String getStringEnv(String varname, String def) {
+  public static String getStringEnv(String varname, String def) {
     String val = System.getenv(varname);
     if (val == null || val.isEmpty()) {
       return def;
@@ -21,12 +21,21 @@ public final class Commons {
     }
   }
 
-  private static int getIntEnv(String varname, int def) {
+  public static int getIntEnv(String varname, int def) {
     String val = System.getenv(varname);
     if (val == null || val.isEmpty()) {
       return def;
     } else {
       return Integer.parseInt(val);
+    }
+  }
+
+  public static double getDoubleEnv(String varname, double def) {
+    String val = System.getenv(varname);
+    if (val == null || val.isEmpty()) {
+      return def;
+    } else {
+      return Double.parseDouble(val);
     }
   }
 }

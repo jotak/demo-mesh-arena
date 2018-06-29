@@ -16,9 +16,7 @@ oc apply -f <(istioctl kube-inject -f ./Deployment.yml)
 oc create -f ./Service.yml
 oc expose service ui
 
-# Get the route URL
-oc get route ui
-# Open it in a browser. When it's ready, you will just see an empty page with title "Mesh Arena"
+# Open it in a browser.
 
 # Ball
 cd ../ball
@@ -40,14 +38,29 @@ oc apply -f <(istioctl kube-inject -f ./Deployment.yml)
 # Visitors
 cd ../ai-visitors
 docker build -t jotak/demo-mesh-arena-ai-visitors .
-oc apply -f <(istioctl kube-inject -f ./Deployment.yml)
+oc apply -f <(istioctl kube-inject -f ./Deployment-5-goats.yml)
 
 # Start game
-oc expose service stadium --path=/start
-# And navigate to that route
-# or alternatively, from within stadium pod:
-curl -H "Content-Type: application/json" http://localhost:8080/start
 ```
+
+### Better players
+
+Those goats are really bad players. Let's deploy another version to rise the level: Messi.
+
+```bash
+cd ../ai-visitors
+oc apply -f <(istioctl kube-inject -f ./Deployment-Messi.yml)
+```
+
+### Another stadium
+
+```bash
+cd ../stadium
+oc apply -f <(istioctl kube-inject -f ./Deployment-Smaller.yml)
+```
+
+But... we now have two stadiums. Both produce data, sent to UI. Both are queried by players to know where they are.
+So we must introduce routing rules. (TBC)
 
 ## Run from IDE
 

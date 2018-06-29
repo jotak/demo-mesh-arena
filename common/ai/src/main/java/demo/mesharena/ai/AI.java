@@ -22,11 +22,22 @@ public abstract class AI extends AbstractVerticle {
   private static final long DELTA_MS = 100;
   private static final double IDLE_TIMER = 2.0;
   private static final double ROLE_TIMER = 10.0;
-  private static final double SPEED = 60.0;
-  private static final double ACCURACY = 0.8;
+  private static final String NAME = Commons.getStringEnv("PLAYER_NAME", "Goat");
+  // Speed = open scale
+  private static final double SPEED = Commons.getIntEnv("PLAYER_SPEED", 60);
+  // Accuracy [0, 1]
+  private static final double ACCURACY = Commons.getDoubleEnv("PLAYER_ACCURACY", 0.8);
   private static final double MIN_SPEED = ACCURACY * SPEED;
-  private static final int SKILL = 5;
-  private static final double SHOOT_STRENGTH = 250;
+  // Skill = open scale
+  private static final int SKILL = Commons.getIntEnv("PLAYER_SKILL", 5);
+  // Shoot strength = open scale
+  private static final double SHOOT_STRENGTH = Commons.getIntEnv("PLAYER_SHOOT", 250);
+  // Attacking / defending? (more is attacking) [0, 100]
+  private static final int ATTACKING = Commons.getIntEnv("PLAYER_ATTACKING", 65);
+  // While attacking, will shoot quickly? [0, 100]
+  private static final int ATT_SHOOT_FAST = Commons.getIntEnv("PLAYER_ATT_SHOOT_FAST", 20);
+  // While defending, will shoot quickly? [0, 100]
+  private static final int DEF_SHOOT_FAST = Commons.getIntEnv("PLAYER_DEF_SHOOT_FAST", 40);
 
   private final Random rnd = new SecureRandom();
   private final String id;
@@ -48,7 +59,7 @@ public abstract class AI extends AbstractVerticle {
     json = new JsonObject()
         .put("id", id)
         .put("style", "position: absolute; background-color: " + (isVisitors ? "yellow" : "blue") + ";")
-        .put("text", "AI");
+        .put("text", NAME);
   }
 
   @Override
@@ -106,7 +117,7 @@ public abstract class AI extends AbstractVerticle {
   }
 
   private void chooseRole() {
-    if (rnd.nextInt(3) == 0) {
+    if (rnd.nextInt(100) > ATTACKING) {
       role = Role.DEFEND;
       if (arenaInfo == null) {
         defendPoint = randomDestination();
@@ -145,26 +156,26 @@ public abstract class AI extends AbstractVerticle {
     if (role == Role.ATTACK) {
       Point direction = randomishSegmentNormalized(new Segment(pos, goal));
       // Go forward or try to shoot
-      int rndNum = rnd.nextInt(10);
-      if (rndNum < 8) {
-        // Go forward
-        shootDest = direction.mult(SPEED * 1.8).add(pos);
-      } else {
+      int rndNum = rnd.nextInt(100);
+      if (rndNum < ATT_SHOOT_FAST) {
         // Try to shoot (if close enough to ball)
         shootDest = direction.mult(SHOOT_STRENGTH).add(pos);
+      } else {
+        // Go forward
+        shootDest = direction.mult(SPEED * 1.8).add(pos);
       }
     } else {
       // Defensive shoot
       Point direction = randomishSegmentNormalized(new Segment(pos, goal));
       // Go forward or defensive shoot
-      int rndNum = rnd.nextInt(10);
-      if (rndNum < 6) {
-        // Go forward
-        shootDest = direction.mult(SPEED * 1.8).add(pos);
-      } else {
+      int rndNum = rnd.nextInt(100);
+      if (rndNum < DEF_SHOOT_FAST) {
         // Defensive shoot, randomise a second time, shoot stronger
         direction = randomishSegmentNormalized(new Segment(pos, pos.add(direction)));
         shootDest = direction.mult(SHOOT_STRENGTH * 1.5).add(pos);
+      } else {
+        // Go forward
+        shootDest = direction.mult(SPEED * 1.8).add(pos);
       }
     }
     String json = new JsonObject()
