@@ -65,7 +65,8 @@ public class Stadium extends AbstractVerticle {
   public void start() throws Exception {
     // Register stadium API
     Router router = Router.router(vertx);
-    router.put("/start").handler(this::startGame);
+    router.get("/health").handler(ctx -> ctx.response().end());
+    router.get("/start").handler(this::startGame);
     router.post("/bounce").handler(this::bounce);
     router.get("/info").handler(this::info);
     vertx.createHttpServer().requestHandler(router::accept).listen(STADIUM_PORT, STADIUM_HOST);

@@ -1,0 +1,38 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: ai-locals
+    version: v1
+  name: ai-locals
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: ai-locals
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: ai-locals
+        version: v1
+    spec:
+      containers:
+      - image: jotak/demo-mesh-arena-ai-locals:latest
+        imagePullPolicy: IfNotPresent
+        name: ai-locals
+        env:
+        - name: MESHARENA_UI_PORT
+          value: 8080
+        - name: MESHARENA_UI_HOST
+          value: ui
+        - name: MESHARENA_BALL_PORT
+          value: 8080
+        - name: MESHARENA_BALL_HOST
+          value: ball
+        - name: MESHARENA_STADIUM_PORT
+          value: 8080
+        - name: MESHARENA_STADIUM_HOST
+          value: stadium
+        securityContext:
+          privileged: false

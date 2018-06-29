@@ -43,6 +43,8 @@ public class UI extends AbstractVerticle {
     sockJSHandler.bridge(opts);
     router.route("/eventbus/*").handler(sockJSHandler);
 
+    router.get("/health").handler(ctx -> ctx.response().end());
+
     // TODO: replace http API with eventbus messages
     // Listen to objects creation
     router.post("/display").handler(this::displayGameObject);

@@ -1,0 +1,58 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: ui
+    version: v1
+  name: ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ui
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: ui
+        version: v1
+    spec:
+      containers:
+      - image: jotak/demo-mesh-arena-ui:latest
+        imagePullPolicy: IfNotPresent
+        name: ui
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: MESHARENA_UI_PORT
+          value: 8080
+        - name: MESHARENA_UI_HOST
+          value: localhost
+        - name: MESHARENA_BALL_PORT
+          value: 8080
+        - name: MESHARENA_BALL_HOST
+          value: ball
+        - name: MESHARENA_STADIUM_PORT
+          value: 8080
+        - name: MESHARENA_STADIUM_HOST
+          value: stadium
+        securityContext:
+          privileged: false
+        readinessProbe:
+          exec:
+            command:
+            - curl
+            - localhost:8080/health
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 1
+        livenessProbe:
+          exec:
+            command:
+            - curl
+            - localhost:8080/health
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 1

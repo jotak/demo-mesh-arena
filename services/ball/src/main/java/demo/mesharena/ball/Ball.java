@@ -46,6 +46,8 @@ public class Ball extends AbstractVerticle {
   public void start() throws Exception {
     // Register ball API
     Router router = Router.router(vertx);
+    router.get("/health").handler(ctx -> ctx.response().end());
+
     router.put("/shoot").handler(this::shoot);
     router.get("/interact").handler(this::interact);
     router.put("/setPosition").handler(this::setPosition);
