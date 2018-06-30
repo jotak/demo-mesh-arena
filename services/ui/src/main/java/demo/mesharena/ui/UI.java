@@ -83,6 +83,11 @@ public class UI extends AbstractVerticle {
       }).exceptionHandler(t -> System.out.println("Exception: " + t));
       request.end();
     });
+
+    // Objects timeout
+    vertx.setPeriodic(5000, loopId -> {
+      // TODO: check objects timeout
+    });
   }
 
   private void displayGameObject(RoutingContext ctx) {
@@ -105,11 +110,13 @@ public class UI extends AbstractVerticle {
     private String text;
     private Double x;
     private Double y;
+    private long lastCheck;
 
     GameObject() {
     }
 
     boolean mergeWithJson(JsonObject json) {
+      lastCheck = System.currentTimeMillis();
       boolean changed = false;
       if (json.containsKey("style")) {
         String style = json.getString("style");

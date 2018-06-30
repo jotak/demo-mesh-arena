@@ -34,7 +34,7 @@ public class Ball extends AbstractVerticle {
   private Ball() {
     json = new JsonObject()
         .put("id", "ball")
-        .put("style", "position: absolute; background-color: red;")
+        .put("style", "position: absolute; background-color: red; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms;")
         .put("text", "ball");
   }
 

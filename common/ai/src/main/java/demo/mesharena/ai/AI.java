@@ -19,7 +19,7 @@ import static demo.mesharena.common.Commons.UI_PORT;
 
 public abstract class AI extends AbstractVerticle {
 
-  private static final long DELTA_MS = 100;
+  private static final long DELTA_MS = 300;
   private static final double IDLE_TIMER = 2.0;
   private static final double ROLE_TIMER = 10.0;
   private static final String NAME = Commons.getStringEnv("PLAYER_NAME", "Goat");
@@ -58,7 +58,7 @@ public abstract class AI extends AbstractVerticle {
     this.isVisitors = isVisitors;
     json = new JsonObject()
         .put("id", id)
-        .put("style", "position: absolute; background-color: " + (isVisitors ? "yellow" : "blue") + ";")
+        .put("style", "position: absolute; background-color: " + (isVisitors ? "pink" : "purple") + "; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms;")
         .put("text", NAME);
   }
 
