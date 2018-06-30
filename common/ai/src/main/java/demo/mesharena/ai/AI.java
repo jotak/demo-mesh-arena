@@ -58,7 +58,7 @@ public abstract class AI extends AbstractVerticle {
     this.isVisitors = isVisitors;
     json = new JsonObject()
         .put("id", id)
-        .put("style", "position: absolute; background-color: " + (isVisitors ? "pink" : "purple") + "; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms;")
+        .put("style", "position: absolute; background-color: " + (isVisitors ? "yellow" : "blue") + "; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms;")
         .put("text", NAME);
   }
 

@@ -40,6 +40,7 @@ public class UI extends AbstractVerticle {
     // Allow events for the designated addresses in/out of the event bus bridge
     BridgeOptions opts = new BridgeOptions()
         .addOutboundPermitted(new PermittedOptions().setAddress("displayGameObject"))
+        .addOutboundPermitted(new PermittedOptions().setAddress("removeGameObject"))
         .addInboundPermitted(new PermittedOptions().setAddress("init-session"))
         .addInboundPermitted(new PermittedOptions().setAddress("on-start"));
 
@@ -86,7 +87,13 @@ public class UI extends AbstractVerticle {
 
     // Objects timeout
     vertx.setPeriodic(5000, loopId -> {
-      // TODO: check objects timeout
+      long now = System.currentTimeMillis();
+      gameObjects.entrySet().forEach(entry -> {
+        if (now - entry.getValue().lastCheck > 2000) {
+          gameObjects.remove(entry.getKey());
+          eb.publish("removeGameObject", entry.getKey());
+        }
+      });
     });
   }
 

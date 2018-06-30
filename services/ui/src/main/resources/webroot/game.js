@@ -20,7 +20,16 @@ function displayGameObject(obj) {
 
 eb.onopen = function () {
   eb.registerHandler('displayGameObject', function (err, msg) {
+    if (err) {
+        console.log(err);
+    }
     displayGameObject(msg.body);
+  });
+  eb.registerHandler('removeGameObject', function (err, msg) {
+    if (err) {
+        console.log(err);
+    }
+    $('#' + msg.body).remove();
   });
 
   eb.send("init-session", "", function (err, msg) {
