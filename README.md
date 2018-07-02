@@ -27,18 +27,19 @@ oc create -f ./Service.yml
 # Stadium
 cd ../stadium
 docker build -t jotak/demo-mesh-arena-stadium .
-oc apply -f <(istioctl kube-inject -f ./Deployment.yml)
+oc apply -f <(istioctl kube-inject -f ./Deployment-Smaller.yml)
+# oc apply -f <(istioctl kube-inject -f ./Deployment.yml)
 oc create -f ./Service.yml
 
 # Locals
 cd ../ai-locals
 docker build -t jotak/demo-mesh-arena-ai-locals .
-oc apply -f <(istioctl kube-inject -f ./Deployment.yml)
+oc apply -f <(istioctl kube-inject -f ./Deployment-4-goats.yml)
 
 # Visitors
 cd ../ai-visitors
 docker build -t jotak/demo-mesh-arena-ai-visitors .
-oc apply -f <(istioctl kube-inject -f ./Deployment-5-goats.yml)
+oc apply -f <(istioctl kube-inject -f ./Deployment-4-goats.yml)
 
 # Start game
 ```

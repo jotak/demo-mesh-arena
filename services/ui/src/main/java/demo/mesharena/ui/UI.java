@@ -88,11 +88,12 @@ public class UI extends AbstractVerticle {
     // Objects timeout
     vertx.setPeriodic(5000, loopId -> {
       long now = System.currentTimeMillis();
-      gameObjects.entrySet().forEach(entry -> {
+      gameObjects.entrySet().removeIf(entry -> {
         if (now - entry.getValue().lastCheck > 2000) {
-          gameObjects.remove(entry.getKey());
           eb.publish("removeGameObject", entry.getKey());
+          return true;
         }
+        return false;
       });
     });
   }

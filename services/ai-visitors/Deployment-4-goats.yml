@@ -2,25 +2,25 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   labels:
-    app: ai-locals
-    version: v1
-  name: ai-locals
+    app: ai-visitors
+    version: goat
+  name: ai-visitors-goat
 spec:
-  replicas: 5
+  replicas: 4
   selector:
     matchLabels:
-      app: ai-locals
-      version: v1
+      app: ai-visitors
+      version: goat
   template:
     metadata:
       labels:
-        app: ai-locals
-        version: v1
+        app: ai-visitors
+        version: goat
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ai-locals:latest
+      - image: jotak/demo-mesh-arena-ai-visitors:latest
         imagePullPolicy: IfNotPresent
-        name: ai-locals
+        name: ai-visitors
         env:
         - name: MESHARENA_UI_PORT
           value: 8080

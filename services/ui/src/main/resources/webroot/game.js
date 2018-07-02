@@ -1,4 +1,5 @@
 var eb = new EventBus('/eventbus/');
+eb.enableReconnect(true);
 
 function displayGameObject(obj) {
   var rawElt = document.getElementById(obj.id);
@@ -19,6 +20,7 @@ function displayGameObject(obj) {
 }
 
 eb.onopen = function () {
+  console.log('onopen')
   eb.registerHandler('displayGameObject', function (err, msg) {
     if (err) {
         console.log(err);
@@ -37,6 +39,11 @@ eb.onopen = function () {
       displayGameObject(obj);
     });
   });
+};
+
+eb.onreconnect = function() {
+  console.log('onreconnect')
+  $('#board').contents().remove();
 };
 
 
