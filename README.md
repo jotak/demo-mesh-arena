@@ -3,14 +3,17 @@
 ## Build & Run for OpenShift
 
 ```bash
+oc login -u system:admin
+
 oc new-project mesh-arena
 oc adm policy add-scc-to-user privileged -z default
 
 # Build all
+cd parent && mvn clean install
 mvn package dependency:copy-dependencies
 
 # UI
-cd services/ui
+cd ../services/ui
 docker build -t jotak/demo-mesh-arena-ui .
 oc apply -f <(istioctl kube-inject -f ./Deployment.yml)
 oc create -f ./Service.yml
