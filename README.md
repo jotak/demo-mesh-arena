@@ -1,5 +1,15 @@
 # demo-mesh-arena
 
+## Pre-requisite
+
+- Kubernetes or OpenShift cluster running (ex: minikube / minishift)
+- Istio installed
+- For visualization support, Kiali installed
+
+## Build & Run for Kubernetes
+
+(to be completed)
+
 ## Build & Run for OpenShift
 
 ```bash
@@ -9,11 +19,10 @@ oc new-project mesh-arena
 oc adm policy add-scc-to-user privileged -z default
 
 # Build all
-cd parent && mvn clean install
 mvn package dependency:copy-dependencies
 
 # UI
-cd ../services/ui
+cd services/ui
 docker build -t jotak/demo-mesh-arena-ui .
 oc apply -f <(istioctl kube-inject -f ./Deployment.yml)
 oc create -f ./Service.yml
@@ -31,7 +40,6 @@ oc create -f ./Service.yml
 cd ../stadium
 docker build -t jotak/demo-mesh-arena-stadium .
 oc apply -f <(istioctl kube-inject -f ./Deployment-Smaller.yml)
-# oc apply -f <(istioctl kube-inject -f ./Deployment.yml)
 oc create -f ./Service.yml
 
 # Locals
@@ -60,7 +68,7 @@ oc apply -f <(istioctl kube-inject -f ./Deployment-Messi.yml)
 
 ```bash
 cd ../stadium
-oc apply -f <(istioctl kube-inject -f ./Deployment-Smaller.yml)
+oc apply -f <(istioctl kube-inject -f ./Deployment.yml)
 ```
 
 But... we now have two stadiums. Both produce data, sent to UI. Both are queried by players to know where they are.

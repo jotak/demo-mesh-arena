@@ -7,6 +7,7 @@
   <parent>
     <groupId>demo.mesh-arena</groupId>
     <artifactId>demo-mesh-parent</artifactId>
+    <relativePath>../../parent</relativePath>
     <version>1</version>
   </parent>
 
