@@ -3,19 +3,19 @@ kind: Deployment
 metadata:
   labels:
     app: stadium
-    version: v1
-  name: stadium
+    version: big
+  name: stadium-big
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: stadium
-      version: v1
+      version: big
   template:
     metadata:
       labels:
         app: stadium
-        version: v1
+        version: big
     spec:
       containers:
       - image: jotak/demo-mesh-arena-stadium:latest
@@ -42,8 +42,10 @@ spec:
           value: Locals
         - name: STADIUM_VISITORS
           value: Visitors
+        - name: STADIUM_NAME
+          value: Velodrome
         - name: STADIUM_TOP
-          value: 50
+          value: 450
         - name: STADIUM_LEFT
           value: 20
         - name: STADIUM_WIDTH

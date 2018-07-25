@@ -19,6 +19,7 @@ public class Stadium extends AbstractVerticle {
 
   private static final String LOCALS = Commons.getStringEnv("STADIUM_LOCALS", "Locals");
   private static final String VISITORS = Commons.getStringEnv("STADIUM_VISITORS", "Visitors");
+  private static final String NAME = Commons.getStringEnv("STADIUM_NAME", "stadium");
   private static final int TOP = Commons.getIntEnv("STADIUM_TOP", 50);
   private static final int LEFT = Commons.getIntEnv("STADIUM_LEFT", 20);
   private static final int WIDTH = Commons.getIntEnv("STADIUM_WIDTH", 1000);
@@ -44,19 +45,19 @@ public class Stadium extends AbstractVerticle {
 
   private Stadium() {
     stadiumJson = new JsonObject()
-        .put("id", "stadium")
+        .put("id", NAME + "-stadium")
         .put("style", "position: absolute; top: " + TOP + "px; left: " + LEFT + "px; width: " + WIDTH + "px; height: " + HEIGHT + "px; border: 1px solid;")
         .put("text", "");
 
     int median = TOP + HEIGHT / 2;
     goalsJson = new JsonObject()
-        .put("id", "goals")
+        .put("id", NAME + "-goals")
         .put("style", "position: absolute; top: " + (median - GOAL_SIZE/2) + "px; left: " + LEFT + "px; width: " + (WIDTH-6) + "px; height: " + GOAL_SIZE + "px; border-left: 4px solid red; border-right: 4px solid red;")
         .put("text", "");
 
     scoreJson = new JsonObject()
-        .put("id", "score")
-        .put("style", "position: absolute;")
+        .put("id", NAME + "-score")
+        .put("style", "position: absolute; top: " + (TOP - 20) + "px;")
         .put("text", "");
   }
 
@@ -258,7 +259,7 @@ public class Stadium extends AbstractVerticle {
     // Score
     request = client.request(HttpMethod.POST, "/display", response -> {});
 
-    scoreJson.put("text", getScoreText());
+    scoreJson.put("text", NAME + " - " + getScoreText());
     strJson = scoreJson.toString();
 
     request.putHeader("content-type", "application/json");

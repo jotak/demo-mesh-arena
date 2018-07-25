@@ -68,11 +68,12 @@ oc apply -f <(istioctl kube-inject -f ./Deployment-Messi.yml)
 
 ```bash
 cd ../stadium
-oc apply -f <(istioctl kube-inject -f ./Deployment.yml)
-```
+oc apply -f <(istioctl kube-inject -f ./Deployment-Bigger.yml)
 
-But... we now have two stadiums. Both produce data, sent to UI. Both are queried by players to know where they are.
-So we must introduce routing rules. (TBC)
+istioctl create -f ./stadium-routes.yml
+istioctl create -f ./route-all-smaller.yml
+istioctl replace -f ./route-all-bigger.yml
+```
 
 ## Run from IDE
 
