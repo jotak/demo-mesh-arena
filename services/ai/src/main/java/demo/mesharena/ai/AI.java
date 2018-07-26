@@ -4,25 +4,26 @@ import demo.mesharena.common.Commons;
 import demo.mesharena.common.Point;
 import demo.mesharena.common.Segment;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpMethod;
+import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.ext.web.client.WebClient;
 
 import java.security.SecureRandom;
 import java.util.Random;
 import java.util.UUID;
 
-import static demo.mesharena.common.Commons.UI_HOST;
-import static demo.mesharena.common.Commons.UI_PORT;
+import static demo.mesharena.common.Commons.*;
 
-public abstract class AI extends AbstractVerticle {
+public class AI extends AbstractVerticle {
 
   private static final long DELTA_MS = 300;
   private static final double IDLE_TIMER = 2.0;
   private static final double ROLE_TIMER = 10.0;
   private static final String NAME = Commons.getStringEnv("PLAYER_NAME", "Goat");
+  private static final String COLOR = Commons.getStringEnv("PLAYER_COLOR", "blue");
+  private static final String TEAM = Commons.getStringEnv("PLAYER_TEAM", "locals");
   // Speed = open scale
   private static final double SPEED = Commons.getIntEnv("PLAYER_SPEED", 60);
   // Accuracy [0, 1]
@@ -40,6 +41,7 @@ public abstract class AI extends AbstractVerticle {
   private static final int DEF_SHOOT_FAST = Commons.getIntEnv("PLAYER_DEF_SHOOT_FAST", 40);
 
   private final Random rnd = new SecureRandom();
+  private final WebClient client;
   private final String id;
   private final boolean isVisitors;
   private final JsonObject json;
@@ -53,13 +55,19 @@ public abstract class AI extends AbstractVerticle {
   private enum Role { ATTACK, DEFEND }
   private Role role;
 
-  public AI(boolean isVisitors) {
+  public AI(Vertx vertx) {
+    client = WebClient.create(vertx);
     id = UUID.randomUUID().toString();
-    this.isVisitors = isVisitors;
+    this.isVisitors = !TEAM.equals("locals");
     json = new JsonObject()
         .put("id", id)
-        .put("style", "position: absolute; background-color: " + (isVisitors ? "yellow" : "blue") + "; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms;")
-        .put("text", NAME);
+        .put("style", "position: absolute; background-color: " + COLOR + "; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms; height: 30px; width: 30px; border-radius: 50%; z-index: 8;")
+        .put("text", "");
+  }
+
+  public static void main(String[] args) {
+    Vertx vertx = Vertx.vertx();
+    vertx.deployVerticle(new AI(vertx));
   }
 
   @Override
@@ -76,30 +84,24 @@ public abstract class AI extends AbstractVerticle {
   }
 
   private void checkArenaInfo() {
-    HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost(Commons.STADIUM_HOST).setDefaultPort(Commons.STADIUM_PORT));
-    HttpClientRequest request = client.request(HttpMethod.GET, "/info", response -> {
-      response.bodyHandler(buf -> {
-        JsonObject obj = buf.toJsonObject();
-        double goalX = obj.getDouble("goalX");
-        double goalY = obj.getDouble("goalY");
-        int defendZoneTop = obj.getInteger("defendZoneTop");
-        int defendZoneBottom = obj.getInteger("defendZoneBottom");
-        int defendZoneLeft = obj.getInteger("defendZoneLeft");
-        int defendZoneRight = obj.getInteger("defendZoneRight");
-        arenaInfo = new ArenaInfo(defendZoneTop, defendZoneLeft, defendZoneBottom, defendZoneRight, new Point(goalX, goalY));
-      });
-    }).exceptionHandler(t -> {
-      System.out.println("Exception: " + t);
-      arenaInfo = null;
-    });
-
-    String json = new JsonObject()
-        .put("isVisitors", isVisitors)
-        .toString();
-    request.putHeader("content-type", "application/json");
-    request.putHeader("content-length", String.valueOf(json.length()));
-    request.write(json);
-    request.end();
+    client.get(STADIUM_PORT, STADIUM_HOST, "/info").sendJson(
+        new JsonObject().put("isVisitors", isVisitors),
+        ar -> {
+          if (!ar.succeeded()) {
+            ar.cause().printStackTrace();
+            arenaInfo = null;
+          } else {
+            HttpResponse<Buffer> response = ar.result();
+            JsonObject obj = response.bodyAsJsonObject();
+            double goalX = obj.getDouble("goalX");
+            double goalY = obj.getDouble("goalY");
+            int defendZoneTop = obj.getInteger("defendZoneTop");
+            int defendZoneBottom = obj.getInteger("defendZoneBottom");
+            int defendZoneLeft = obj.getInteger("defendZoneLeft");
+            int defendZoneRight = obj.getInteger("defendZoneRight");
+            arenaInfo = new ArenaInfo(defendZoneTop, defendZoneLeft, defendZoneBottom, defendZoneRight, new Point(goalX, goalY));
+          }
+        });
   }
 
   private void update(double delta) {
@@ -132,25 +134,6 @@ public abstract class AI extends AbstractVerticle {
   }
 
   private void lookForBall(double delta) {
-    HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost(Commons.BALL_HOST).setDefaultPort(Commons.BALL_PORT));
-    HttpClientRequest request = client.request(HttpMethod.GET, "/interact", response -> {
-      response.bodyHandler(buf -> {
-        JsonObject obj = buf.toJsonObject();
-        double x = obj.getDouble("x");
-        double y = obj.getDouble("y");
-        if (role == Role.ATTACK) {
-          // Go to the ball
-          currentDestination = new Point(x, y);
-        } else {
-          defend(new Point(x, y));
-        }
-        walkToDestination(delta);
-      });
-    }).exceptionHandler(t -> {
-      // No ball? What a pity. Walk randomly in sadness.
-      idle();
-    });
-
     final Point shootDest;
     Point goal = (arenaInfo == null) ? randomDestination() : arenaInfo.goal;
     if (role == Role.ATTACK) {
@@ -178,18 +161,33 @@ public abstract class AI extends AbstractVerticle {
         shootDest = direction.mult(SPEED * 1.8).add(pos);
       }
     }
-    String json = new JsonObject()
+    JsonObject json = new JsonObject()
         .put("playerX", pos.x())
         .put("playerY", pos.y())
         .put("shootX", shootDest.x())
         .put("shootY", shootDest.y())
         .put("playerSkill", SKILL)
         .put("playerID", id)
-        .toString();
-    request.putHeader("content-type", "application/json");
-    request.putHeader("content-length", String.valueOf(json.length()));
-    request.write(json);
-    request.end();
+        .put("playerName", NAME);
+
+    client.get(BALL_PORT, BALL_HOST, "/interact").sendJson(json, ar -> {
+      if (!ar.succeeded()) {
+        // No ball? What a pity. Walk randomly in sadness.
+        idle();
+      } else {
+        HttpResponse<Buffer> response = ar.result();
+        JsonObject obj = response.bodyAsJsonObject();
+        double x = obj.getDouble("x");
+        double y = obj.getDouble("y");
+        if (role == Role.ATTACK) {
+          // Go to the ball
+          currentDestination = new Point(x, y);
+        } else {
+          defend(new Point(x, y));
+        }
+        walkToDestination(delta);
+      }
+    });
   }
 
   private void defend(Point ball) {
@@ -242,17 +240,14 @@ public abstract class AI extends AbstractVerticle {
   }
 
   private void display() {
-    HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost(UI_HOST).setDefaultPort(UI_PORT));
-    HttpClientRequest request = client.request(HttpMethod.POST, "/display", response -> {});
+    json.put("x", pos.x() - 15)
+        .put("y", pos.y() - 15);
 
-    json.put("x", pos.x())
-        .put("y", pos.y());
-    String strJson = json.toString();
-
-    request.putHeader("content-type", "application/json");
-    request.putHeader("content-length", String.valueOf(strJson.length()));
-    request.write(strJson);
-    request.end();
+    client.post(UI_PORT, UI_HOST, "/display").sendJson(json, ar -> {
+      if (!ar.succeeded()) {
+        ar.cause().printStackTrace();
+      }
+    });
   }
 
   private static class ArenaInfo {

@@ -27,15 +27,15 @@ spec:
           protocol: TCP
         env:
         - name: MESHARENA_UI_PORT
-          value: 8080
+          value: "8080"
         - name: MESHARENA_UI_HOST
           value: ui
         - name: MESHARENA_BALL_PORT
-          value: 8080
+          value: "8080"
         - name: MESHARENA_BALL_HOST
           value: ball
         - name: MESHARENA_STADIUM_PORT
-          value: 8080
+          value: "8080"
         - name: MESHARENA_STADIUM_HOST
           value: localhost
         - name: STADIUM_LOCALS
@@ -43,19 +43,15 @@ spec:
         - name: STADIUM_VISITORS
           value: Visitors
         - name: STADIUM_NAME
-          value: Velodrome
+          value: Vélodrome
         - name: STADIUM_TOP
-          value: 450
+          value: "500"
         - name: STADIUM_LEFT
-          value: 20
-        - name: STADIUM_WIDTH
-          value: 1000
-        - name: STADIUM_HEIGHT
-          value: 700
-        - name: STADIUM_GOAL_SIZE
-          value: 100
+          value: "20"
+        - name: STADIUM_SCALE
+          value: "1.4"
         - name: STADIUM_MATCH_TIME
-          value: 300
+          value: "300"
         securityContext:
           privileged: false
         readinessProbe:

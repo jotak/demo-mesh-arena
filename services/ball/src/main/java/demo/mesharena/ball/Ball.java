@@ -5,17 +5,18 @@ import demo.mesharena.common.Point;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpMethod;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.ext.web.client.WebClient;
 
 import java.security.SecureRandom;
 import java.util.Random;
 
+import static demo.mesharena.common.Commons.STADIUM_HOST;
+import static demo.mesharena.common.Commons.STADIUM_PORT;
 import static demo.mesharena.common.Commons.UI_HOST;
 import static demo.mesharena.common.Commons.UI_PORT;
 
@@ -24,22 +25,27 @@ public class Ball extends AbstractVerticle {
   private static final long DELTA_MS = 100;
   private static final double RESISTANCE = 80;
 
+  private final WebClient client;
   private final Random rnd = new SecureRandom();
   private final JsonObject json;
   private Point speed = Point.ZERO;
   private String controllingPlayer;
+  private String controllingPlayerName;
   private int controllingPlayerSkill;
+  private double controllingPlayerSkillTimer;
   private Point pos = Point.ZERO;
 
-  private Ball() {
+  private Ball(Vertx vertx) {
+    client = WebClient.create(vertx);
     json = new JsonObject()
         .put("id", "ball")
-        .put("style", "position: absolute; background-color: red; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms;")
-        .put("text", "ball");
+        .put("style", "position: absolute; background-image: url(./ball.png); width: 20px; height: 20px; z-index: 5; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms;")
+        .put("text", "");
   }
 
   public static void main(String[] args) {
-    Vertx.vertx().deployVerticle(new Ball());
+    Vertx vertx = Vertx.vertx();
+    vertx.deployVerticle(new Ball(vertx));
   }
 
   @Override
@@ -69,6 +75,7 @@ public class Ball extends AbstractVerticle {
       double shootY = input.getDouble("shootY");
       String playerID = input.getString("playerID");
       int playerSkill = input.getInteger("playerSkill");
+      String playerName = input.getString("playerName");
       JsonObject output = new JsonObject()
           .put("x", pos.x())
           .put("y", pos.y());
@@ -78,16 +85,53 @@ public class Ball extends AbstractVerticle {
         if (playerID.equals(controllingPlayer)) {
           if (distanceToBall < 5) {
             // Shoot
+            controllingPlayerSkill = playerSkill;
             speed = new Point(shootX, shootY).diff(pos);
+            int commentRnd = rnd.nextInt(2);
+            if (speed.size() > 200) {
+              if (commentRnd == 0) {
+                comment("Tir de " + playerName + "!");
+              } else {
+                comment("Attention " + playerName + " tente sa chance!");
+              }
+            } else {
+              if (commentRnd == 0) {
+                comment("Toujours " + playerName + "...");
+              } else {
+                comment("Encore " + playerName + "...");
+              }
+            }
           }
         } else if (controllingPlayer == null || rnd.nextInt(2 * controllingPlayerSkill + playerSkill) < playerSkill) {
           controllingPlayer = playerID;
           controllingPlayerSkill = playerSkill;
+          controllingPlayerName = playerName;
           // Shoot
           speed = new Point(shootX, shootY).diff(pos);
+          double size = speed.size();
+          if (size > 310) {
+            comment("Dégagement de " + playerName);
+          } else if (size > 200) {
+            comment(playerName + " s'empare du ballon et tire!");
+          } else {
+            comment(playerName + " récupère le ballon");
+          }
         }
       }
       ctx.response().end(output.toString());
+    });
+  }
+
+  private void comment(String text) {
+    JsonObject json = new JsonObject()
+        .put("id", "ball-comment")
+        .put("style", "position: absolute; color: brown; font-weight: bold; z-index: 10; top: " + (pos.y() + 10) + "px; left: " + (pos.x() - 10) + "px;")
+        .put("text", text);
+
+    client.post(UI_PORT, UI_HOST, "/display").sendJson(json, ar -> {
+      if (!ar.succeeded()) {
+        ar.cause().printStackTrace();
+      }
     });
   }
 
@@ -99,6 +143,7 @@ public class Ball extends AbstractVerticle {
       pos = new Point(x, y);
       speed = Point.ZERO;
       controllingPlayer = null;
+      controllingPlayerSkill = 0;
       ctx.response().end();
       display();
     });
@@ -111,6 +156,7 @@ public class Ball extends AbstractVerticle {
       double dy = json.getDouble("dy");
       speed = new Point(dx, dy);
       controllingPlayer = null;
+      controllingPlayerSkill = 0;
       ctx.response().end();
     });
   }
@@ -131,14 +177,32 @@ public class Ball extends AbstractVerticle {
         }
       });
     }
+    // Decrease controlling skill
+    if (controllingPlayerSkill > 0) {
+      controllingPlayerSkillTimer += delta;
+      if (controllingPlayerSkillTimer >= 0.5) {
+        controllingPlayerSkill--;
+        controllingPlayerSkillTimer = 0;
+      }
+    }
   }
 
   private void checkBounce(Point oldPos, Point newPos, double newSpeed, Handler<Boolean> handler) {
-    HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost(Commons.STADIUM_HOST).setDefaultPort(Commons.STADIUM_PORT));
-    HttpClientRequest request = client.request(HttpMethod.POST, "/bounce", response -> {
-      response.bodyHandler(buf -> {
-        JsonObject obj = buf.toJsonObject();
+    JsonObject json = new JsonObject()
+        .put("xStart", oldPos.x())
+        .put("yStart", oldPos.y())
+        .put("xEnd", newPos.x())
+        .put("yEnd", newPos.y());
+
+    client.post(STADIUM_PORT, STADIUM_HOST, "/bounce").sendJson(json, ar -> {
+      if (!ar.succeeded()) {
+        // No stadium => no bounce
+        handler.handle(false);
+      } else {
+        HttpResponse<Buffer> response = ar.result();
+        JsonObject obj = response.bodyAsJsonObject();
         if (obj.containsKey("scored")) {
+          comment("Et BUUUUT de " + controllingPlayerName + " !!!!");
           // Do not update position, Stadium will do it
           controllingPlayer = null;
           speed = Point.ZERO;
@@ -155,35 +219,18 @@ public class Ball extends AbstractVerticle {
         } else {
           handler.handle(false);
         }
-      });
-    }).exceptionHandler(t -> {
-      // No stadium => no bounce
-      handler.handle(false);
+      }
     });
-
-    String json = new JsonObject()
-        .put("xStart", oldPos.x())
-        .put("yStart", oldPos.y())
-        .put("xEnd", newPos.x())
-        .put("yEnd", newPos.y())
-        .toString();
-    request.putHeader("content-type", "application/json");
-    request.putHeader("content-length", String.valueOf(json.length()));
-    request.write(json);
-    request.end();
   }
 
   private void display() {
-    HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost(UI_HOST).setDefaultPort(UI_PORT));
-    HttpClientRequest request = client.request(HttpMethod.POST, "/display", response -> {});
+    json.put("x", pos.x() - 10)
+        .put("y", pos.y() - 10);
 
-    json.put("x", pos.x())
-        .put("y", pos.y());
-    String strJson = json.toString();
-
-    request.putHeader("content-type", "application/json");
-    request.putHeader("content-length", String.valueOf(strJson.length()));
-    request.write(strJson);
-    request.end();
+    client.post(UI_PORT, UI_HOST, "/display").sendJson(json, ar -> {
+      if (!ar.succeeded()) {
+        ar.cause().printStackTrace();
+      }
+    });
   }
 }

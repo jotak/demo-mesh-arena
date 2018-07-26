@@ -5,13 +5,10 @@ import demo.mesharena.common.Point;
 import demo.mesharena.common.Segment;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.client.WebClient;
 
 import static demo.mesharena.common.Commons.*;
 
@@ -20,12 +17,17 @@ public class Stadium extends AbstractVerticle {
   private static final String LOCALS = Commons.getStringEnv("STADIUM_LOCALS", "Locals");
   private static final String VISITORS = Commons.getStringEnv("STADIUM_VISITORS", "Visitors");
   private static final String NAME = Commons.getStringEnv("STADIUM_NAME", "stadium");
-  private static final int TOP = Commons.getIntEnv("STADIUM_TOP", 50);
-  private static final int LEFT = Commons.getIntEnv("STADIUM_LEFT", 20);
-  private static final int WIDTH = Commons.getIntEnv("STADIUM_WIDTH", 1000);
-  private static final int HEIGHT = Commons.getIntEnv("STADIUM_HEIGHT", 700);
-  private static final int GOAL_SIZE = Commons.getIntEnv("STADIUM_GOAL_SIZE", 100);
-  private static final int MATCH_TIME = Commons.getIntEnv("STADIUM_MATCH_TIME", 60*5);
+  private static final double SCALE = Commons.getDoubleEnv("STADIUM_SCALE", 1.0);
+  private static final int TX_TOP = Commons.getIntEnv("STADIUM_TOP", 50);
+  private static final int TX_LEFT = Commons.getIntEnv("STADIUM_LEFT", 20);
+  private static final int TOP = TX_TOP + (int)(63 * SCALE);
+  private static final int LEFT = TX_LEFT + (int)(47 * SCALE);
+  private static final int TX_WIDTH = (int)(700 * SCALE);
+  private static final int TX_HEIGHT = (int)(490 * SCALE);
+  private static final int WIDTH = (int)(605 * SCALE);
+  private static final int HEIGHT = (int)(363 * SCALE);
+  private static final int GOAL_SIZE = (int)(54 * SCALE);
+  private static final int MATCH_TIME = 1000 * Commons.getIntEnv("STADIUM_MATCH_TIME", 60*2);
   private static final Segment GOAL_A = new Segment(new Point(LEFT, TOP + HEIGHT / 2 - GOAL_SIZE / 2), new Point(LEFT, TOP + HEIGHT / 2 + GOAL_SIZE / 2));
   private static final Segment GOAL_B = new Segment(new Point(LEFT + WIDTH, TOP + HEIGHT / 2 - GOAL_SIZE / 2), new Point(LEFT + WIDTH, TOP + HEIGHT / 2 + GOAL_SIZE / 2));
   private static final Segment[] ARENA_SEGMENTS = {
@@ -35,34 +37,30 @@ public class Stadium extends AbstractVerticle {
       new Segment(new Point(LEFT, TOP+HEIGHT), new Point(LEFT, TOP))
   };
 
+  private final WebClient client;
   private final JsonObject stadiumJson;
-  private final JsonObject goalsJson;
   private final JsonObject scoreJson;
 
   private int scoreA = 0;
   private int scoreB = 0;
-  private int elapsed = 0;
+  private long startTime = 0;
 
-  private Stadium() {
+  private Stadium(Vertx vertx) {
+    client = WebClient.create(vertx);
     stadiumJson = new JsonObject()
         .put("id", NAME + "-stadium")
-        .put("style", "position: absolute; top: " + TOP + "px; left: " + LEFT + "px; width: " + WIDTH + "px; height: " + HEIGHT + "px; border: 1px solid;")
-        .put("text", "");
-
-    int median = TOP + HEIGHT / 2;
-    goalsJson = new JsonObject()
-        .put("id", NAME + "-goals")
-        .put("style", "position: absolute; top: " + (median - GOAL_SIZE/2) + "px; left: " + LEFT + "px; width: " + (WIDTH-6) + "px; height: " + GOAL_SIZE + "px; border-left: 4px solid red; border-right: 4px solid red;")
+        .put("style", "position: absolute; top: " + TX_TOP + "px; left: " + TX_LEFT + "px; width: " + TX_WIDTH + "px; height: " + TX_HEIGHT + "px; background-image: url(./football-ground.png); background-size: cover;")
         .put("text", "");
 
     scoreJson = new JsonObject()
         .put("id", NAME + "-score")
-        .put("style", "position: absolute; top: " + (TOP - 20) + "px;")
+        .put("style", "position: absolute; top: " + (TX_TOP + 10) + "px; left: " + (TX_LEFT + 50) + "px; color: white; font-weight: bold; z-index: 10;")
         .put("text", "");
   }
 
   public static void main(String[] args) {
-    Vertx.vertx().deployVerticle(new Stadium());
+    Vertx vertx = Vertx.vertx();
+    vertx.deployVerticle(new Stadium(vertx));
   }
 
   @Override
@@ -80,15 +78,14 @@ public class Stadium extends AbstractVerticle {
   }
 
   private void startGame(RoutingContext ctx) {
-    scoreA = scoreB = elapsed = 0;
+    scoreA = scoreB = 0;
+    startTime = System.currentTimeMillis();
     vertx.setPeriodic(1000, loopId -> {
-      if (elapsed >= MATCH_TIME) {
+      if (System.currentTimeMillis() - startTime >= MATCH_TIME) {
         // End of game!
         vertx.cancelTimer(loopId);
-        display();
-      } else {
-        this.update();
       }
+      display();
     });
     resetBall();
     ctx.response().end();
@@ -105,20 +102,21 @@ public class Stadium extends AbstractVerticle {
   }
 
   private void resetBall() {
-    HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost(BALL_HOST).setDefaultPort(BALL_PORT));
-    HttpClientRequest request = client.request(HttpMethod.PUT, "/setPosition", response -> {});
-
-    String json = new JsonObject()
+    JsonObject json = new JsonObject()
         .put("x", LEFT + WIDTH / 2)
-        .put("y", TOP + HEIGHT / 2)
-        .toString();
-    request.putHeader("content-type", "application/json");
-    request.putHeader("content-length", String.valueOf(json.length()));
-    request.write(json);
-    request.end();
+        .put("y", TOP + HEIGHT / 2);
+
+    client.put(BALL_PORT, BALL_HOST, "/setPosition").sendJson(json, ar -> {
+      if (!ar.succeeded()) {
+        ar.cause().printStackTrace();
+      }
+    });
   }
 
   private JsonObject bounce(Segment segment, int excludeWall) {
+    if (isOutside(segment.start())) {
+      return new JsonObject();
+    }
     Point goalA = GOAL_A.getCrossingPoint(segment);
     if (goalA != null) {
       // Team B scored!
@@ -186,6 +184,11 @@ public class Stadium extends AbstractVerticle {
     return new JsonObject();
   }
 
+  private boolean isOutside(Point pos) {
+    return pos.x() < LEFT || pos.x() > LEFT + WIDTH
+        || pos.y() < TOP || pos.y() > TOP + HEIGHT;
+  }
+
   private void info(RoutingContext ctx) {
     ctx.request().bodyHandler(buf -> {
       JsonObject input = buf.toJsonObject();
@@ -212,16 +215,12 @@ public class Stadium extends AbstractVerticle {
     });
   }
 
-  private void update() {
-    elapsed++;
-    display();
-  }
-
   private String getScoreText() {
+    int elapsed = Math.min(MATCH_TIME, (int) (System.currentTimeMillis() - startTime) / 1000);
     int minutes = elapsed / 60;
     int seconds = elapsed % 60;
     String text = LOCALS + ": " + scoreA + " - " + VISITORS + ": " + scoreB + " ~~ Time: " + adjust(minutes) + ":" + adjust(seconds);
-    if (elapsed >= MATCH_TIME) {
+    if (elapsed == MATCH_TIME) {
       if (scoreA == scoreB) {
         return text + " ~~ Draw game!";
       }
@@ -236,35 +235,18 @@ public class Stadium extends AbstractVerticle {
 
   private void display() {
     // Stadium
-    HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost(UI_HOST).setDefaultPort(UI_PORT));
-    HttpClientRequest request = client.request(HttpMethod.POST, "/display", response -> {});
-
-    String strJson = stadiumJson.toString();
-
-    request.putHeader("content-type", "application/json");
-    request.putHeader("content-length", String.valueOf(strJson.length()));
-    request.write(strJson);
-    request.end();
-
-    // Goals
-    request = client.request(HttpMethod.POST, "/display", response -> {});
-
-    strJson = goalsJson.toString();
-
-    request.putHeader("content-type", "application/json");
-    request.putHeader("content-length", String.valueOf(strJson.length()));
-    request.write(strJson);
-    request.end();
+    client.post(UI_PORT, UI_HOST, "/display").sendJson(stadiumJson, ar -> {
+      if (!ar.succeeded()) {
+        ar.cause().printStackTrace();
+      }
+    });
 
     // Score
-    request = client.request(HttpMethod.POST, "/display", response -> {});
-
     scoreJson.put("text", NAME + " - " + getScoreText());
-    strJson = scoreJson.toString();
-
-    request.putHeader("content-type", "application/json");
-    request.putHeader("content-length", String.valueOf(strJson.length()));
-    request.write(strJson);
-    request.end();
+    client.post(UI_PORT, UI_HOST, "/display").sendJson(scoreJson, ar -> {
+      if (!ar.succeeded()) {
+        ar.cause().printStackTrace();
+      }
+    });
   }
 }

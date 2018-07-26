@@ -12,12 +12,10 @@
   <modules>
     <module>parent</module>
     <module>common/common</module>
-    <module>common/ai</module>
     <module>services/ui</module>
     <module>services/ball</module>
     <module>services/stadium</module>
-    <module>services/ai-locals</module>
-    <module>services/ai-visitors</module>
+    <module>services/ai</module>
   </modules>
 
 </project>

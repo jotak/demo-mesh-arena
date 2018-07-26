@@ -17,7 +17,8 @@ public final class Commons {
     if (val == null || val.isEmpty()) {
       return def;
     } else {
-      return val;
+      System.out.println(varname + " = " + html(val));
+      return html(val);
     }
   }
 
@@ -37,5 +38,17 @@ public final class Commons {
     } else {
       return Double.parseDouble(val);
     }
+  }
+
+  public static String html(String str) {
+    StringBuilder out = new StringBuilder();
+    for (char c : str.toCharArray()) {
+      if (!Character.isLetterOrDigit(c)) {
+        out.append(String.format("&#x%x;", (int) c));
+      } else {
+        out.append(c);
+      }
+    }
+    return out.toString();
   }
 }

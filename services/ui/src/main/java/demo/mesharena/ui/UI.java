@@ -4,15 +4,12 @@ import demo.mesharena.common.Commons;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.http.HttpClientRequest;
-import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.bridge.PermittedOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
@@ -21,6 +18,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static demo.mesharena.common.Commons.STADIUM_HOST;
+import static demo.mesharena.common.Commons.STADIUM_PORT;
 
 public class UI extends AbstractVerticle {
 
@@ -79,10 +79,11 @@ public class UI extends AbstractVerticle {
     });
     eb.consumer("on-start", msg -> {
       System.out.println("Starting new game!");
-      HttpClient client = vertx.createHttpClient(new HttpClientOptions().setDefaultHost(Commons.STADIUM_HOST).setDefaultPort(Commons.STADIUM_PORT));
-      HttpClientRequest request = client.request(HttpMethod.GET, "/start", response -> {
-      }).exceptionHandler(t -> System.out.println("Exception: " + t));
-      request.end();
+      WebClient.create(vertx).get(STADIUM_PORT, STADIUM_HOST, "/start").send(ar -> {
+        if (!ar.succeeded()) {
+          ar.cause().printStackTrace();
+        }
+      });
     });
 
     // Objects timeout

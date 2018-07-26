@@ -24,6 +24,10 @@
       <artifactId>vertx-web</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-web-client</artifactId>
+    </dependency>
+    <dependency>
       <groupId>demo.mesh-arena</groupId>
       <artifactId>demo-mesh-common</artifactId>
     </dependency>

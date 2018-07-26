@@ -12,3 +12,5 @@ ENV JAVA_APP_DIR=/deployment
 ENV JAVA_LIB_DIR=/deployment/libs
 ENV JAVA_CLASSPATH=${JAVA_APP_DIR}/classes:${JAVA_LIB_DIR}/*
 ENV JAVA_MAIN_CLASS="demo.mesharena.ball.Ball"
+ENV AB_OFF 1
+RUN chgrp -R 0 ${JAVA_APP_DIR} && chmod -R g+rwX ${JAVA_APP_DIR}

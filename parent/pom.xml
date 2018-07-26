@@ -26,6 +26,11 @@
         <version>${vertx.version}</version>
       </dependency>
       <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-web-client</artifactId>
+        <version>${vertx.version}</version>
+      </dependency>
+      <dependency>
         <groupId>demo.mesh-arena</groupId>
         <artifactId>demo-mesh-common</artifactId>
         <version>${project.version}</version>

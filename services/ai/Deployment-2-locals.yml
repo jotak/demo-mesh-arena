@@ -2,37 +2,43 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   labels:
-    app: ai-visitors
+    app: ai-locals
     version: goat
-  name: ai-visitors-goat
+  name: ai-locals-goat
 spec:
-  replicas: 4
+  replicas: 2
   selector:
     matchLabels:
-      app: ai-visitors
+      app: ai-locals
       version: goat
   template:
     metadata:
       labels:
-        app: ai-visitors
+        app: ai-locals
         version: goat
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ai-visitors:latest
+      - image: jotak/demo-mesh-arena-ai:latest
         imagePullPolicy: IfNotPresent
-        name: ai-visitors
+        name: ai-locals
         env:
         - name: MESHARENA_UI_PORT
-          value: 8080
+          value: "8080"
         - name: MESHARENA_UI_HOST
           value: ui
         - name: MESHARENA_BALL_PORT
-          value: 8080
+          value: "8080"
         - name: MESHARENA_BALL_HOST
           value: ball
         - name: MESHARENA_STADIUM_PORT
-          value: 8080
+          value: "8080"
         - name: MESHARENA_STADIUM_HOST
           value: stadium
+        - name: PLAYER_TEAM
+          value: locals
+        - name: PLAYER_COLOR
+          value: blue
+        - name: PLAYER_NAME
+          value: une chèvre bleue
         securityContext:
           privileged: false
