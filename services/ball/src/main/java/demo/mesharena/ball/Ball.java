@@ -25,6 +25,7 @@ public class Ball extends AbstractVerticle {
 
   private static final long DELTA_MS = 100;
   private static final double RESISTANCE = 80;
+  private static final double PCT_ERRORS = Commons.getIntEnv("PCT_ERRORS", 0);
 
   private final WebClient client;
   private final String id;
@@ -71,6 +72,10 @@ public class Ball extends AbstractVerticle {
 
   private void interact(RoutingContext ctx) {
     ctx.request().bodyHandler(buf -> {
+      if (rnd.nextInt(100) < PCT_ERRORS) {
+        ctx.response().setStatusCode(503).setStatusMessage("faiiiiilure! (to test outlier detection)").end();
+        return;
+      }
       JsonObject input = buf.toJsonObject();
       double playerX = input.getDouble("playerX");
       double playerY = input.getDouble("playerY");

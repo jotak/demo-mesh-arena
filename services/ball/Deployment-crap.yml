@@ -3,19 +3,19 @@ kind: Deployment
 metadata:
   labels:
     app: ball
-    version: v2
-  name: ball-v2
+    version: crap
+  name: ball-crap
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: ball
-      version: v2
+      version: crap
   template:
     metadata:
       labels:
         app: ball
-        version: v2
+        version: crap
     spec:
       containers:
       - image: jotak/demo-mesh-arena-ball:latest
@@ -38,6 +38,8 @@ spec:
           value: "8080"
         - name: MESHARENA_STADIUM_HOST
           value: stadium
+        - name: PCT_ERRORS
+          value: "10"
         securityContext:
           privileged: false
         readinessProbe:

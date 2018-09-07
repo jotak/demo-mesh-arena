@@ -1,3 +1,4 @@
+# Scenario 1: 75-25
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
@@ -11,12 +12,13 @@ spec:
     - destination:
         host: ball
         subset: ball-v1
-      weight: 25
+      weight: 75
     - destination:
         host: ball
-        subset: ball-v2
-      weight: 75
+        subset: ball-crap
+      weight: 25
 
+## Scenario 2: By label
 #---
 #apiVersion: networking.istio.io/v1alpha3
 #kind: VirtualService
@@ -27,7 +29,6 @@ spec:
 #  - ball
 #  http:
 #  - match:
-#    # doesn't work... because of this? https://github.com/istio/istio/issues/7787
 #    - sourceLabels:
 #        version: goat
 #    route:
@@ -37,4 +38,4 @@ spec:
 #  - route:
 #    - destination:
 #        host: ball
-#        subset: ball-v2
+#        subset: ball-crap

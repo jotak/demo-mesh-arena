@@ -129,7 +129,9 @@ oc create -f ./services/ball/Service.yml
 oc apply -f <(istioctl kube-inject -f ./services/stadium/Deployment-Smaller.yml)
 oc create -f ./services/stadium/Service.yml
 oc apply -f <(istioctl kube-inject -f ./services/ai/Deployment-2-locals.yml)
+oc create -f ./services/ai/Service-locals.yml
 oc apply -f <(istioctl kube-inject -f ./services/ai/Deployment-2-visitors.yml)
+oc create -f ./services/ai/Service-visitors.yml
 
 ```
 
