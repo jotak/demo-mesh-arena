@@ -150,7 +150,17 @@ oc apply -f <(istioctl kube-inject -f ./services/stadium/Deployment-Bigger.yml)
 
 istioctl create -f ./services/stadium/stadium-routes.yml
 istioctl create -f ./services/stadium/route-all-smaller.yml
+
 istioctl replace -f ./services/stadium/route-all-bigger.yml
+```
+
+### Another ball
+
+```bash
+oc apply -f <(istioctl kube-inject -f ./services/ball/Deployment-v2.yml)
+
+istioctl create -f ./services/ball/destrule.yml
+istioctl create -f ./services/ball/virtualservice.yml
 ```
 
 ## Run from IDE

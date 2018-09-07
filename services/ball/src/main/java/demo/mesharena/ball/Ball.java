@@ -14,6 +14,7 @@ import io.vertx.ext.web.client.WebClient;
 
 import java.security.SecureRandom;
 import java.util.Random;
+import java.util.UUID;
 
 import static demo.mesharena.common.Commons.STADIUM_HOST;
 import static demo.mesharena.common.Commons.STADIUM_PORT;
@@ -26,6 +27,7 @@ public class Ball extends AbstractVerticle {
   private static final double RESISTANCE = 80;
 
   private final WebClient client;
+  private final String id;
   private final Random rnd = new SecureRandom();
   private final JsonObject json;
   private Point speed = Point.ZERO;
@@ -37,8 +39,9 @@ public class Ball extends AbstractVerticle {
 
   private Ball(Vertx vertx) {
     client = WebClient.create(vertx);
+    id = "ball-" + UUID.randomUUID().toString();
     json = new JsonObject()
-        .put("id", "ball")
+        .put("id", id)
         .put("style", "position: absolute; background-image: url(./ball.png); width: 20px; height: 20px; z-index: 5; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms;")
         .put("text", "");
   }
