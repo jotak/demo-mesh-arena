@@ -53,11 +53,11 @@ Deploy UI, Ball and Stadium
 kubectl apply -f <(istioctl kube-inject -f ./services/ui/Deployment.yml)
 kubectl apply -f ./services/ui/Service.yml
 
-kubectl apply -f <(istioctl kube-inject -f ./services/ball/Deployment.yml)
-kubectl apply -f ./services/ball/Service.yml
-
 kubectl apply -f <(istioctl kube-inject -f ./services/stadium/Deployment-Smaller.yml)
 kubectl apply -f ./services/stadium/Service.yml
+
+kubectl apply -f <(istioctl kube-inject -f ./services/ball/Deployment-crap.yml)
+kubectl apply -f ./services/ball/Service.yml
 ```
 
 Verify all is good with in default namespace
@@ -83,6 +83,8 @@ So you can now deploy the goats
 ```bash
 kubectl apply -f <(istioctl kube-inject -f ./services/ai/Deployment-2-locals.yml)
 kubectl apply -f <(istioctl kube-inject -f ./services/ai/Deployment-2-visitors.yml)
+kubectl create -f ./services/ai/Service-locals.yml
+kubectl create -f ./services/ai/Service-visitors.yml
 ```
 
 To update goats with real players. Sorry no Chris Waddle in this release.
