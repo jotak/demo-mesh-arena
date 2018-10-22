@@ -15,7 +15,7 @@ spec:
       weight: 75
     - destination:
         host: ball
-        subset: ball-crap
+        subset: ball-v2
       weight: 25
 
 ## Scenario 2: By label
@@ -30,7 +30,7 @@ spec:
 #  http:
 #  - match:
 #    - sourceLabels:
-#        version: goat
+#        version: basic
 #    route:
 #    - destination:
 #        host: ball
@@ -38,4 +38,4 @@ spec:
 #  - route:
 #    - destination:
 #        host: ball
-#        subset: ball-crap
+#        subset: ball-v2

@@ -3,19 +3,19 @@ kind: Deployment
 metadata:
   labels:
     app: ai-visitors
-    version: goat
-  name: ai-visitors-goat
+    version: basic
+  name: ai-visitors-basic
 spec:
   replicas: 2
   selector:
     matchLabels:
       app: ai-visitors
-      version: goat
+      version: basic
   template:
     metadata:
       labels:
         app: ai-visitors
-        version: goat
+        version: basic
     spec:
       containers:
       - image: jotak/demo-mesh-arena-ai:latest

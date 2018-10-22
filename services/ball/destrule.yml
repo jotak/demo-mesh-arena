@@ -8,12 +8,15 @@ spec:
   - name: ball-v1
     labels:
       version: v1
+  - name: ball-v2
+    labels:
+      version: v2
   - name: ball-crap
     labels:
       version: crap
-## Scenario 3: With outlier detection
-#  trafficPolicy:
-#    outlierDetection:
-#      consecutiveErrors: 1
-#      baseEjectionTime: 10s
-#      maxEjectionPercent: 50
+# Scenario 3: With outlier detection
+  trafficPolicy:
+    outlierDetection:
+      consecutiveErrors: 1
+      baseEjectionTime: 10s
+      maxEjectionPercent: 50

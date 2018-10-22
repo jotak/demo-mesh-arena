@@ -3,19 +3,19 @@ kind: Deployment
 metadata:
   labels:
     app: ai-locals
-    version: goat
-  name: ai-locals-goat
+    version: basic
+  name: ai-locals-basic
 spec:
   replicas: 2
   selector:
     matchLabels:
       app: ai-locals
-      version: goat
+      version: basic
   template:
     metadata:
       labels:
         app: ai-locals
-        version: goat
+        version: basic
     spec:
       containers:
       - image: jotak/demo-mesh-arena-ai:latest
