@@ -124,9 +124,9 @@ public class AI extends AbstractVerticle {
       if (arenaInfo == null) {
         defendPoint = randomDestination();
       } else {
-        int dextX = arenaInfo.defendZoneLeft + rnd.nextInt(arenaInfo.defendZoneRight - arenaInfo.defendZoneLeft);
-        int dextY = arenaInfo.defendZoneTop + rnd.nextInt(arenaInfo.defendZoneBottom - arenaInfo.defendZoneTop);
-        defendPoint = new Point(dextX, dextY);
+        Point dimension = arenaInfo.defendZoneTLBR.derivate();
+        defendPoint = new Point(rnd.nextInt((int) dimension.x()), rnd.nextInt((int) dimension.y()))
+          .add(arenaInfo.defendZoneTLBR.start());
       }
     } else {
       role = Role.ATTACK;
@@ -179,25 +179,16 @@ public class AI extends AbstractVerticle {
         JsonObject obj = response.bodyAsJsonObject();
         double x = obj.getDouble("x");
         double y = obj.getDouble("y");
-        if (role == Role.ATTACK) {
+        Point ball = new Point(x, y);
+        if (role == Role.ATTACK || pos.diff(ball).size() < 70) {
           // Go to the ball
-          currentDestination = new Point(x, y);
+          currentDestination = ball;
         } else {
-          defend(new Point(x, y));
+          currentDestination = defendPoint;
         }
         walkToDestination(delta);
       }
     });
-  }
-
-  private void defend(Point ball) {
-    // Is the ball next to me?
-    if (arenaInfo != null && pos.diff(ball).size() < 70) {
-      // Go to the ball
-      currentDestination = ball;
-    } else {
-      currentDestination = defendPoint;
-    }
   }
 
   private void idle() {
@@ -250,17 +241,11 @@ public class AI extends AbstractVerticle {
   }
 
   private static class ArenaInfo {
-    private final int defendZoneTop;
-    private final int defendZoneLeft;
-    private final int defendZoneBottom;
-    private final int defendZoneRight;
+    private final Segment defendZoneTLBR;
     private final Point goal;
 
     private ArenaInfo(int defendZoneTop, int defendZoneLeft, int defendZoneBottom, int defendZoneRight, Point goal) {
-      this.defendZoneTop = defendZoneTop;
-      this.defendZoneLeft = defendZoneLeft;
-      this.defendZoneBottom = defendZoneBottom;
-      this.defendZoneRight = defendZoneRight;
+      this.defendZoneTLBR = new Segment(new Point(defendZoneLeft, defendZoneTop), new Point(defendZoneRight, defendZoneBottom));
       this.goal = goal;
     }
   }
