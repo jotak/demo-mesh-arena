@@ -1,0 +1,19 @@
+# Scenario 1: 75-25
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: ball-vs
+spec:
+  hosts:
+  - ball
+  http:
+  - route:
+    - destination:
+        host: ball
+        subset: ball-v1
+      weight: 75
+    - destination:
+        host: ball
+        subset: ball-v2
+      weight: 25

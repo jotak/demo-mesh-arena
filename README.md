@@ -56,7 +56,7 @@ kubectl apply -f ./services/ui/Service.yml
 kubectl apply -f <(istioctl kube-inject -f ./services/stadium/Deployment-Smaller.yml)
 kubectl apply -f ./services/stadium/Service.yml
 
-kubectl apply -f <(istioctl kube-inject -f ./services/ball/Deployment-crap.yml)
+kubectl apply -f <(istioctl kube-inject -f ./services/ball/Deployment-burst.yml)
 kubectl apply -f ./services/ball/Service.yml
 ```
 
@@ -164,7 +164,7 @@ istioctl replace -f ./services/stadium/route-all-bigger.yml
 oc apply -f <(istioctl kube-inject -f ./services/ball/Deployment-v2.yml)
 
 istioctl create -f ./services/ball/destrule.yml
-istioctl create -f ./services/ball/virtualservice.yml
+istioctl create -f ./services/ball/virtualservice-75-25.yml
 ```
 
 ## Run from IDE

@@ -1,0 +1,21 @@
+# Scenario 2: By label
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: ball-vs
+spec:
+  hosts:
+  - ball
+  http:
+  - match:
+    - sourceLabels:
+        version: basic
+    route:
+    - destination:
+        host: ball
+        subset: ball-v1
+  - route:
+    - destination:
+        host: ball
+        subset: ball-v2

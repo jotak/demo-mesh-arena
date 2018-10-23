@@ -3,19 +3,19 @@ kind: Deployment
 metadata:
   labels:
     app: ball
-    version: crap
-  name: ball-crap
+    version: v2
+  name: ball-v2
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: ball
-      version: crap
+      version: v2
   template:
     metadata:
       labels:
         app: ball
-        version: crap
+        version: v2
     spec:
       containers:
       - image: jotak/demo-mesh-arena-ball:latest
