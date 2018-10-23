@@ -191,9 +191,8 @@ public class AI extends AbstractVerticle {
   }
 
   private void defend(Point ball) {
-    // Is the ball in my side of the field?
-    if (arenaInfo != null && ball.x() >= arenaInfo.defendZoneLeft && ball.x() <= arenaInfo.defendZoneRight
-        && ball.y() >= arenaInfo.defendZoneTop && ball.y() <= arenaInfo.defendZoneBottom) {
+    // Is the ball next to me?
+    if (arenaInfo != null && pos.diff(ball).size() < 70) {
       // Go to the ball
       currentDestination = ball;
     } else {

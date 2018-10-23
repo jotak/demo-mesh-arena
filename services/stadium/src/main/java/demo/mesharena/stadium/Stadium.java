@@ -20,16 +20,16 @@ public class Stadium extends AbstractVerticle {
   private static final double SCALE = Commons.getDoubleEnv("STADIUM_SCALE", 1.0);
   private static final int TX_TOP = Commons.getIntEnv("STADIUM_TOP", 50);
   private static final int TX_LEFT = Commons.getIntEnv("STADIUM_LEFT", 20);
-  private static final int TOP = TX_TOP + (int)(63 * SCALE);
-  private static final int LEFT = TX_LEFT + (int)(47 * SCALE);
-  private static final int TX_WIDTH = (int)(700 * SCALE);
-  private static final int TX_HEIGHT = (int)(490 * SCALE);
-  private static final int WIDTH = (int)(605 * SCALE);
-  private static final int HEIGHT = (int)(363 * SCALE);
+  private static final int TOP = TX_TOP + (int)(47 * SCALE);
+  private static final int LEFT = TX_LEFT + (int)(63 * SCALE);
+  private static final int TX_WIDTH = (int)(490 * SCALE);
+  private static final int TX_HEIGHT = (int)(700 * SCALE);
+  private static final int WIDTH = (int)(363 * SCALE);
+  private static final int HEIGHT = (int)(605 * SCALE);
   private static final int GOAL_SIZE = (int)(54 * SCALE);
   private static final int MATCH_TIME = 1000 * Commons.getIntEnv("STADIUM_MATCH_TIME", 60*2);
-  private static final Segment GOAL_A = new Segment(new Point(LEFT, TOP + HEIGHT / 2 - GOAL_SIZE / 2), new Point(LEFT, TOP + HEIGHT / 2 + GOAL_SIZE / 2));
-  private static final Segment GOAL_B = new Segment(new Point(LEFT + WIDTH, TOP + HEIGHT / 2 - GOAL_SIZE / 2), new Point(LEFT + WIDTH, TOP + HEIGHT / 2 + GOAL_SIZE / 2));
+  private static final Segment GOAL_A = new Segment(new Point(LEFT + WIDTH / 2 - GOAL_SIZE / 2, TOP), new Point(LEFT + WIDTH / 2 + GOAL_SIZE / 2, TOP));
+  private static final Segment GOAL_B = new Segment(new Point(LEFT + WIDTH / 2 - GOAL_SIZE / 2, TOP + HEIGHT), new Point(LEFT + WIDTH / 2 + GOAL_SIZE / 2, TOP + HEIGHT));
   private static final Segment[] ARENA_SEGMENTS = {
       new Segment(new Point(LEFT, TOP), new Point(LEFT+WIDTH, TOP)),
       new Segment(new Point(LEFT+WIDTH, TOP), new Point(LEFT+WIDTH, TOP+HEIGHT)),
@@ -54,7 +54,7 @@ public class Stadium extends AbstractVerticle {
 
     scoreJson = new JsonObject()
         .put("id", NAME + "-score")
-        .put("style", "position: absolute; top: " + (TX_TOP + 10) + "px; left: " + (TX_LEFT + 50) + "px; color: white; font-weight: bold; z-index: 10;")
+        .put("style", "position: absolute; top: " + (TX_TOP + 5) + "px; left: " + (TX_LEFT + 5) + "px; color: white; font-weight: bold; z-index: 10;")
         .put("text", "");
   }
 
@@ -193,26 +193,28 @@ public class Stadium extends AbstractVerticle {
     ctx.request().bodyHandler(buf -> {
       JsonObject input = buf.toJsonObject();
       boolean isVisitors = input.getBoolean("isVisitors");
-      JsonObject output = new JsonObject();
-      if (isVisitors) {
-        output
-            .put("goalX", LEFT)
-            .put("goalY", TOP + HEIGHT / 2)
-            .put("defendZoneTop", TOP)
-            .put("defendZoneBottom", TOP + HEIGHT)
-            .put("defendZoneLeft", LEFT + 2 * WIDTH / 3)
-            .put("defendZoneRight", LEFT + WIDTH);
-      } else {
-        output
-            .put("goalX", LEFT + WIDTH)
-            .put("goalY", TOP + HEIGHT / 2)
-            .put("defendZoneTop", TOP)
-            .put("defendZoneBottom", TOP + HEIGHT)
-            .put("defendZoneLeft", LEFT)
-            .put("defendZoneRight", LEFT + WIDTH / 3);
-      }
+      Point oppGoal = (isVisitors ? GOAL_A : GOAL_B).middle();
+      Point ownGoal = (isVisitors ? GOAL_B : GOAL_A).middle();
+      Point direction = oppGoal.diff(ownGoal).normalize();
+      Segment defendZone = getDefendZone(ownGoal, direction);
+      JsonObject output = new JsonObject()
+        .put("goalX", oppGoal.x())
+        .put("goalY", oppGoal.y())
+        .put("defendZoneTop", defendZone.start().y())
+        .put("defendZoneBottom", defendZone.end().y())
+        .put("defendZoneLeft", defendZone.start().x())
+        .put("defendZoneRight", defendZone.end().x());
       ctx.response().end(output.toString());
     });
+  }
+
+  private static Segment getDefendZone(Point goalMiddle, Point txUnitVec) {
+    double boxHalfSize = Math.min(WIDTH, HEIGHT) / 4;
+    Point topLeft = new Point(-boxHalfSize, -boxHalfSize);
+    Point bottomRight = new Point(boxHalfSize, boxHalfSize);
+    return new Segment(topLeft, bottomRight)
+        .add(goalMiddle)
+        .add(txUnitVec.mult(boxHalfSize));
   }
 
   private String getScoreText() {

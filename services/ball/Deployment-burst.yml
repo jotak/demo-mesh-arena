@@ -38,6 +38,8 @@ spec:
           value: "8080"
         - name: MESHARENA_STADIUM_HOST
           value: stadium
+        - name: IMAGE
+          value: "ballv2"
         - name: PCT_ERRORS
           value: "30"
         securityContext:

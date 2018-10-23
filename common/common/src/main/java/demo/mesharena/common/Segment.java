@@ -48,6 +48,10 @@ public final class Segment {
     return new Point((start.x + end.x) / 2, (start.y + end.y) / 2);
   }
 
+  public Segment add(Point p) {
+    return new Segment(start.add(p), end.add(p));
+  }
+
   public boolean isValid() {
     return start.x != end.x || start.y != end.y;
   }

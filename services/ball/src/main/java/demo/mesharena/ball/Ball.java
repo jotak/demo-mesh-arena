@@ -26,6 +26,7 @@ public class Ball extends AbstractVerticle {
   private static final long DELTA_MS = 100;
   private static final double RESISTANCE = 80;
   private static final double PCT_ERRORS = Commons.getIntEnv("PCT_ERRORS", 0);
+  private static final String IMAGE = Commons.getStringEnv("IMAGE", "ball");
 
   private final WebClient client;
   private final String id;
@@ -43,7 +44,7 @@ public class Ball extends AbstractVerticle {
     id = "ball-" + UUID.randomUUID().toString();
     json = new JsonObject()
         .put("id", id)
-        .put("style", "position: absolute; background-image: url(./ball.png); width: 20px; height: 20px; z-index: 5; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms;")
+        .put("style", "position: absolute; background-image: url(./" + IMAGE + ".png); width: 20px; height: 20px; z-index: 5; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms;")
         .put("text", "");
   }
 
