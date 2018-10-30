@@ -1,0 +1,17 @@
+# Scenario 4: Mirrored
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: ball-vs
+spec:
+  hosts:
+  - ball
+  http:
+  - route:
+    - destination:
+        host: ball
+        subset: ball-v1
+    mirror:
+      host: ball
+      subset: ball-v2
