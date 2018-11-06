@@ -1,4 +1,4 @@
-# Scenario 4: Mirrored
+# Scenario 3: Mirrored
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
