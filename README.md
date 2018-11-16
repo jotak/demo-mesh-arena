@@ -45,6 +45,11 @@ kubectl get pods -n istio-system
 
 to see when deployed pods are ready.
 
+Note, for OpenShift users, you may have to grant extended permissions:
+```bash
+oc adm policy add-scc-to-user privileged -z default
+```
+
 ## Open Kiali
 
 For simplicity we'll use kube's port-forward.
@@ -137,6 +142,10 @@ istioctl replace -f ./services/ball/destrule-outlier.yml
 ````
 
 ## El Clasico, Caramba!
+
+**D-I-S-C-L-A-I-M-E-R**
+This is going to deploy 20 players on the field, it's quite CPU intensive, it is NOT recommended to run on a PC / single-node cluster, or your cluster may suffer.
+
 ```bash
 kubectl delete -f ./services/ball/Deployment-v2.yml
 kubectl delete -f ./services/ai/Deployment-2-locals.yml
