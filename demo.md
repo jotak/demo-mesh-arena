@@ -1,7 +1,6 @@
 # Présentation du jeu
 
 ## Mise en place du jeu
-`
 ```
 kubectl apply -f <(istioctl kube-inject -f ./services/ui/Deployment.yml)
 kubectl apply -f ./services/ui/Service.yml
