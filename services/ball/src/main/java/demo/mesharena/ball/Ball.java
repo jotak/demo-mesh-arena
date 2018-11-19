@@ -49,7 +49,7 @@ public class Ball extends AbstractVerticle {
   }
 
   public static void main(String[] args) {
-    Vertx vertx = Vertx.vertx();
+    Vertx vertx = Vertx.vertx(Commons.vertxOptions());
     vertx.deployVerticle(new Ball(vertx));
   }
 

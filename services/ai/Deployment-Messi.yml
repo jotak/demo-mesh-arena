@@ -12,6 +12,9 @@ spec:
       app: ai-visitors
       version: messi
   template:
+      annotations:
+        prometheus.io/scrape: true
+        prometheus.io/port: 9090
     metadata:
       labels:
         app: ai-visitors

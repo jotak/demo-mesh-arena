@@ -13,6 +13,9 @@ spec:
       version: v2
   template:
     metadata:
+      annotations:
+        prometheus.io/scrape: true
+        prometheus.io/port: 9090
       labels:
         app: ball
         version: v2

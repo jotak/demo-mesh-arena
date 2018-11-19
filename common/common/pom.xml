@@ -14,4 +14,15 @@
   <artifactId>demo-mesh-common</artifactId>
   <version>0.0.1</version>
 
+  <dependencies>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-micrometer-metrics</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
+    </dependency>
+  </dependencies>
+
 </project>

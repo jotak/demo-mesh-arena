@@ -1,5 +1,10 @@
 package demo.mesharena.common;
 
+import io.vertx.core.VertxOptions;
+import io.vertx.core.http.HttpServerOptions;
+import io.vertx.micrometer.MicrometerMetricsOptions;
+import io.vertx.micrometer.VertxPrometheusOptions;
+
 public final class Commons {
 
   public static final int UI_PORT = getIntEnv("MESHARENA_UI_PORT", 8080);
@@ -50,5 +55,15 @@ public final class Commons {
       }
     }
     return out.toString();
+  }
+
+  public static VertxOptions vertxOptions() {
+    return new VertxOptions().setMetricsOptions(new MicrometerMetricsOptions()
+        .setPrometheusOptions(new VertxPrometheusOptions()
+            .setStartEmbeddedServer(true)
+            .setEmbeddedServerOptions(new HttpServerOptions().setPort(9090))
+            .setPublishQuantiles(true)
+            .setEnabled(true))
+        .setEnabled(true));
   }
 }

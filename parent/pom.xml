@@ -10,7 +10,7 @@
   <version>1</version>
 
   <properties>
-    <vertx.version>3.5.4</vertx.version>
+    <vertx.version>3.6.0-SNAPSHOT</vertx.version>
   </properties>
 
   <dependencyManagement>
@@ -29,6 +29,16 @@
         <groupId>io.vertx</groupId>
         <artifactId>vertx-web-client</artifactId>
         <version>${vertx.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-micrometer-metrics</artifactId>
+        <version>${vertx.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.micrometer</groupId>
+        <artifactId>micrometer-registry-prometheus</artifactId>
+        <version>1.0.5</version>
       </dependency>
       <dependency>
         <groupId>demo.mesh-arena</groupId>

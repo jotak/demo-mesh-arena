@@ -30,7 +30,7 @@ public class UI extends AbstractVerticle {
   }
 
   public static void main(String[] args) {
-    Vertx.vertx().deployVerticle(new UI());
+    Vertx.vertx(Commons.vertxOptions()).deployVerticle(new UI());
   }
 
   @Override

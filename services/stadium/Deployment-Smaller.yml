@@ -13,6 +13,9 @@ spec:
       version: small
   template:
     metadata:
+      annotations:
+        prometheus.io/scrape: true
+        prometheus.io/port: 9090
       labels:
         app: stadium
         version: small
