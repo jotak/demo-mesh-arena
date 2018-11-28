@@ -16,12 +16,13 @@ spec:
       annotations:
         prometheus.io/scrape: true
         prometheus.io/port: 9090
+        kiali.io/runtime: vertx
       labels:
         app: ui
         version: v1
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ui:latest
+      - image: jotak/demo-mesh-arena-ui:1.0-metrics
         imagePullPolicy: IfNotPresent
         name: ui
         ports:

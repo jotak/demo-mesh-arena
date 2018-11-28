@@ -16,12 +16,13 @@ spec:
       annotations:
         prometheus.io/scrape: true
         prometheus.io/port: 9090
+        kiali.io/runtime: vertx
       labels:
         app: stadium
         version: small
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-stadium:latest
+      - image: jotak/demo-mesh-arena-stadium:1.0-metrics
         imagePullPolicy: IfNotPresent
         name: stadium
         ports:
