@@ -7,6 +7,7 @@ import io.vertx.micrometer.VertxPrometheusOptions;
 
 public final class Commons {
 
+  private static final int METRICS_ENABLED = Commons.getIntEnv("METRICS_ENABLED", 0);
   public static final int UI_PORT = getIntEnv("MESHARENA_UI_PORT", 8080);
   public static final String UI_HOST = getStringEnv("MESHARENA_UI_HOST", "localhost");
   public static final int BALL_PORT = getIntEnv("MESHARENA_BALL_PORT", 8081);
@@ -58,12 +59,15 @@ public final class Commons {
   }
 
   public static VertxOptions vertxOptions() {
-    return new VertxOptions().setMetricsOptions(new MicrometerMetricsOptions()
-        .setPrometheusOptions(new VertxPrometheusOptions()
-            .setStartEmbeddedServer(true)
-            .setEmbeddedServerOptions(new HttpServerOptions().setPort(9090))
-            .setPublishQuantiles(true)
-            .setEnabled(true))
-        .setEnabled(true));
+    if (METRICS_ENABLED == 1) {
+      return new VertxOptions().setMetricsOptions(new MicrometerMetricsOptions()
+          .setPrometheusOptions(new VertxPrometheusOptions()
+              .setStartEmbeddedServer(true)
+              .setEmbeddedServerOptions(new HttpServerOptions().setPort(9090))
+              .setPublishQuantiles(true)
+              .setEnabled(true))
+          .setEnabled(true));
+    }
+    return new VertxOptions();
   }
 }

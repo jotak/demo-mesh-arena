@@ -14,15 +14,15 @@ spec:
   template:
     metadata:
       annotations:
-        prometheus.io/scrape: true
-        prometheus.io/port: 9090
-        kiali.io/runtime: vertx
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        kiali.io/dashboards: vertx
       labels:
         app: stadium
         version: small
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-stadium:1.0-metrics
+      - image: jotak/demo-mesh-arena-stadium:1.1
         imagePullPolicy: IfNotPresent
         name: stadium
         ports:
@@ -30,6 +30,12 @@ spec:
           name: http
           protocol: TCP
         env:
+        - name: METRICS_ENABLED
+          value: "1"
+        - name: AB_OFF
+          value: "1"
+        - name: JAVA_OPTIONS
+          value: "-Dvertx.disableDnsResolver=true"
         - name: MESHARENA_UI_PORT
           value: "8080"
         - name: MESHARENA_UI_HOST
@@ -40,8 +46,6 @@ spec:
           value: ball
         - name: MESHARENA_STADIUM_PORT
           value: "8080"
-        - name: MESHARENA_STADIUM_HOST
-          value: localhost
         - name: STADIUM_LOCALS
           value: Locals
         - name: STADIUM_VISITORS

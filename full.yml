@@ -1,0 +1,405 @@
+# Generated template (mer. déc. 12 10:36:18 CET 2018)
+# Source: services/ui/Deployment.yml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: ui
+    version: v1
+  name: ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ui
+      version: v1
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        kiali.io/dashboards: vertx
+      labels:
+        app: ui
+        version: v1
+    spec:
+      containers:
+      - image: jotak/demo-mesh-arena-ui:1.1
+        imagePullPolicy: IfNotPresent
+        name: ui
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: METRICS_ENABLED
+          value: "1"
+        - name: AB_OFF
+          value: "1"
+        - name: JAVA_OPTIONS
+          value: "-Dvertx.disableDnsResolver=true"
+        - name: MESHARENA_UI_PORT
+          value: "8080"
+        - name: MESHARENA_STADIUM_PORT
+          value: "8080"
+        - name: MESHARENA_STADIUM_HOST
+          value: stadium
+        securityContext:
+          privileged: false
+        readinessProbe:
+          exec:
+            command:
+            - curl
+            - localhost:8080/health
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 1
+        livenessProbe:
+          exec:
+            command:
+            - curl
+            - localhost:8080/health
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 1
+
+---
+# Source: services/ui/Service.yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: ui
+  labels:
+    app: ui
+spec:
+  ports:
+  - name: http
+    port: 8080
+  selector:
+    app: ui
+---
+# Source: services/stadium/Deployment-Smaller.yml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: stadium
+    version: small
+  name: stadium-small
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stadium
+      version: small
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        kiali.io/dashboards: vertx
+      labels:
+        app: stadium
+        version: small
+    spec:
+      containers:
+      - image: jotak/demo-mesh-arena-stadium:1.1
+        imagePullPolicy: IfNotPresent
+        name: stadium
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: METRICS_ENABLED
+          value: "1"
+        - name: AB_OFF
+          value: "1"
+        - name: JAVA_OPTIONS
+          value: "-Dvertx.disableDnsResolver=true"
+        - name: MESHARENA_UI_PORT
+          value: "8080"
+        - name: MESHARENA_UI_HOST
+          value: ui
+        - name: MESHARENA_BALL_PORT
+          value: "8080"
+        - name: MESHARENA_BALL_HOST
+          value: ball
+        - name: MESHARENA_STADIUM_PORT
+          value: "8080"
+        - name: STADIUM_LOCALS
+          value: Locals
+        - name: STADIUM_VISITORS
+          value: Visitors
+        - name: STADIUM_NAME
+          value: Commanderie
+        - name: STADIUM_TOP
+          value: "50"
+        - name: STADIUM_LEFT
+          value: "20"
+        - name: STADIUM_SCALE
+          value: "1.0"
+        - name: STADIUM_MATCH_TIME
+          value: "120"
+        securityContext:
+          privileged: false
+        readinessProbe:
+          exec:
+            command:
+            - curl
+            - localhost:8080/health
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 1
+        livenessProbe:
+          exec:
+            command:
+            - curl
+            - localhost:8080/health
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 1
+
+---
+# Source: services/stadium/Service.yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: stadium
+  labels:
+    app: stadium
+spec:
+  ports:
+  - name: http
+    port: 8080
+  selector:
+    app: stadium
+
+---
+# Source: services/ball/Deployment.yml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: ball
+    version: v1
+  name: ball
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ball
+      version: v1
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        kiali.io/dashboards: vertx
+      labels:
+        app: ball
+        version: v1
+    spec:
+      containers:
+      - image: jotak/demo-mesh-arena-ball:1.1
+        imagePullPolicy: IfNotPresent
+        name: ball
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: METRICS_ENABLED
+          value: "1"
+        - name: AB_OFF
+          value: "1"
+        - name: JAVA_OPTIONS
+          value: "-Dvertx.disableDnsResolver=true"
+        - name: MESHARENA_UI_PORT
+          value: "8080"
+        - name: MESHARENA_UI_HOST
+          value: ui
+        - name: MESHARENA_BALL_PORT
+          value: "8080"
+        - name: MESHARENA_STADIUM_PORT
+          value: "8080"
+        - name: MESHARENA_STADIUM_HOST
+          value: stadium
+        securityContext:
+          privileged: false
+        readinessProbe:
+          exec:
+            command:
+            - curl
+            - localhost:8080/health
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 1
+        livenessProbe:
+          exec:
+            command:
+            - curl
+            - localhost:8080/health
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 1
+
+---
+# Source: services/ball/Service.yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: ball
+  labels:
+    app: ball
+spec:
+  ports:
+  - name: http
+    port: 8080
+  selector:
+    app: ball
+---
+# Source: services/ai/Deployment-2-locals.yml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: ai-locals
+    version: basic
+  name: ai-locals-basic
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ai-locals
+      version: basic
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        kiali.io/dashboards: "vertx"
+      labels:
+        app: ai-locals
+        version: basic
+    spec:
+      containers:
+      - image: jotak/demo-mesh-arena-ai:1.1
+        imagePullPolicy: IfNotPresent
+        name: ai-locals
+        env:
+        - name: METRICS_ENABLED
+          value: "1"
+        - name: AB_OFF
+          value: "1"
+        - name: JAVA_OPTIONS
+          value: "-Dvertx.disableDnsResolver=true"
+        - name: MESHARENA_UI_PORT
+          value: "8080"
+        - name: MESHARENA_UI_HOST
+          value: ui
+        - name: MESHARENA_BALL_PORT
+          value: "8080"
+        - name: MESHARENA_BALL_HOST
+          value: ball
+        - name: MESHARENA_STADIUM_PORT
+          value: "8080"
+        - name: MESHARENA_STADIUM_HOST
+          value: stadium
+        - name: PLAYER_TEAM
+          value: locals
+        - name: PLAYER_COLOR
+          value: blue
+        - name: PLAYER_NAME
+          value: une chèvre bleue
+        securityContext:
+          privileged: false
+
+---
+# Source: services/ai/Service-locals.yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-locals
+  labels:
+    app: ai-locals
+spec:
+  ports:
+  - name: http
+    port: 8080
+  selector:
+    app: ai-locals
+
+---
+# Source: services/ai/Deployment-2-visitors.yml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: ai-visitors
+    version: basic
+  name: ai-visitors-basic
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ai-visitors
+      version: basic
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        kiali.io/dashboards: vertx
+      labels:
+        app: ai-visitors
+        version: basic
+    spec:
+      containers:
+      - image: jotak/demo-mesh-arena-ai:1.1
+        imagePullPolicy: IfNotPresent
+        name: ai-visitors
+        env:
+        - name: METRICS_ENABLED
+          value: "1"
+        - name: AB_OFF
+          value: "1"
+        - name: JAVA_OPTIONS
+          value: "-Dvertx.disableDnsResolver=true"
+        - name: MESHARENA_UI_PORT
+          value: "8080"
+        - name: MESHARENA_UI_HOST
+          value: ui
+        - name: MESHARENA_BALL_PORT
+          value: "8080"
+        - name: MESHARENA_BALL_HOST
+          value: ball
+        - name: MESHARENA_STADIUM_PORT
+          value: "8080"
+        - name: MESHARENA_STADIUM_HOST
+          value: stadium
+        - name: PLAYER_TEAM
+          value: visitors
+        - name: PLAYER_COLOR
+          value: yellow
+        - name: PLAYER_NAME
+          value: une chèvre jaune
+        securityContext:
+          privileged: false
+
+---
+# Source: services/ai/Service-visitors.yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-visitors
+  labels:
+    app: ai-visitors
+spec:
+  ports:
+  - name: http
+    port: 8080
+  selector:
+    app: ai-visitors
+
+---

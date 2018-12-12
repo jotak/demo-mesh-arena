@@ -4,6 +4,7 @@ import demo.mesharena.common.Commons;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.bridge.PermittedOptions;
@@ -35,6 +36,8 @@ public class UI extends AbstractVerticle {
 
   @Override
   public void start() throws Exception {
+    HttpServerOptions serverOptions = new HttpServerOptions().setPort(Commons.UI_PORT);
+
     Router router = Router.router(vertx);
 
     // Allow events for the designated addresses in/out of the event bus bridge
@@ -59,7 +62,8 @@ public class UI extends AbstractVerticle {
     router.route().handler(StaticHandler.create());
 
     // Start the web server and tell it to use the router to handle requests.
-    vertx.createHttpServer().requestHandler(router::accept).listen(Commons.UI_PORT, Commons.UI_HOST);
+    vertx.createHttpServer().requestHandler(router)
+        .listen(serverOptions.getPort(), serverOptions.getHost());
 
     EventBus eb = vertx.eventBus();
     eb.consumer("init-session", msg -> {

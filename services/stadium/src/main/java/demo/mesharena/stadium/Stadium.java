@@ -5,6 +5,7 @@ import demo.mesharena.common.Point;
 import demo.mesharena.common.Segment;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -66,12 +67,14 @@ public class Stadium extends AbstractVerticle {
   @Override
   public void start() throws Exception {
     // Register stadium API
+    HttpServerOptions serverOptions = new HttpServerOptions().setPort(Commons.STADIUM_PORT);
     Router router = Router.router(vertx);
     router.get("/health").handler(ctx -> ctx.response().end());
     router.get("/start").handler(this::startGame);
     router.post("/bounce").handler(this::bounce);
     router.get("/info").handler(this::info);
-    vertx.createHttpServer().requestHandler(router::accept).listen(STADIUM_PORT, STADIUM_HOST);
+    vertx.createHttpServer().requestHandler(router)
+        .listen(serverOptions.getPort(), serverOptions.getHost());
 
     // Ping-display
     vertx.setPeriodic(2000, loopId -> this.display());

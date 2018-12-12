@@ -6,6 +6,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -56,13 +57,15 @@ public class Ball extends AbstractVerticle {
   @Override
   public void start() throws Exception {
     // Register ball API
+    HttpServerOptions serverOptions = new HttpServerOptions().setPort(Commons.BALL_PORT);
     Router router = Router.router(vertx);
     router.get("/health").handler(ctx -> ctx.response().end());
 
     router.put("/shoot").handler(this::shoot);
     router.get("/interact").handler(this::interact);
     router.put("/setPosition").handler(this::setPosition);
-    vertx.createHttpServer().requestHandler(router::accept).listen(Commons.BALL_PORT, Commons.BALL_HOST);
+    vertx.createHttpServer().requestHandler(router)
+        .listen(serverOptions.getPort(), serverOptions.getHost());
 
     // Ping-display
     vertx.setPeriodic(2000, loopId -> this.display());

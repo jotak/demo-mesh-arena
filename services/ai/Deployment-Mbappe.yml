@@ -14,18 +14,24 @@ spec:
   template:
     metadata:
       annotations:
-        prometheus.io/scrape: true
-        prometheus.io/port: 9090
-        kiali.io/runtime: vertx
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        kiali.io/dashboards: vertx
       labels:
         app: ai-locals
         version: mbappe
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ai:1.0-metrics
+      - image: jotak/demo-mesh-arena-ai:1.1
         imagePullPolicy: IfNotPresent
         name: ai-locals
         env:
+        - name: METRICS_ENABLED
+          value: "1"
+        - name: AB_OFF
+          value: "1"
+        - name: JAVA_OPTIONS
+          value: "-Dvertx.disableDnsResolver=true"
         - name: MESHARENA_UI_PORT
           value: "8080"
         - name: MESHARENA_UI_HOST
