@@ -15,6 +15,7 @@ spec:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
+        prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
         kiali.io/dashboards: vertx
       labels:

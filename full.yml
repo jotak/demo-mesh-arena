@@ -1,4 +1,4 @@
-# Generated template (mer. déc. 12 10:36:18 CET 2018)
+# Generated template (mer. déc. 12 14:50:11 CET 2018)
 # Source: services/ui/Deployment.yml
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -17,6 +17,7 @@ spec:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
+        prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
         kiali.io/dashboards: vertx
       labels:
@@ -96,6 +97,7 @@ spec:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
+        prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
         kiali.io/dashboards: vertx
       labels:
@@ -194,6 +196,7 @@ spec:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
+        prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
         kiali.io/dashboards: vertx
       labels:
@@ -277,8 +280,9 @@ spec:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
+        prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
-        kiali.io/dashboards: "vertx"
+        kiali.io/dashboards: vertx
       labels:
         app: ai-locals
         version: basic
@@ -349,6 +353,7 @@ spec:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
+        prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
         kiali.io/dashboards: vertx
       labels:
