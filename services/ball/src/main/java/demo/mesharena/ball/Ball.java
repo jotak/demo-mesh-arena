@@ -255,7 +255,7 @@ public class Ball extends AbstractVerticle {
   }
 
   private String getStyle() {
-    String filters;
+    final String filters;
     if (errorTimer < 3d) {
       // filter: brightness(40%) sepia(100%) hue-rotate(-50deg) saturate(600%);
       // error ]0 (no err), 1 (err)]
@@ -278,11 +278,8 @@ public class Ball extends AbstractVerticle {
       filters = "filter: brightness(" + brightness + "%); -webkit-filter: brightness(" + brightness + "%);";
     }
 
-    String baseStyle = "position: absolute; background-image: url(./" + IMAGE + ".png); width: 20px; height: 20px;"
-        + "z-index: 5; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms;";
-    if (filters != null) {
-      return baseStyle + filters;
-    }
-    return baseStyle;
+    return "position: absolute; background-image: url(./" + IMAGE + ".png); width: 20px; height: 20px;"
+        + "z-index: 5; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms;"
+        + filters;
   }
 }
