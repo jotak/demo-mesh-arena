@@ -177,14 +177,16 @@ public class AI extends AbstractVerticle {
       } else {
         HttpResponse<Buffer> response = ar.result();
         JsonObject obj = response.bodyAsJsonObject();
-        double x = obj.getDouble("x");
-        double y = obj.getDouble("y");
-        Point ball = new Point(x, y);
-        if (role == Role.ATTACK || pos.diff(ball).size() < 70) {
-          // Go to the ball
-          currentDestination = ball;
-        } else {
-          currentDestination = defendPoint;
+        if (obj != null) {
+          double x = obj.getDouble("x");
+          double y = obj.getDouble("y");
+          Point ball = new Point(x, y);
+          if (role == Role.ATTACK || pos.diff(ball).size() < 70) {
+            // Go to the ball
+            currentDestination = ball;
+          } else {
+            currentDestination = defendPoint;
+          }
         }
         walkToDestination(delta);
       }

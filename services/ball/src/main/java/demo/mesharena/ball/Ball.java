@@ -39,13 +39,16 @@ public class Ball extends AbstractVerticle {
   private int controllingPlayerSkill;
   private double controllingPlayerSkillTimer;
   private Point pos = Point.ZERO;
+  private double interactTimer;
+  private double errorTimer;
 
   private Ball(Vertx vertx) {
     client = WebClient.create(vertx);
     id = "ball-" + UUID.randomUUID().toString();
     json = new JsonObject()
         .put("id", id)
-        .put("style", "position: absolute; background-image: url(./" + IMAGE + ".png); width: 20px; height: 20px; z-index: 5; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms;")
+        .put("style", "position: absolute; background-image: url(./" + IMAGE + ".png); width: 20px; height: 20px;"
+            + "z-index: 5; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms;")
         .put("text", "");
   }
 
@@ -77,9 +80,11 @@ public class Ball extends AbstractVerticle {
   private void interact(RoutingContext ctx) {
     ctx.request().bodyHandler(buf -> {
       if (rnd.nextInt(100) < PCT_ERRORS) {
+        errorTimer = 0;
         ctx.response().setStatusCode(503).setStatusMessage("faiiiiilure! (to test outlier detection)").end();
         return;
       }
+      interactTimer = 0;
       JsonObject input = buf.toJsonObject();
       double playerX = input.getDouble("playerX");
       double playerY = input.getDouble("playerY");
@@ -197,6 +202,8 @@ public class Ball extends AbstractVerticle {
         controllingPlayerSkillTimer = 0;
       }
     }
+    interactTimer += delta;
+    errorTimer += delta;
   }
 
   private void checkBounce(Point oldPos, Point newPos, double newSpeed, Handler<Boolean> handler) {
@@ -237,12 +244,45 @@ public class Ball extends AbstractVerticle {
 
   private void display() {
     json.put("x", pos.x() - 10)
-        .put("y", pos.y() - 10);
+        .put("y", pos.y() - 10)
+        .put("style", getStyle());
 
     client.post(UI_PORT, UI_HOST, "/display").sendJson(json, ar -> {
       if (!ar.succeeded()) {
         ar.cause().printStackTrace();
       }
     });
+  }
+
+  private String getStyle() {
+    String filters;
+    if (errorTimer < 3d) {
+      // filter: brightness(40%) sepia(100%) hue-rotate(-50deg) saturate(600%);
+      // error ]0 (no err), 1 (err)]
+      double error = 1d - errorTimer / 3d;
+      // hue rotate ]0 (no err), -50 (err)]
+      int hue = (int)(-50 * error);
+      // brightness [40 (err), 100 (no err)[
+      int brightness = 40 + (int)(60d * (1d - error));
+      // sepia [0 (no err), 100 (err)[
+      int sepia = (int)(100d * error);
+      // saturate ]100 (no err), 600 (err)]
+      int saturate = 100 + (int)(500d * error);
+      filters = "filter: brightness(" + brightness + "%) sepia(" + sepia + "%) hue-rotate(" + hue + "deg) saturate(" + saturate + "%);"
+          + "-webkit-filter: brightness(" + brightness + "%) sepia(" + sepia + "%) hue-rotate(" + hue + "deg) saturate(" + saturate + "%);";
+    } else {
+      // interact [0 (old), 1 (now)]
+      double interact = 1d - Math.min(interactTimer, 3d) / 3d;
+      // brightness [40 (old), 100 (now)]
+      int brightness = 40 + (int)(60d * interact);
+      filters = "filter: brightness(" + brightness + "%); -webkit-filter: brightness(" + brightness + "%);";
+    }
+
+    String baseStyle = "position: absolute; background-image: url(./" + IMAGE + ".png); width: 20px; height: 20px;"
+        + "z-index: 5; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms;";
+    if (filters != null) {
+      return baseStyle + filters;
+    }
+    return baseStyle;
   }
 }

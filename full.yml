@@ -1,4 +1,4 @@
-# Generated template (mer. déc. 12 14:50:11 CET 2018)
+# Generated template (jeu. déc. 13 11:22:41 CET 2018)
 # Source: services/ui/Deployment.yml
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -34,7 +34,7 @@ spec:
           protocol: TCP
         env:
         - name: METRICS_ENABLED
-          value: "1"
+          value: "0"
         - name: AB_OFF
           value: "1"
         - name: JAVA_OPTIONS
@@ -114,7 +114,7 @@ spec:
           protocol: TCP
         env:
         - name: METRICS_ENABLED
-          value: "1"
+          value: "0"
         - name: AB_OFF
           value: "1"
         - name: JAVA_OPTIONS
@@ -213,7 +213,7 @@ spec:
           protocol: TCP
         env:
         - name: METRICS_ENABLED
-          value: "1"
+          value: "0"
         - name: AB_OFF
           value: "1"
         - name: JAVA_OPTIONS
@@ -293,7 +293,7 @@ spec:
         name: ai-locals
         env:
         - name: METRICS_ENABLED
-          value: "1"
+          value: "0"
         - name: AB_OFF
           value: "1"
         - name: JAVA_OPTIONS
@@ -366,7 +366,7 @@ spec:
         name: ai-visitors
         env:
         - name: METRICS_ENABLED
-          value: "1"
+          value: "0"
         - name: AB_OFF
           value: "1"
         - name: JAVA_OPTIONS

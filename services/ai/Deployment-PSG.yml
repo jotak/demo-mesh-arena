@@ -28,7 +28,7 @@ spec:
         name: ai-locals
         env:
         - name: METRICS_ENABLED
-          value: "1"
+          value: "0"
         - name: AB_OFF
           value: "1"
         - name: JAVA_OPTIONS
