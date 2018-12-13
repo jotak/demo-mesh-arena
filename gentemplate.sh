@@ -19,4 +19,6 @@ gen_service "ball" "Deployment.yml" "Service.yml"
 gen_service "ai" "Deployment-2-locals.yml" "Service-locals.yml"
 gen_service "ai" "Deployment-2-visitors.yml" "Service-visitors.yml"
 
-echo "Template generated: full.yml"
+sed -n '1h;1!H;${;g;s/\(METRICS_ENABLED\s*value: \)"0"/\1"1"/g;p;}' full.yml > full-metrics.yml
+
+echo "Templates generated: full.yml, full-metrics.yml"
