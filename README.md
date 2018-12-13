@@ -129,10 +129,15 @@ kubectl delete -f ./services/ai/Deployment-Mbappe.yml
 istioctl delete -f ./services/ball/virtualservice-by-label.yml
 ```
 
-## Deploying burst ball (500 errors) with shadowing
+## Deploying burst ball (500 errors) unused
 ```bash
-istioctl create -f ./services/ball/virtualservice-mirrored.yml
+istioctl create -f ./services/ball/virtualservice-all-to-v1.yml
 kubectl apply -f <(istioctl kube-inject -f ./services/ball/Deployment-burst.yml)
+```
+
+## Burst ball with shadowing
+```bash
+istioctl replace -f ./services/ball/virtualservice-mirrored.yml
 ```
 
 ## Remove shadowing, put circuit breaking
