@@ -168,7 +168,8 @@ public class AI extends AbstractVerticle {
         .put("shootY", shootDest.y())
         .put("playerSkill", SKILL)
         .put("playerID", id)
-        .put("playerName", NAME);
+        .put("playerName", NAME)
+        .put("playerTeam", TEAM);
 
     client.get(BALL_PORT, BALL_HOST, "/interact").sendJson(json, ar -> {
       if (!ar.succeeded()) {

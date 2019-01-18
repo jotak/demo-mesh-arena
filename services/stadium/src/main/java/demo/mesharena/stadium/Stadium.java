@@ -11,7 +11,10 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.WebClient;
 
-import static demo.mesharena.common.Commons.*;
+import static demo.mesharena.common.Commons.BALL_HOST;
+import static demo.mesharena.common.Commons.BALL_PORT;
+import static demo.mesharena.common.Commons.UI_HOST;
+import static demo.mesharena.common.Commons.UI_PORT;
 
 public class Stadium extends AbstractVerticle {
 
@@ -125,14 +128,14 @@ public class Stadium extends AbstractVerticle {
       // Team B scored!
       scoreB++;
       resetBall();
-      return new JsonObject().put("scored", "B");
+      return new JsonObject().put("scored", "visitors");
     }
     Point goalB = GOAL_B.getCrossingPoint(segment);
     if (goalB != null) {
       // Team A scored!
       scoreA++;
       resetBall();
-      return new JsonObject().put("scored", "B");
+      return new JsonObject().put("scored", "locals");
     }
     double minDistance = -1;
     Point collision = null;

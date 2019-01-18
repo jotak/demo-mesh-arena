@@ -2,6 +2,9 @@ package demo.mesharena.ball;
 
 import demo.mesharena.common.Commons;
 import demo.mesharena.common.Point;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -12,8 +15,10 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.micrometer.backends.BackendRegistries;
 
 import java.security.SecureRandom;
+import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 
@@ -33,11 +38,14 @@ public class Ball extends AbstractVerticle {
   private final String id;
   private final Random rnd = new SecureRandom();
   private final JsonObject json;
+  private final Optional<MeterRegistry> registry;
+
   private Point speed = Point.ZERO;
   private String controllingPlayer;
   private String controllingPlayerName;
   private int controllingPlayerSkill;
   private double controllingPlayerSkillTimer;
+  private String controllingPlayerTeam;
   private Point pos = Point.ZERO;
   private double interactTimer;
   private double errorTimer;
@@ -50,6 +58,14 @@ public class Ball extends AbstractVerticle {
         .put("style", "position: absolute; background-image: url(./" + IMAGE + ".png); width: 20px; height: 20px;"
             + "z-index: 5; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms;")
         .put("text", "");
+
+    registry = Optional.ofNullable(BackendRegistries.getDefaultNow());
+    registry.ifPresent(reg -> Gauge.builder("mesharena_ball_speed", () -> speed.size())
+        .description("Ball speed gauge")
+        .register(reg));
+    if (!registry.isPresent()) {
+      System.out.println("No metrics");
+    }
   }
 
   public static void main(String[] args) {
@@ -93,6 +109,7 @@ public class Ball extends AbstractVerticle {
       String playerID = input.getString("playerID");
       int playerSkill = input.getInteger("playerSkill");
       String playerName = input.getString("playerName");
+      String playerTeam = input.getString("playerTeam");
       JsonObject output = new JsonObject()
           .put("x", pos.x())
           .put("y", pos.y());
@@ -111,6 +128,12 @@ public class Ball extends AbstractVerticle {
               } else {
                 comment("Attention " + playerName + " tente sa chance!");
               }
+              registry.ifPresent(reg -> Counter.builder("mesharena_shoots")
+                  .description("Shoots counter")
+                  .tag("team", controllingPlayerTeam)
+                  .tag("player", controllingPlayerName)
+                  .register(reg)
+                  .increment());
             } else {
               if (commentRnd == 0) {
                 comment("Toujours " + playerName + "...");
@@ -120,9 +143,18 @@ public class Ball extends AbstractVerticle {
             }
           }
         } else if (controllingPlayer == null || rnd.nextInt(2 * controllingPlayerSkill + playerSkill) < playerSkill) {
+          if (controllingPlayer != null) {
+            registry.ifPresent(reg -> Counter.builder("mesharena_take_ball")
+                .description("Counter of player taking control of the ball")
+                .tag("team", playerTeam)
+                .tag("player", playerName)
+                .register(reg)
+                .increment());
+          }
           controllingPlayer = playerID;
           controllingPlayerSkill = playerSkill;
           controllingPlayerName = playerName;
+          controllingPlayerTeam = playerTeam;
           // Shoot
           speed = new Point(shootX, shootY).diff(pos);
           double size = speed.size();
@@ -221,7 +253,20 @@ public class Ball extends AbstractVerticle {
         HttpResponse<Buffer> response = ar.result();
         JsonObject obj = response.bodyAsJsonObject();
         if (obj.containsKey("scored")) {
-          comment("Et BUUUUT de " + controllingPlayerName + " !!!!");
+          String team = obj.getString("scored");
+          boolean isOwn = !team.equals(controllingPlayerTeam);
+          if (isOwn) {
+            comment("Ohhhh le but contre son camp de " + controllingPlayerName + " !!");
+          } else {
+            comment("Et BUUUUT de " + controllingPlayerName + " !!!!");
+          }
+          registry.ifPresent(reg -> Counter.builder("mesharena_goals")
+              .description("Goals counter")
+              .tag("team", team)
+              .tag("player", controllingPlayerName)
+              .tag("own_goal", isOwn ? "yes" : "no")
+              .register(reg)
+              .increment());
           // Do not update position, Stadium will do it
           controllingPlayer = null;
           speed = Point.ZERO;

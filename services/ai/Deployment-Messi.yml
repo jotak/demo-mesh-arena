@@ -17,13 +17,13 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
-        kiali.io/dashboards: vertx
+        kiali.io/runtimes: vertx-client,vertx-pool
       labels:
         app: ai-visitors
         version: messi
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ai:1.1
+      - image: jotak/demo-mesh-arena-ai:1.1.1
         imagePullPolicy: IfNotPresent
         name: ai-visitors
         env:

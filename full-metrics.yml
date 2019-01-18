@@ -1,4 +1,4 @@
-# Generated template (jeu. déc. 13 13:09:54 CET 2018)
+# Generated template (ven. janv. 18 13:35:38 CET 2019)
 # Source: services/ui/Deployment.yml
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -19,13 +19,13 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
-        kiali.io/dashboards: vertx
+        kiali.io/runtimes: vertx-server,vertx-eventbus,vertx-pool
       labels:
         app: ui
         version: v1
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ui:1.1
+      - image: jotak/demo-mesh-arena-ui:1.1.1
         imagePullPolicy: IfNotPresent
         name: ui
         ports:
@@ -99,13 +99,13 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
-        kiali.io/dashboards: vertx
+        kiali.io/runtimes: vertx-server,vertx-client,vertx-pool
       labels:
         app: stadium
         version: small
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-stadium:1.1
+      - image: jotak/demo-mesh-arena-stadium:1.1.1
         imagePullPolicy: IfNotPresent
         name: stadium
         ports:
@@ -198,13 +198,13 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
-        kiali.io/dashboards: vertx
+        kiali.io/runtimes: vertx-server,vertx-client,vertx-pool,mesh-arena
       labels:
         app: ball
         version: v1
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ball:1.1
+      - image: jotak/demo-mesh-arena-ball:1.1.1
         imagePullPolicy: IfNotPresent
         name: ball
         ports:
@@ -282,13 +282,13 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
-        kiali.io/dashboards: vertx
+        kiali.io/runtimes: vertx-client,vertx-pool
       labels:
         app: ai-locals
         version: basic
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ai:1.1
+      - image: jotak/demo-mesh-arena-ai:1.1.1
         imagePullPolicy: IfNotPresent
         name: ai-locals
         env:
@@ -355,13 +355,13 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
-        kiali.io/dashboards: vertx
+        kiali.io/runtimes: vertx-client,vertx-pool
       labels:
         app: ai-visitors
         version: basic
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ai:1.1
+      - image: jotak/demo-mesh-arena-ai:1.1.1
         imagePullPolicy: IfNotPresent
         name: ai-visitors
         env:

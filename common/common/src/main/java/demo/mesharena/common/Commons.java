@@ -2,8 +2,11 @@ package demo.mesharena.common;
 
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.micrometer.Label;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
+
+import java.util.EnumSet;
 
 public final class Commons {
 
@@ -66,6 +69,7 @@ public final class Commons {
               .setEmbeddedServerOptions(new HttpServerOptions().setPort(9090))
               .setPublishQuantiles(true)
               .setEnabled(true))
+          .setLabels(EnumSet.of(Label.POOL_TYPE, Label.POOL_NAME, Label.CLASS_NAME, Label.HTTP_CODE, Label.HTTP_METHOD, Label.HTTP_PATH, Label.EB_ADDRESS, Label.EB_FAILURE, Label.EB_SIDE))
           .setEnabled(true));
     }
     return new VertxOptions();
