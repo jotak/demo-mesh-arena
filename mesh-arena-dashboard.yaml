@@ -1,0 +1,45 @@
+apiVersion: "monitoring.kiali.io/v1alpha1"
+kind: MonitoringDashboard
+metadata:
+  name: mesh-arena
+  runtime: Vert.x
+spec:
+  title: Mesh Arena Metrics
+  charts:
+    - name: "Goals"
+      unit: ""
+      spans: 6
+      metricName: "mesharena_goals_total"
+      dataType: "raw"
+      aggregations:
+        - label: "player"
+          displayName: "Player"
+        - label: "team"
+          displayName: "Team"
+        - label: "own_goal"
+          displayName: "Own goal"
+    - name: "Shoots"
+      unit: "ops"
+      spans: 6
+      metricName: "mesharena_shoots_total"
+      dataType: "rate"
+      aggregations:
+        - label: "player"
+          displayName: "Player"
+        - label: "team"
+          displayName: "Team"
+    - name: "Taking ball"
+      unit: "ops"
+      spans: 6
+      metricName: "mesharena_take_ball_total"
+      dataType: "rate"
+      aggregations:
+        - label: "player"
+          displayName: "Player"
+        - label: "team"
+          displayName: "Team"
+    - name: "Ball speed"
+      unit: "pxl/s"
+      spans: 6
+      metricName: "mesharena_ball_speed"
+      dataType: "raw"
