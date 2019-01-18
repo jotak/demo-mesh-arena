@@ -8,12 +8,15 @@ This demo was presented at [DevopsDday](http://2018.devops-dday.com/) in the Vel
 ## Pre-requisite
 
 - Kubernetes or OpenShift cluster running (ex: minikube 0.27+ / minishift)
-- Istio 1.0+ installed
+- Istio 1.0+ with Kiali installed, for instance download a release (Ex: [1.0.5](https://github.com/istio/istio/releases/tag/1.0.5)) then:
 
-Ex: pickup [a release](https://github.com/istio/istio/releases/tag/1.0.3), unzip and from there apply istio-demo.yml to a running kube cluster:
 ```bash
-kubectl apply -f install/kubernetes/istio-demo.yaml
-# We'll also use istioctl
+tar -zxvf istio-1.0.5-linux.tar.gz
+cd istio-1.0.5/
+helm template install/kubernetes/helm/istio --name istio --namespace istio-system --set kiali.enabled=true > $HOME/istio.yaml
+kubectl apply -f install/kubernetes/helm/istio/templates/crds.yaml
+kubectl create namespace istio-system
+kubectl apply -f $HOME/istio.yaml
 export PATH=$PATH:`pwd`/bin
 ```
 
@@ -22,16 +25,6 @@ export PATH=$PATH:`pwd`/bin
 ```bash
 git clone git@github.com:jotak/demo-mesh-arena.git
 cd demo-mesh-arena
-```
-
-- Kiali installed
-
-If you don't have it already installed, refer to [the official doc](https://www.kiali.io/gettingstarted/) or for a quicker start just run:
-
-```bash
-kubectl create -f kiali/kiali-configmap.yaml -n istio-system
-kubectl create -f kiali/kiali-secrets.yaml -n istio-system
-kubectl create -f kiali/kiali.yaml -n istio-system
 ```
 
 As a general note for this demo, some docker images will have to be downloaded while we're deploying the stuff.
@@ -160,6 +153,7 @@ kubectl apply -f <(istioctl kube-inject -f ./services/ai/Deployment-PSG.yml)
 ```
 
 ## To clean up everything at any time (but Istio/Kiali)
+
 ```bash
 kubectl delete deployments ai-locals-om
 kubectl delete deployments ai-visitors-psg
@@ -179,6 +173,29 @@ kubectl delete svc ui
 kubectl delete virtualservices mesh-arena
 kubectl delete destinationrules ball-dr
 ```
+
+PS: I'm sure there's a better command with labels :)
+
+## To build the demo
+
+For the first build, it is necessary to get the JS dependencies on your filesystem:
+
+```bash
+cd services/ui/src/main/resources/webroot/
+npm install
+# back to project root
+cd ../../../../../..
+```
+
+Then build everything:
+
+```bash
+# Trigger maven build + docker builds
+# Ex: for docker tag "dev"
+./buildall.sh dev
+```
+
+Then update all the deployment YAML to have the correct docker tag on images
 
 
 ## To run the microservices only from the IDE, without Kube / Istio / Kiali:
