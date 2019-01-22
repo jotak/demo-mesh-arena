@@ -184,15 +184,15 @@ For the first build, it is necessary to get the JS dependencies on your filesyst
 cd services/ui/src/main/resources/webroot/
 npm install
 # back to project root
-cd ../../../../../..
+cd -
 ```
 
 Then build everything:
 
 ```bash
 # Trigger maven build + docker builds
-# Ex: for docker tag "dev"
-./buildall.sh dev
+# Ex: for docker namespace "myname" and tag "dev"
+./buildall.sh myname dev
 ```
 
 Then update all the deployment YAML to have the correct docker tag on images

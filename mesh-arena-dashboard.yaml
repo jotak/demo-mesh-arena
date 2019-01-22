@@ -2,7 +2,8 @@ apiVersion: "monitoring.kiali.io/v1alpha1"
 kind: MonitoringDashboard
 metadata:
   name: mesh-arena
-  runtime: Vert.x
+  labels:
+    runtime: Vert.x
 spec:
   title: Mesh Arena Metrics
   charts:
