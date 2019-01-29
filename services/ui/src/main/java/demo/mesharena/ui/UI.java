@@ -1,8 +1,15 @@
 package demo.mesharena.ui;
 
 import demo.mesharena.common.Commons;
+import demo.mesharena.common.TracingContext;
+import io.jaegertracing.Configuration;
+import io.opentracing.Span;
+import io.opentracing.Tracer;
+import io.opentracing.contrib.vertx.ext.web.TracingHandler;
+import io.opentracing.propagation.Format.Builtin;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonArray;
@@ -10,6 +17,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.bridge.PermittedOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
@@ -38,7 +46,14 @@ public class UI extends AbstractVerticle {
   public void start() throws Exception {
     HttpServerOptions serverOptions = new HttpServerOptions().setPort(Commons.UI_PORT);
 
+    Configuration configuration = Configuration.fromEnv();
+    Tracer tracer = configuration.getTracer();
+
     Router router = Router.router(vertx);
+    TracingHandler handler = new TracingHandler(tracer);
+    router.route()
+        .order(-1).handler(handler)
+        .failureHandler(handler);
 
     // Allow events for the designated addresses in/out of the event bus bridge
     BridgeOptions opts = new BridgeOptions()
@@ -82,8 +97,13 @@ public class UI extends AbstractVerticle {
       msg.reply(new JsonArray(objects));
     });
     eb.consumer("on-start", msg -> {
+      Span span = tracer.buildSpan("on-start").start();
       System.out.println("Starting new game!");
-      WebClient.create(vertx).get(STADIUM_PORT, STADIUM_HOST, "/start").send(ar -> {
+      HttpRequest<Buffer> request = WebClient.create(vertx)
+          .get(STADIUM_PORT, STADIUM_HOST, "/start");
+      tracer.inject(span.context(), Builtin.HTTP_HEADERS, new TracingContext(request.headers()));
+      request.send(ar -> {
+        span.finish();
         if (!ar.succeeded()) {
           ar.cause().printStackTrace();
         }

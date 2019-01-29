@@ -3,12 +3,20 @@ package demo.mesharena.stadium;
 import demo.mesharena.common.Commons;
 import demo.mesharena.common.Point;
 import demo.mesharena.common.Segment;
+import demo.mesharena.common.TracingContext;
+import io.jaegertracing.Configuration;
+import io.opentracing.Span;
+import io.opentracing.Tracer;
+import io.opentracing.contrib.vertx.ext.web.TracingHandler;
+import io.opentracing.propagation.Format.Builtin;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
 
 import static demo.mesharena.common.Commons.BALL_HOST;
@@ -44,22 +52,29 @@ public class Stadium extends AbstractVerticle {
   private final WebClient client;
   private final JsonObject stadiumJson;
   private final JsonObject scoreJson;
+  private final Tracer tracer;
 
   private int scoreA = 0;
   private int scoreB = 0;
   private long startTime = 0;
 
   private Stadium(Vertx vertx) {
+    Configuration configuration = Configuration.fromEnv();
+    tracer = configuration.getTracer();
+    Span span = tracer.buildSpan("application_start").start();
+
     client = WebClient.create(vertx);
     stadiumJson = new JsonObject()
         .put("id", NAME + "-stadium")
-        .put("style", "position: absolute; top: " + TX_TOP + "px; left: " + TX_LEFT + "px; width: " + TX_WIDTH + "px; height: " + TX_HEIGHT + "px; background-image: url(./football-ground.png); background-size: cover;")
+        .put("style", "position: absolute; top: " + TX_TOP + "px; left: " + TX_LEFT + "px; width: " + TX_WIDTH + "px; height: " + TX_HEIGHT + "px; background-image: url(./football-ground.png); background-size: cover; color: black")
         .put("text", "");
 
     scoreJson = new JsonObject()
         .put("id", NAME + "-score")
-        .put("style", "position: absolute; top: " + (TX_TOP + 5) + "px; left: " + (TX_LEFT + 5) + "px; color: white; font-weight: bold; z-index: 10;")
+        .put("style", "position: absolute; top: " + (TX_TOP + 5) + "px; left: " + (TX_LEFT + 5) + "px; color: black; font-weight: bold; z-index: 10;")
         .put("text", "");
+
+    span.finish();
   }
 
   public static void main(String[] args) {
@@ -72,6 +87,11 @@ public class Stadium extends AbstractVerticle {
     // Register stadium API
     HttpServerOptions serverOptions = new HttpServerOptions().setPort(Commons.STADIUM_PORT);
     Router router = Router.router(vertx);
+    TracingHandler handler = new TracingHandler(tracer);
+    router.route()
+        .order(-1).handler(handler)
+        .failureHandler(handler);
+
     router.get("/health").handler(ctx -> ctx.response().end());
     router.get("/start").handler(this::startGame);
     router.post("/bounce").handler(this::bounce);
@@ -93,33 +113,35 @@ public class Stadium extends AbstractVerticle {
       }
       display();
     });
-    resetBall();
+    resetBall(ctx);
     ctx.response().end();
   }
 
   private void bounce(RoutingContext ctx) {
     ctx.request().bodyHandler(buf -> {
       JsonObject json = buf.toJsonObject();
-      JsonObject result = bounce(new Segment(
+      JsonObject result = bounce(ctx, new Segment(
           new Point(json.getDouble("xStart"), json.getDouble("yStart")),
           new Point(json.getDouble("xEnd"), json.getDouble("yEnd"))), -1);
       ctx.response().end(result.toString());
     });
   }
 
-  private void resetBall() {
+  private void resetBall(RoutingContext ctx) {
     JsonObject json = new JsonObject()
         .put("x", LEFT + WIDTH / 2)
         .put("y", TOP + HEIGHT / 2);
 
-    client.put(BALL_PORT, BALL_HOST, "/setPosition").sendJson(json, ar -> {
+    HttpRequest<Buffer> request = client.put(BALL_PORT, BALL_HOST, "/setPosition");
+    tracer.inject(TracingHandler.serverSpanContext(ctx), Builtin.HTTP_HEADERS, new TracingContext(request.headers()));
+    request.sendJson(json, ar -> {
       if (!ar.succeeded()) {
         ar.cause().printStackTrace();
       }
     });
   }
 
-  private JsonObject bounce(Segment segment, int excludeWall) {
+  private JsonObject bounce(RoutingContext ctx, Segment segment, int excludeWall) {
     if (isOutside(segment.start())) {
       return new JsonObject();
     }
@@ -127,14 +149,14 @@ public class Stadium extends AbstractVerticle {
     if (goalA != null) {
       // Team B scored!
       scoreB++;
-      resetBall();
+      resetBall(ctx);
       return new JsonObject().put("scored", "visitors");
     }
     Point goalB = GOAL_B.getCrossingPoint(segment);
     if (goalB != null) {
       // Team A scored!
       scoreA++;
-      resetBall();
+      resetBall(ctx);
       return new JsonObject().put("scored", "locals");
     }
     double minDistance = -1;
@@ -175,7 +197,7 @@ public class Stadium extends AbstractVerticle {
       Point result = collision.add(new Point(Math.cos(dpAngle), -Math.sin(dpAngle)).mult(segment.size() - minDistance));
       Segment resultVector = new Segment(collision, result);
       // Recursive call to check if the result vector itself is bouncing again
-      JsonObject recResult = bounce(resultVector, bounceWall);
+      JsonObject recResult = bounce(ctx, resultVector, bounceWall);
       if (recResult.isEmpty()) {
         // No bounce in recursive call => return new vector
         Point normalized = resultVector.derivate().normalize();
@@ -206,6 +228,8 @@ public class Stadium extends AbstractVerticle {
       JsonObject output = new JsonObject()
         .put("goalX", oppGoal.x())
         .put("goalY", oppGoal.y())
+        .put("scoreA", scoreA)
+        .put("scoreB", scoreB)
         .put("defendZoneTop", defendZone.start().y())
         .put("defendZoneBottom", defendZone.end().y())
         .put("defendZoneLeft", defendZone.start().x())
