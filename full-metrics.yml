@@ -45,6 +45,16 @@ spec:
           value: "8080"
         - name: MESHARENA_STADIUM_HOST
           value: stadium
+        - name: JAEGER_SERVICE_NAME
+          value: ui
+        - name: JAEGER_SAMPLER_TYPE
+          value: const
+        - name: JAEGER_SAMPLER_PARAM
+          value: 1
+        - name: JAEGER_PROPAGATION
+          value: b3
+        - name: JAEGER_ENDPOINT
+          value: http://jaeger-collector.istio-system.svc:14268/api/traces
         securityContext:
           privileged: false
         readinessProbe:
@@ -143,6 +153,17 @@ spec:
           value: "1.0"
         - name: STADIUM_MATCH_TIME
           value: "120"
+        - name: JAEGER_SERVICE_NAME
+          value: stadium
+        - name: JAEGER_SAMPLER_TYPE
+          value: const
+        - name: JAEGER_SAMPLER_PARAM
+          value: 1
+        - name: JAEGER_PROPAGATION
+          value: b3
+        - name: JAEGER_ENDPOINT
+          value: http://jaeger-collector.istio-system.svc:14268/api/traces
+
         securityContext:
           privileged: false
         readinessProbe:
@@ -228,6 +249,16 @@ spec:
           value: "8080"
         - name: MESHARENA_STADIUM_HOST
           value: stadium
+        - name: JAEGER_SERVICE_NAME
+          value: ball
+        - name: JAEGER_SAMPLER_TYPE
+          value: const
+        - name: JAEGER_SAMPLER_PARAM
+          value: 1
+        - name: JAEGER_PROPAGATION
+          value: b3
+        - name: JAEGER_ENDPOINT
+          value: http://jaeger-collector.istio-system.svc:14268/api/traces
         securityContext:
           privileged: false
         readinessProbe:
@@ -315,7 +346,17 @@ spec:
         - name: PLAYER_COLOR
           value: blue
         - name: PLAYER_NAME
-          value: une chèvre bleue
+          value: blue goat
+        - name: JAEGER_SERVICE_NAME
+          value: ai-locals
+        - name: JAEGER_SAMPLER_TYPE
+          value: const
+        - name: JAEGER_SAMPLER_PARAM
+          value: 1
+        - name: JAEGER_PROPAGATION
+          value: b3
+        - name: JAEGER_ENDPOINT
+          value: http://jaeger-collector.istio-system.svc:14268/api/traces
         securityContext:
           privileged: false
 
@@ -388,7 +429,17 @@ spec:
         - name: PLAYER_COLOR
           value: yellow
         - name: PLAYER_NAME
-          value: une chèvre jaune
+          value: yellow goat
+        - name: JAEGER_SERVICE_NAME
+          value: ai-visitors
+        - name: JAEGER_SAMPLER_TYPE
+          value: const
+        - name: JAEGER_SAMPLER_PARAM
+          value: 1
+        - name: JAEGER_PROPAGATION
+          value: b3
+        - name: JAEGER_ENDPOINT
+          value: http://jaeger-collector.istio-system.svc:14268/api/traces
         securityContext:
           privileged: false
 

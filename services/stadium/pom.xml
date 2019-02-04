@@ -35,6 +35,11 @@
       <groupId>demo.mesh-arena</groupId>
       <artifactId>demo-mesh-common</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.opentracing.contrib</groupId>
+      <artifactId>opentracing-vertx-web</artifactId>
+      <version>0.1.0</version>
+    </dependency>
   </dependencies>
 
   <build>

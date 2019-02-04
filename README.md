@@ -13,7 +13,7 @@ This demo was presented at [DevopsDday](http://2018.devops-dday.com/) in the Vel
 ```bash
 tar -zxvf istio-1.0.5-linux.tar.gz
 cd istio-1.0.5/
-helm template install/kubernetes/helm/istio --name istio --namespace istio-system --set kiali.enabled=true > $HOME/istio.yaml
+helm template install/kubernetes/helm/istio --name istio --namespace istio-system --set kiali.enabled=true --set tracing.enabled=true > $HOME/istio.yaml
 kubectl apply -f install/kubernetes/helm/istio/templates/crds.yaml
 kubectl create namespace istio-system
 kubectl apply -f $HOME/istio.yaml
@@ -58,6 +58,19 @@ kubectl port-forward svc/kiali 20001:20001 -n istio-system
 ```
 
 Open http://localhost:20001 in a browser.
+
+## Open Jaeger
+Tracing data generated from microservices and Istio can be viewed in Jaeger by port-forwarding
+`jaeger-query` service.
+
+```
+kubectl port-forward svc/jaeger-query 16686:16686 -n istio-system
+```
+AI service generates trace named `new_game` for each game. This way we are able to trace player's
+movement on the stadium.
+The other interesting trace is from `ui` service called `on-start` it captures all initialization
+steps performed at the beginning of the game.
+
 
 ## Deploy micro-service UI
 

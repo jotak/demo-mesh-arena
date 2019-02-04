@@ -49,6 +49,16 @@ spec:
           value: stadium
         - name: IMAGE
           value: "ballv2"
+        - name: JAEGER_SERVICE_NAME
+          value: ballv2
+        - name: JAEGER_SAMPLER_TYPE
+          value: const
+        - name: JAEGER_SAMPLER_PARAM
+          value: 1
+        - name: JAEGER_PROPAGATION
+          value: b3
+        - name: JAEGER_ENDPOINT
+          value: http://jaeger-collector.istio-system.svc:14268/api/traces
         securityContext:
           privileged: false
         readinessProbe:
