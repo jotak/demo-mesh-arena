@@ -4,12 +4,10 @@ import demo.mesharena.common.Commons;
 import demo.mesharena.common.Point;
 import demo.mesharena.common.Segment;
 import demo.mesharena.common.TracingContext;
-import io.jaegertracing.Configuration;
 import io.opentracing.References;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
-import io.opentracing.Tracer;
 import io.opentracing.Tracer.SpanBuilder;
 import io.opentracing.propagation.Format.Builtin;
 import io.vertx.core.AbstractVerticle;
@@ -21,6 +19,7 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 
 import java.security.SecureRandom;
+import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 
@@ -55,7 +54,6 @@ public class AI extends AbstractVerticle {
   private final String id;
   private final boolean isVisitors;
   private final JsonObject json;
-  final private Tracer tracer;
   private Point pos = Point.ZERO;
   private ArenaInfo arenaInfo;
   private Point currentDestination = null;
@@ -66,13 +64,11 @@ public class AI extends AbstractVerticle {
   private enum Role { ATTACK, DEFEND }
   private Role role;
 
-  private Span currentSpan;
-  private Span newGameSpan;
+  private Optional<Span> currentSpan = Optional.empty();
+  private Optional<Span> newGameSpan = Optional.empty();
 
   public AI(Vertx vertx) {
-    Configuration configuration = Configuration.fromEnv();
-    tracer = configuration.getTracer();
-    Span span = tracer.buildSpan("application_start").start();
+    Optional<Span> span = TRACER.map(t -> t.buildSpan("application_start").start());
 
     client = WebClient.create(vertx);
     id = UUID.randomUUID().toString();
@@ -81,7 +77,7 @@ public class AI extends AbstractVerticle {
         .put("id", id)
         .put("style", "position: absolute; background-color: " + COLOR + "; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms; height: 30px; width: 30px; border-radius: 50%; z-index: 8;")
         .put("text", "");
-    span.finish();
+    span.ifPresent(Span::finish);
   }
 
   public static void main(String[] args) {
@@ -92,8 +88,8 @@ public class AI extends AbstractVerticle {
   @Override
   public void start() throws Exception {
     // First display
-    Span startSpan = tracer.buildSpan("start").start();
-    display(startSpan.context());
+    Optional<Span> startSpan = TRACER.map(t -> t.buildSpan("start").start());
+    display(startSpan.map(Span::context));
 
     // Check regularly about arena info
     checkArenaInfo();
@@ -101,7 +97,7 @@ public class AI extends AbstractVerticle {
 
     // Start game loop
     vertx.setPeriodic(DELTA_MS, loopId -> update((double)DELTA_MS / 1000.0));
-    startSpan.finish();
+    startSpan.ifPresent(Span::finish);
   }
 
   private void checkArenaInfo() {
@@ -125,13 +121,16 @@ public class AI extends AbstractVerticle {
 
             if (arenaInfo == null || (arenaInfo.scoreA != scoreA || arenaInfo.scoreA != scoreB)) {
               // the goals changed - new game started
-              try (Scope startGame = tracer.buildSpan("new_game")
-                  .withTag("name", NAME)
-                  .withTag("id", id)
-                  .ignoreActiveSpan()
-                  .startActive(true)) {
-                newGameSpan = startGame.span();
-              }
+              newGameSpan = Optional.empty();
+              TRACER.ifPresent(tracer -> {
+                try (Scope startGame = tracer.buildSpan("new_game")
+                    .withTag("name", NAME)
+                    .withTag("id", id)
+                    .ignoreActiveSpan()
+                    .startActive(true)) {
+                  newGameSpan = Optional.of(startGame.span());
+                }
+              });
             }
 
             arenaInfo = new ArenaInfo(defendZoneTop, defendZoneLeft, defendZoneBottom, defendZoneRight, new Point(goalX, goalY), scoreA, scoreB);
@@ -140,31 +139,30 @@ public class AI extends AbstractVerticle {
   }
 
   private void update(double delta) {
-    SpanBuilder updateSpanBuilder = tracer.buildSpan("update")
-        .withTag("x", pos != null ? pos.x() :  0)
-        .withTag("x", pos != null ? pos.y() : 0)
-        .withTag("role", role != null ? role.name(): "unknown");
-    if (newGameSpan != null) {
-      updateSpanBuilder.addReference(References.FOLLOWS_FROM, newGameSpan.context());
-      newGameSpan = null;
-    } else {
-      updateSpanBuilder.addReference(References.FOLLOWS_FROM, currentSpan != null ? currentSpan.context(): null);
-    }
-    Span updateSpan = updateSpanBuilder.start();
+    Optional<Span> updateSpan = TRACER.map(tracer -> {
+      SpanBuilder updateSpanBuilder = tracer.buildSpan("update")
+          .withTag("x", pos != null ? pos.x() :  0)
+          .withTag("x", pos != null ? pos.y() : 0)
+          .withTag("role", role != null ? role.name(): "unknown");
+      SpanContext followsFrom = newGameSpan.map(Span::context).orElse(currentSpan.map(Span::context).orElse(null));
+      newGameSpan = Optional.empty();
+      updateSpanBuilder.addReference(References.FOLLOWS_FROM, followsFrom);
+      return updateSpanBuilder.start();
+    });
 
     if (idleTimer > 0) {
       idleTimer -= delta;
-      walkRandom(updateSpan.context(), delta);
+      walkRandom(updateSpan.map(Span::context), delta);
     } else {
       roleTimer -= delta;
       if (roleTimer < 0) {
         roleTimer = ROLE_TIMER;
         chooseRole();
       }
-      lookForBall(updateSpan.context(), delta);
+      lookForBall(updateSpan.map(Span::context), delta);
     }
 
-    updateSpan.finish();
+    updateSpan.ifPresent(Span::finish);
     currentSpan = updateSpan;
   }
 
@@ -183,7 +181,7 @@ public class AI extends AbstractVerticle {
     }
   }
 
-  private void lookForBall(SpanContext spanContext, double delta) {
+  private void lookForBall(Optional<SpanContext> spanContext, double delta) {
     final Point shootDest;
     Point goal = (arenaInfo == null) ? randomDestination() : arenaInfo.goal;
     if (role == Role.ATTACK) {
@@ -222,7 +220,7 @@ public class AI extends AbstractVerticle {
         .put("playerTeam", TEAM);
 
     HttpRequest<Buffer> request = client.get(BALL_PORT, BALL_HOST, "/interact");
-    tracer.inject(spanContext, Builtin.HTTP_HEADERS, new TracingContext(request.headers()));
+    spanContext.ifPresent(sc -> TRACER.ifPresent(tracer -> tracer.inject(sc, Builtin.HTTP_HEADERS, new TracingContext(request.headers()))));
     request.sendJson(json, ar -> {
       if (!ar.succeeded()) {
         // No ball? What a pity. Walk randomly in sadness.
@@ -254,14 +252,14 @@ public class AI extends AbstractVerticle {
     return new Point(rnd.nextInt(500), rnd.nextInt(500));
   }
 
-  private void walkRandom(SpanContext spanContext, double delta) {
+  private void walkRandom(Optional<SpanContext> spanContext, double delta) {
     if (currentDestination == null || new Segment(pos, currentDestination).size() < 10) {
       currentDestination = randomDestination();
     }
     walkToDestination(spanContext, delta);
   }
 
-  private void walkToDestination(SpanContext spanContext, double delta) {
+  private void walkToDestination(Optional<SpanContext> spanContext, double delta) {
     if (currentDestination != null) {
       // Speed and angle are modified by accuracy
       Segment segToDest = new Segment(pos, currentDestination);
@@ -284,12 +282,12 @@ public class AI extends AbstractVerticle {
     return segToDest.derivate().normalize().rotate(angle);
   }
 
-  private void display(SpanContext spanContext) {
+  private void display(Optional<SpanContext> spanContext) {
     json.put("x", pos.x() - 15)
         .put("y", pos.y() - 15);
 
     HttpRequest<Buffer> request = client.post(UI_PORT, UI_HOST, "/display");
-    tracer.inject(spanContext, Builtin.HTTP_HEADERS, new TracingContext(request.headers()));
+    spanContext.ifPresent(sc -> TRACER.ifPresent(tracer -> tracer.inject(sc, Builtin.HTTP_HEADERS, new TracingContext(request.headers()))));
     request.sendJson(json, ar -> {
       if (!ar.succeeded()) {
         ar.cause().printStackTrace();

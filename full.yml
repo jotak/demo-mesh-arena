@@ -1,4 +1,4 @@
-# Generated template (ven. janv. 18 13:35:38 CET 2019)
+# Generated template (lun. avril 22 17:52:28 CEST 2019)
 # Source: services/ui/Deployment.yml
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -25,7 +25,7 @@ spec:
         version: v1
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ui:1.1.1
+      - image: jotak/demo-mesh-arena-ui:1.1.2
         imagePullPolicy: IfNotPresent
         name: ui
         ports:
@@ -34,6 +34,8 @@ spec:
           protocol: TCP
         env:
         - name: METRICS_ENABLED
+          value: "0"
+        - name: TRACING_ENABLED
           value: "0"
         - name: AB_OFF
           value: "1"
@@ -115,7 +117,7 @@ spec:
         version: small
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-stadium:1.1.1
+      - image: jotak/demo-mesh-arena-stadium:1.1.2
         imagePullPolicy: IfNotPresent
         name: stadium
         ports:
@@ -124,6 +126,8 @@ spec:
           protocol: TCP
         env:
         - name: METRICS_ENABLED
+          value: "0"
+        - name: TRACING_ENABLED
           value: "0"
         - name: AB_OFF
           value: "1"
@@ -224,7 +228,7 @@ spec:
         version: v1
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ball:1.1.1
+      - image: jotak/demo-mesh-arena-ball:1.1.2
         imagePullPolicy: IfNotPresent
         name: ball
         ports:
@@ -233,6 +237,8 @@ spec:
           protocol: TCP
         env:
         - name: METRICS_ENABLED
+          value: "0"
+        - name: TRACING_ENABLED
           value: "0"
         - name: AB_OFF
           value: "1"
@@ -253,7 +259,7 @@ spec:
         - name: JAEGER_SAMPLER_TYPE
           value: const
         - name: JAEGER_SAMPLER_PARAM
-          value: 1
+          value: "1"
         - name: JAEGER_PROPAGATION
           value: b3
         - name: JAEGER_ENDPOINT
@@ -318,11 +324,13 @@ spec:
         version: basic
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ai:1.1.1
+      - image: jotak/demo-mesh-arena-ai:1.1.2
         imagePullPolicy: IfNotPresent
         name: ai-locals
         env:
         - name: METRICS_ENABLED
+          value: "0"
+        - name: TRACING_ENABLED
           value: "0"
         - name: AB_OFF
           value: "1"
@@ -401,11 +409,13 @@ spec:
         version: basic
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ai:1.1.1
+      - image: jotak/demo-mesh-arena-ai:1.1.2
         imagePullPolicy: IfNotPresent
         name: ai-visitors
         env:
         - name: METRICS_ENABLED
+          value: "0"
+        - name: TRACING_ENABLED
           value: "0"
         - name: AB_OFF
           value: "1"

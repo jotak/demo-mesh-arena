@@ -23,11 +23,13 @@ spec:
         version: basic
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ai:1.1.1
+      - image: jotak/demo-mesh-arena-ai:1.1.2
         imagePullPolicy: IfNotPresent
         name: ai-locals
         env:
         - name: METRICS_ENABLED
+          value: "0"
+        - name: TRACING_ENABLED
           value: "0"
         - name: AB_OFF
           value: "1"
@@ -52,7 +54,7 @@ spec:
         - name: PLAYER_NAME
           value: blue goat
         - name: JAEGER_SERVICE_NAME
-          value: ai-visitors
+          value: ai-locals
         - name: JAEGER_SAMPLER_TYPE
           value: const
         - name: JAEGER_SAMPLER_PARAM

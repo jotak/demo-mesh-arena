@@ -4,9 +4,7 @@ import demo.mesharena.common.Commons;
 import demo.mesharena.common.Point;
 import demo.mesharena.common.Segment;
 import demo.mesharena.common.TracingContext;
-import io.jaegertracing.Configuration;
 import io.opentracing.Span;
-import io.opentracing.Tracer;
 import io.opentracing.contrib.vertx.ext.web.TracingHandler;
 import io.opentracing.propagation.Format.Builtin;
 import io.vertx.core.AbstractVerticle;
@@ -19,10 +17,9 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
 
-import static demo.mesharena.common.Commons.BALL_HOST;
-import static demo.mesharena.common.Commons.BALL_PORT;
-import static demo.mesharena.common.Commons.UI_HOST;
-import static demo.mesharena.common.Commons.UI_PORT;
+import java.util.Optional;
+
+import static demo.mesharena.common.Commons.*;
 
 public class Stadium extends AbstractVerticle {
 
@@ -52,16 +49,13 @@ public class Stadium extends AbstractVerticle {
   private final WebClient client;
   private final JsonObject stadiumJson;
   private final JsonObject scoreJson;
-  private final Tracer tracer;
 
   private int scoreA = 0;
   private int scoreB = 0;
   private long startTime = 0;
 
   private Stadium(Vertx vertx) {
-    Configuration configuration = Configuration.fromEnv();
-    tracer = configuration.getTracer();
-    Span span = tracer.buildSpan("application_start").start();
+    Optional<Span> span = TRACER.map(t -> t.buildSpan("application_start").start());
 
     client = WebClient.create(vertx);
     stadiumJson = new JsonObject()
@@ -74,7 +68,7 @@ public class Stadium extends AbstractVerticle {
         .put("style", "position: absolute; top: " + (TX_TOP + 5) + "px; left: " + (TX_LEFT + 5) + "px; color: black; font-weight: bold; z-index: 10;")
         .put("text", "");
 
-    span.finish();
+    span.ifPresent(Span::finish);
   }
 
   public static void main(String[] args) {
@@ -87,10 +81,12 @@ public class Stadium extends AbstractVerticle {
     // Register stadium API
     HttpServerOptions serverOptions = new HttpServerOptions().setPort(Commons.STADIUM_PORT);
     Router router = Router.router(vertx);
-    TracingHandler handler = new TracingHandler(tracer);
-    router.route()
-        .order(-1).handler(handler)
-        .failureHandler(handler);
+    TRACER.ifPresent(tracer -> {
+      TracingHandler handler = new TracingHandler(tracer);
+      router.route()
+          .order(-1).handler(handler)
+          .failureHandler(handler);
+    });
 
     router.get("/health").handler(ctx -> ctx.response().end());
     router.get("/start").handler(this::startGame);
@@ -133,7 +129,7 @@ public class Stadium extends AbstractVerticle {
         .put("y", TOP + HEIGHT / 2);
 
     HttpRequest<Buffer> request = client.put(BALL_PORT, BALL_HOST, "/setPosition");
-    tracer.inject(TracingHandler.serverSpanContext(ctx), Builtin.HTTP_HEADERS, new TracingContext(request.headers()));
+    TRACER.ifPresent(tracer -> tracer.inject(TracingHandler.serverSpanContext(ctx), Builtin.HTTP_HEADERS, new TracingContext(request.headers())));
     request.sendJson(json, ar -> {
       if (!ar.succeeded()) {
         ar.cause().printStackTrace();

@@ -2,12 +2,10 @@ package demo.mesharena.ball;
 
 import demo.mesharena.common.Commons;
 import demo.mesharena.common.Point;
-import io.jaegertracing.Configuration;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.opentracing.Span;
-import io.opentracing.Tracer;
 import io.opentracing.contrib.vertx.ext.web.TracingHandler;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
@@ -27,10 +25,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 
-import static demo.mesharena.common.Commons.STADIUM_HOST;
-import static demo.mesharena.common.Commons.STADIUM_PORT;
-import static demo.mesharena.common.Commons.UI_HOST;
-import static demo.mesharena.common.Commons.UI_PORT;
+import static demo.mesharena.common.Commons.*;
 
 public class Ball extends AbstractVerticle {
 
@@ -44,7 +39,6 @@ public class Ball extends AbstractVerticle {
   private final Random rnd = new SecureRandom();
   private final JsonObject json;
   private final Optional<MeterRegistry> registry;
-  private final Tracer tracer;
 
   private Point speed = Point.ZERO;
   private String controllingPlayer;
@@ -57,9 +51,7 @@ public class Ball extends AbstractVerticle {
   private double errorTimer;
 
   private Ball(Vertx vertx) {
-    Configuration configuration = Configuration.fromEnv();
-    tracer = configuration.getTracer();
-    Span span = tracer.buildSpan("application_start").start();
+    Optional<Span> span = TRACER.map(t -> t.buildSpan("application_start").start());
 
     client = WebClient.create(vertx);
     id = "ball-" + UUID.randomUUID().toString();
@@ -76,7 +68,7 @@ public class Ball extends AbstractVerticle {
     if (!registry.isPresent()) {
       System.out.println("No metrics");
     }
-    span.finish();
+    span.ifPresent(Span::finish);
   }
 
   public static void main(String[] args) {
@@ -89,10 +81,12 @@ public class Ball extends AbstractVerticle {
     // Register ball API
     HttpServerOptions serverOptions = new HttpServerOptions().setPort(Commons.BALL_PORT);
     Router router = Router.router(vertx);
-    TracingHandler handler = new TracingHandler(tracer);
-    router.route()
-        .order(-1).handler(handler)
-        .failureHandler(handler);
+    TRACER.ifPresent(tracer -> {
+      TracingHandler handler = new TracingHandler(tracer);
+      router.route()
+          .order(-1).handler(handler)
+          .failureHandler(handler);
+    });
 
     router.get("/health").handler(ctx -> ctx.response().end());
     router.put("/shoot").handler(this::shoot);
@@ -139,9 +133,9 @@ public class Ball extends AbstractVerticle {
             int commentRnd = rnd.nextInt(2);
             if (speed.size() > 200) {
               if (commentRnd == 0) {
-                comment("Shoot by " + playerName + "!");
+                comment(playerName + " shooting!");
               } else {
-                comment("Warning " + playerName + " tries his luck/shoot!");
+                comment("Wooow " + playerName + " tries his luck!");
               }
               registry.ifPresent(reg -> Counter.builder("mesharena_shoots")
                   .description("Shoots counter")
@@ -151,9 +145,9 @@ public class Ball extends AbstractVerticle {
                   .increment());
             } else {
               if (commentRnd == 0) {
-                comment("Always " + playerName + "...");
+                comment("Still " + playerName + "...");
               } else {
-                comment("Again " + playerName + "...");
+                comment(playerName + " again...");
               }
             }
           }
@@ -174,11 +168,11 @@ public class Ball extends AbstractVerticle {
           speed = new Point(shootX, shootY).diff(pos);
           double size = speed.size();
           if (size > 310) {
-            comment("Goal kick " + playerName);
+            comment("Defensive shooting from " + playerName);
           } else if (size > 200) {
             comment(playerName + " takes the ball and shoots!");
           } else {
-            comment(playerName + " regains the ball");
+            comment(playerName + " takes the ball back");
           }
         }
       }
@@ -272,7 +266,7 @@ public class Ball extends AbstractVerticle {
           String team = obj.getString("scored");
           boolean isOwn = !team.equals(controllingPlayerTeam);
           if (isOwn) {
-            comment("Ohhhh goal against his side by " + controllingPlayerName + " !!");
+            comment("Ohhhh own goal from " + controllingPlayerName + " !!");
           } else {
             comment("Goaaaaaaal by " + controllingPlayerName + " !!!!");
           }

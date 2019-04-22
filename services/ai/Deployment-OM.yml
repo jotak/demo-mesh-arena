@@ -23,11 +23,13 @@ spec:
         version: OM
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ai:1.1.1
+      - image: jotak/demo-mesh-arena-ai:1.1.2
         imagePullPolicy: IfNotPresent
         name: ai-locals
         env:
         - name: METRICS_ENABLED
+          value: "0"
+        - name: TRACING_ENABLED
           value: "0"
         - name: AB_OFF
           value: "1"

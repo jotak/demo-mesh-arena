@@ -36,7 +36,7 @@ spec:
         - name: METRICS_ENABLED
           value: "1"
         - name: TRACING_ENABLED
-          value: "0"
+          value: "1"
         - name: AB_OFF
           value: "1"
         - name: JAVA_OPTIONS
@@ -128,7 +128,7 @@ spec:
         - name: METRICS_ENABLED
           value: "1"
         - name: TRACING_ENABLED
-          value: "0"
+          value: "1"
         - name: AB_OFF
           value: "1"
         - name: JAVA_OPTIONS
@@ -239,7 +239,7 @@ spec:
         - name: METRICS_ENABLED
           value: "1"
         - name: TRACING_ENABLED
-          value: "0"
+          value: "1"
         - name: AB_OFF
           value: "1"
         - name: JAVA_OPTIONS
@@ -331,7 +331,7 @@ spec:
         - name: METRICS_ENABLED
           value: "1"
         - name: TRACING_ENABLED
-          value: "0"
+          value: "1"
         - name: AB_OFF
           value: "1"
         - name: JAVA_OPTIONS
@@ -416,7 +416,7 @@ spec:
         - name: METRICS_ENABLED
           value: "1"
         - name: TRACING_ENABLED
-          value: "0"
+          value: "1"
         - name: AB_OFF
           value: "1"
         - name: JAVA_OPTIONS

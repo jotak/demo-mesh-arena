@@ -34,9 +34,9 @@ spec:
           protocol: TCP
         env:
         - name: METRICS_ENABLED
-          value: "1"
-        - name: TRACING_ENABLED
           value: "0"
+        - name: TRACING_ENABLED
+          value: "1"
         - name: AB_OFF
           value: "1"
         - name: JAVA_OPTIONS
@@ -126,9 +126,9 @@ spec:
           protocol: TCP
         env:
         - name: METRICS_ENABLED
-          value: "1"
-        - name: TRACING_ENABLED
           value: "0"
+        - name: TRACING_ENABLED
+          value: "1"
         - name: AB_OFF
           value: "1"
         - name: JAVA_OPTIONS
@@ -237,9 +237,9 @@ spec:
           protocol: TCP
         env:
         - name: METRICS_ENABLED
-          value: "1"
-        - name: TRACING_ENABLED
           value: "0"
+        - name: TRACING_ENABLED
+          value: "1"
         - name: AB_OFF
           value: "1"
         - name: JAVA_OPTIONS
@@ -329,9 +329,9 @@ spec:
         name: ai-locals
         env:
         - name: METRICS_ENABLED
-          value: "1"
-        - name: TRACING_ENABLED
           value: "0"
+        - name: TRACING_ENABLED
+          value: "1"
         - name: AB_OFF
           value: "1"
         - name: JAVA_OPTIONS
@@ -414,9 +414,9 @@ spec:
         name: ai-visitors
         env:
         - name: METRICS_ENABLED
-          value: "1"
-        - name: TRACING_ENABLED
           value: "0"
+        - name: TRACING_ENABLED
+          value: "1"
         - name: AB_OFF
           value: "1"
         - name: JAVA_OPTIONS

@@ -2,9 +2,7 @@ package demo.mesharena.ui;
 
 import demo.mesharena.common.Commons;
 import demo.mesharena.common.TracingContext;
-import io.jaegertracing.Configuration;
 import io.opentracing.Span;
-import io.opentracing.Tracer;
 import io.opentracing.contrib.vertx.ext.web.TracingHandler;
 import io.opentracing.propagation.Format.Builtin;
 import io.vertx.core.AbstractVerticle;
@@ -26,10 +24,12 @@ import io.vertx.ext.web.handler.sockjs.SockJSHandler;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static demo.mesharena.common.Commons.STADIUM_HOST;
 import static demo.mesharena.common.Commons.STADIUM_PORT;
+import static demo.mesharena.common.Commons.TRACER;
 
 public class UI extends AbstractVerticle {
 
@@ -46,14 +46,13 @@ public class UI extends AbstractVerticle {
   public void start() throws Exception {
     HttpServerOptions serverOptions = new HttpServerOptions().setPort(Commons.UI_PORT);
 
-    Configuration configuration = Configuration.fromEnv();
-    Tracer tracer = configuration.getTracer();
-
     Router router = Router.router(vertx);
-    TracingHandler handler = new TracingHandler(tracer);
-    router.route()
-        .order(-1).handler(handler)
-        .failureHandler(handler);
+    TRACER.ifPresent(tracer -> {
+      TracingHandler handler = new TracingHandler(tracer);
+      router.route()
+          .order(-1).handler(handler)
+          .failureHandler(handler);
+    });
 
     // Allow events for the designated addresses in/out of the event bus bridge
     BridgeOptions opts = new BridgeOptions()
@@ -97,13 +96,13 @@ public class UI extends AbstractVerticle {
       msg.reply(new JsonArray(objects));
     });
     eb.consumer("on-start", msg -> {
-      Span span = tracer.buildSpan("on-start").start();
+      Optional<Span> span = TRACER.map(tracer -> tracer.buildSpan("on-start").start());
       System.out.println("Starting new game!");
       HttpRequest<Buffer> request = WebClient.create(vertx)
           .get(STADIUM_PORT, STADIUM_HOST, "/start");
-      tracer.inject(span.context(), Builtin.HTTP_HEADERS, new TracingContext(request.headers()));
+      span.ifPresent(s -> TRACER.get().inject(s.context(), Builtin.HTTP_HEADERS, new TracingContext(request.headers())));
       request.send(ar -> {
-        span.finish();
+        span.ifPresent(Span::finish);
         if (!ar.succeeded()) {
           ar.cause().printStackTrace();
         }

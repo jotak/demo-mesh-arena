@@ -3,7 +3,7 @@ kind: MonitoringDashboard
 metadata:
   name: mesh-arena
   labels:
-    runtime: Vert.x
+    runtime: "mesh-arena"
 spec:
   title: Mesh Arena Metrics
   charts:

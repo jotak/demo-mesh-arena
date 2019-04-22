@@ -1,5 +1,7 @@
 package demo.mesharena.common;
 
+import io.jaegertracing.Configuration;
+import io.opentracing.Tracer;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.micrometer.Label;
@@ -7,16 +9,27 @@ import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
 
 import java.util.EnumSet;
+import java.util.Optional;
 
 public final class Commons {
 
   private static final int METRICS_ENABLED = Commons.getIntEnv("METRICS_ENABLED", 0);
+  public static final Optional<Tracer> TRACER = initTracer();
   public static final int UI_PORT = getIntEnv("MESHARENA_UI_PORT", 8080);
   public static final String UI_HOST = getStringEnv("MESHARENA_UI_HOST", "localhost");
   public static final int BALL_PORT = getIntEnv("MESHARENA_BALL_PORT", 8081);
   public static final String BALL_HOST = getStringEnv("MESHARENA_BALL_HOST", "localhost");
   public static final int STADIUM_PORT = getIntEnv("MESHARENA_STADIUM_PORT", 8082);
   public static final String STADIUM_HOST = getStringEnv("MESHARENA_STADIUM_HOST", "localhost");
+
+  private static Optional<Tracer> initTracer() {
+    int tracingEnabled = Commons.getIntEnv("TRACING_ENABLED", 0);
+    if (tracingEnabled == 1) {
+      Configuration configuration = Configuration.fromEnv();
+      return Optional.of(configuration.getTracer());
+    }
+    return Optional.empty();
+  }
 
   private Commons() {
   }
