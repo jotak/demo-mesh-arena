@@ -1,9 +1,10 @@
-# Generated template (mar. avril 23 13:17:49 CEST 2019)
+# Generated template (mer. avril 24 13:22:30 CEST 2019)
 # Source: services/ui/Deployment.yml
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   labels:
+    project: mesh-arena
     app: ui
     version: v1
   name: ui
@@ -20,6 +21,7 @@ spec:
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
       labels:
+        project: mesh-arena
         app: ui
         version: v1
     spec:
@@ -82,6 +84,7 @@ kind: Service
 metadata:
   name: ui
   labels:
+    project: mesh-arena
     app: ui
 spec:
   ports:
@@ -95,6 +98,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   labels:
+    project: mesh-arena
     app: stadium
     version: small
   name: stadium-small
@@ -111,6 +115,7 @@ spec:
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
       labels:
+        project: mesh-arena
         app: stadium
         version: small
     spec:
@@ -191,6 +196,7 @@ kind: Service
 metadata:
   name: stadium
   labels:
+    project: mesh-arena
     app: stadium
 spec:
   ports:
@@ -205,6 +211,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   labels:
+    project: mesh-arena
     app: ball
     version: v1
   name: ball
@@ -221,6 +228,7 @@ spec:
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
       labels:
+        project: mesh-arena
         app: ball
         version: v1
     spec:
@@ -287,6 +295,7 @@ kind: Service
 metadata:
   name: ball
   labels:
+    project: mesh-arena
     app: ball
 spec:
   ports:
@@ -300,6 +309,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   labels:
+    project: mesh-arena
     app: ai-locals
     version: basic
   name: ai-locals-basic
@@ -316,6 +326,7 @@ spec:
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
       labels:
+        project: mesh-arena
         app: ai-locals
         version: basic
     spec:
@@ -370,6 +381,7 @@ kind: Service
 metadata:
   name: ai-locals
   labels:
+    project: mesh-arena
     app: ai-locals
 spec:
   ports:
@@ -384,6 +396,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   labels:
+    project: mesh-arena
     app: ai-visitors
     version: basic
   name: ai-visitors-basic
@@ -400,6 +413,7 @@ spec:
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
       labels:
+        project: mesh-arena
         app: ai-visitors
         version: basic
     spec:
@@ -454,6 +468,7 @@ kind: Service
 metadata:
   name: ai-visitors
   labels:
+    project: mesh-arena
     app: ai-visitors
 spec:
   ports:

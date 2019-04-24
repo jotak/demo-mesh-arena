@@ -3,6 +3,7 @@ kind: Service
 metadata:
   name: ai-locals
   labels:
+    project: mesh-arena
     app: ai-locals
 spec:
   ports:

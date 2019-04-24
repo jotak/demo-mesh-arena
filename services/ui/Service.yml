@@ -3,6 +3,7 @@ kind: Service
 metadata:
   name: ui
   labels:
+    project: mesh-arena
     app: ui
 spec:
   ports:

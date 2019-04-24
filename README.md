@@ -3,191 +3,113 @@
 ## Slides
 
 This demo was presented at [DevopsDday](http://2018.devops-dday.com/) in the Velodrome, Marseilles' famous stadium.
-[Here are the slides](https://docs.google.com/presentation/d/1PzRD3BquEI3Al6y2_vSrZqUY0AlJF54_uuWYhr81t5g), in French. Or [in English](https://docs.google.com/presentation/d/1WZDmIcfzKC9GMqz8Cvcb0_mJK_hIH-JxEDROZLnEnng).
+[Here are the slides](https://docs.google.com/presentation/d/1PzRD3BquEI3Al6y2_vSrZqUY0AlJF54_uuWYhr81t5g), in French. Or a similar [English version](https://docs.google.com/presentation/d/1WZDmIcfzKC9GMqz8Cvcb0_mJK_hIH-JxEDROZLnEnng).
+
+## Step-by-step
+
+For a step-by-step walk-through, [read this](./STEP-BY-STEP.md).
 
 ## Pre-requisite
 
 - Kubernetes or OpenShift cluster running (ex: minikube 0.27+ / minishift)
-- Istio 1.0+ with Kiali installed, for instance download a release (Ex: [1.0.5](https://github.com/istio/istio/releases/tag/1.0.5)) then:
+- Istio with Kiali installed
+- Repo cloned locally (actually, only YML files are necessary)
+
+## OpenShift
+
+For OpenShift users, you may have to grant extended permissions for Istio, logged as admin:
 
 ```bash
-tar -zxvf istio-1.0.5-linux.tar.gz
-cd istio-1.0.5/
-helm template install/kubernetes/helm/istio --name istio --namespace istio-system --set kiali.enabled=true --set tracing.enabled=true > $HOME/istio.yaml
-kubectl apply -f install/kubernetes/helm/istio/templates/crds.yaml
-kubectl create namespace istio-system
-kubectl apply -f $HOME/istio.yaml
-export PATH=$PATH:`pwd`/bin
-```
-
-- Clone this repo locally, `cd` to it.
-
-```bash
-git clone git@github.com:jotak/demo-mesh-arena.git
-cd demo-mesh-arena
-```
-
-As a general note for this demo, some docker images will have to be downloaded while we're deploying the stuff.
-First time you run the demo, we don't expect things to come up immediately. You can run at anytime:
-
-```bash
-kubectl get pods
-# or (for istio/kiali):
-kubectl get pods -n istio-system
-```
-
-to see when deployed pods are ready.
-
-Note, for OpenShift users, you may have to grant extended permissions:
-```bash
+oc new-project mesh-arena
 oc adm policy add-scc-to-user privileged -z default
 ```
 
-## Open Kiali
+## Deploy services
 
-For simplicity we'll use kube's port-forward.
-If you wish to share access to Kiali from other hosts, you would have to setup an ingress or an OpenShift route instead.
-
-Note, for some reason, I found port-forward not reliable when applied quickly after setting up the service.
-Maybe wait up to ~one minute before running the command.
-
-In a new terminal:
+Without runtimes metrics & tracing:
 
 ```bash
-kubectl port-forward svc/kiali 20001:20001 -n istio-system
+oc apply -f <(istioctl kube-inject -f full.yml)
 ```
 
-Open http://localhost:20001 in a browser.
-
-## Open Jaeger
-Tracing data generated from microservices and Istio can be viewed in Jaeger by port-forwarding
-`jaeger-query` service.
-
-```
-kubectl port-forward svc/jaeger-query 16686:16686 -n istio-system
-```
-AI service generates trace named `new_game` for each game. This way we are able to trace player's
-movement on the stadium.
-The other interesting trace is from `ui` service called `on-start` it captures all initialization
-steps performed at the beginning of the game.
-
-
-## Deploy micro-service UI
+With runtimes metrics:
 
 ```bash
-kubectl apply -f <(istioctl kube-inject -f ./services/ui/Deployment.yml)
-kubectl create -f ./services/ui/Service.yml
-kubectl apply -f mesh-arena-gateway.yaml 
+oc apply -f <(istioctl kube-inject -f full-metrics.yml)
 ```
 
-## Open in browser
-
-(Wait a little bit because port-forward?)
+With tracing:
 
 ```bash
-kubectl port-forward svc/istio-ingressgateway 8080:80 -n istio-system
+oc apply -f <(istioctl kube-inject -f full-tracing.yml)
 ```
 
-Open http://localhost:8080 in a browser.
+With everything:
 
-## Deploy stadium & ball
 ```bash
-kubectl apply -f <(istioctl kube-inject -f ./services/stadium/Deployment-Smaller.yml)
-kubectl create -f ./services/stadium/Service.yml
-kubectl apply -f <(istioctl kube-inject -f ./services/ball/Deployment.yml)
-kubectl create -f ./services/ball/Service.yml
+oc apply -f <(istioctl kube-inject -f full-metrics-tracing.yml)
 ```
 
-## Deploy 2x2 players
+## Expose route
+
 ```bash
-kubectl apply -f <(istioctl kube-inject -f ./services/ai/Deployment-2-locals.yml)
-kubectl create -f ./services/ai/Service-locals.yml
-kubectl apply -f <(istioctl kube-inject -f ./services/ai/Deployment-2-visitors.yml)
-kubectl create -f ./services/ai/Service-visitors.yml
+oc expose service ui
 ```
 
 ## Second ball
 ```bash
-kubectl apply -f <(istioctl kube-inject -f ./services/ball/Deployment-v2.yml)
+oc apply -f <(istioctl kube-inject -f ./services/ball/Deployment-v2.yml)
 ````
 
-## Apply weight on balls
+## Weighting
 ```bash
-istioctl create -f ./services/ball/destrule.yml
-istioctl create -f ./services/ball/virtualservice-75-25.yml
+oc apply -f ./services/ball/destrule.yml
+oc apply -f ./services/ball/virtualservice-75-25.yml
 ```
 
 ## Messi / Mbappé
 ```bash
-kubectl apply -f <(istioctl kube-inject -f ./services/ai/Deployment-Messi.yml)
-kubectl apply -f <(istioctl kube-inject -f ./services/ai/Deployment-Mbappe.yml)
+oc apply -f <(istioctl kube-inject -f ./services/ai/Deployment-Messi.yml)
+oc apply -f <(istioctl kube-inject -f ./services/ai/Deployment-Mbappe.yml)
 ```
 
-## Each his ball
+## 2 games
 ```bash
-istioctl replace -f ./services/ball/virtualservice-by-label.yml
+oc apply -f ./services/ball/virtualservice-by-label.yml
 ```
 
 ## Reset
 ```bash
-kubectl delete -f ./services/ai/Deployment-Messi.yml
-kubectl delete -f ./services/ai/Deployment-Mbappe.yml
-istioctl delete -f ./services/ball/virtualservice-by-label.yml
+oc delete -f ./services/ai/Deployment-Messi.yml
+oc delete -f ./services/ai/Deployment-Mbappe.yml
+oc delete -f ./services/ball/virtualservice-by-label.yml
 ```
 
 ## Deploying burst ball (500 errors) unused
 ```bash
-istioctl create -f ./services/ball/virtualservice-all-to-v1.yml
-kubectl apply -f <(istioctl kube-inject -f ./services/ball/Deployment-burst.yml)
+oc apply -f ./services/ball/virtualservice-all-to-v1.yml
+oc apply -f <(istioctl kube-inject -f ./services/ball/Deployment-burst.yml)
 ```
 
 ## Burst ball with shadowing
 ```bash
-istioctl replace -f ./services/ball/virtualservice-mirrored.yml
+oc apply -f ./services/ball/virtualservice-mirrored.yml
 ```
 
 ## Remove shadowing, put circuit breaking
 ```bash
-istioctl delete -f ./services/ball/virtualservice-mirrored.yml
-istioctl replace -f ./services/ball/destrule-outlier.yml
+oc delete -f ./services/ball/virtualservice-mirrored.yml
+oc apply -f ./services/ball/destrule-outlier.yml
 ````
 
-## El Clasico, Caramba!
-
-**D-I-S-C-L-A-I-M-E-R**
-This is going to deploy 20 players on the field, it's quite CPU intensive, it is NOT recommended to run on a PC / single-node cluster, or your cluster may suffer.
+## To clean up everything
 
 ```bash
-kubectl delete -f ./services/ball/Deployment-v2.yml
-kubectl delete -f ./services/ai/Deployment-2-locals.yml
-kubectl delete -f ./services/ai/Deployment-2-visitors.yml
-kubectl apply -f <(istioctl kube-inject -f ./services/ai/Deployment-OM.yml)
-kubectl apply -f <(istioctl kube-inject -f ./services/ai/Deployment-PSG.yml)
+oc delete deployments -l project=mesh-arena
+oc delete svc -l project=mesh-arena
+oc delete virtualservices -l project=mesh-arena
+oc delete destinationrules -l project=mesh-arena
 ```
-
-## To clean up everything at any time (but Istio/Kiali)
-
-```bash
-kubectl delete deployments ai-locals-om
-kubectl delete deployments ai-visitors-psg
-kubectl delete deployments ai-locals-basic
-kubectl delete deployments ai-visitors-basic
-kubectl delete deployments ai-visitors-messi
-kubectl delete deployments ai-locals-mbappe
-kubectl delete deployments ball
-kubectl delete deployments ball-v2
-kubectl delete deployments stadium-small
-kubectl delete deployments ui
-kubectl delete svc ai-locals
-kubectl delete svc ai-visitors
-kubectl delete svc ball
-kubectl delete svc stadium
-kubectl delete svc ui
-kubectl delete virtualservices mesh-arena
-kubectl delete destinationrules ball-dr
-```
-
-PS: I'm sure there's a better command with labels :)
 
 ## To build the demo
 
@@ -210,12 +132,7 @@ Then build everything:
 
 Then update all the deployment YAML to have the correct docker tag on images
 
-
-## To run the microservices only from the IDE, without Kube / Istio / Kiali:
-
-- Run UI's main
-- Open browser to localhost:8080
-- Run Ball's main
-- Run Stadium's main
-- Start game: ```curl http://localhost:8082/start```
-- Run Visitors and Locals AIs
+## To generate the full-* templates
+```bash
+./gentemplate.sh
+```

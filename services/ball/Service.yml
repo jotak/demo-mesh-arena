@@ -3,6 +3,7 @@ kind: Service
 metadata:
   name: ball
   labels:
+    project: mesh-arena
     app: ball
 spec:
   ports:

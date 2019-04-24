@@ -3,6 +3,7 @@ kind: Service
 metadata:
   name: ai-visitors
   labels:
+    project: mesh-arena
     app: ai-visitors
 spec:
   ports:

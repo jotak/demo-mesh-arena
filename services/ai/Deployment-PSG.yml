@@ -2,6 +2,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   labels:
+    project: mesh-arena
     app: ai-visitors
     version: PSG
   name: ai-visitors-psg
@@ -18,6 +19,7 @@ spec:
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
       labels:
+        project: mesh-arena
         app: ai-visitors
         version: PSG
     spec:
