@@ -1,4 +1,4 @@
-# Generated template (lun. avril 22 17:52:28 CEST 2019)
+# Generated template (mar. avril 23 13:17:49 CEST 2019)
 # Source: services/ui/Deployment.yml
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -19,7 +19,6 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
-        kiali.io/runtimes: vertx-server,vertx-eventbus,vertx-pool
       labels:
         app: ui
         version: v1
@@ -111,7 +110,6 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
-        kiali.io/runtimes: vertx-server,vertx-client,vertx-pool
       labels:
         app: stadium
         version: small
@@ -222,7 +220,6 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
-        kiali.io/runtimes: vertx-server,vertx-client,vertx-pool,mesh-arena
       labels:
         app: ball
         version: v1
@@ -318,7 +315,6 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
-        kiali.io/runtimes: vertx-client,vertx-pool
       labels:
         app: ai-locals
         version: basic
@@ -403,7 +399,6 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
-        kiali.io/runtimes: vertx-client,vertx-pool
       labels:
         app: ai-visitors
         version: basic

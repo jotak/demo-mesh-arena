@@ -17,7 +17,6 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
-        kiali.io/runtimes: vertx-client,vertx-pool
       labels:
         app: ai-locals
         version: OM

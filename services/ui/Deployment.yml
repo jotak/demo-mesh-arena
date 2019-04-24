@@ -17,7 +17,6 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
-        kiali.io/runtimes: vertx-server,vertx-eventbus,vertx-pool
       labels:
         app: ui
         version: v1
