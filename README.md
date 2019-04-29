@@ -100,7 +100,7 @@ oc apply -f ./services/ball/virtualservice-mirrored.yml
 ```bash
 oc delete -f ./services/ball/virtualservice-mirrored.yml
 oc apply -f ./services/ball/destrule-outlier.yml
-````
+```
 
 ## To clean up everything
 
