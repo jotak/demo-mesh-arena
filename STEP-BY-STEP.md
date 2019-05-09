@@ -32,6 +32,10 @@ kubectl port-forward svc/kiali 20001:20001 -n istio-system
 
 Open http://localhost:20001/kiali
 
+### Install dashboards
+
+From there: https://github.com/kiali/kiali/tree/master/operator/roles/kiali-deploy/templates/dashboards
+
 ## Get the yml files locally
 
 - Clone this repo locally, `cd` to it.
