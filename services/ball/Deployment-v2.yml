@@ -18,6 +18,7 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
+        status.sidecar.istio.io/port: "0"
       labels:
         project: mesh-arena
         app: ball
