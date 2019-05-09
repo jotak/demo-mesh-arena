@@ -21,6 +21,10 @@ cd istio-1.1.5
 for i in install/kubernetes/helm/istio-init/files/crd*yaml; do kubectl apply -f $i; done
 kubectl apply -f install/kubernetes/istio-demo.yaml
 
+# Remove old Kiali:
+kubectl delete deployment kiali-operator -n kiali-operator
+kubectl delete deployment kiali -n istio-system
+
 bash <(curl -L https://git.io/getLatestKialiOperator)
 ```
 
@@ -35,6 +39,10 @@ Open http://localhost:20001/kiali
 ### Install dashboards
 
 From there: https://github.com/kiali/kiali/tree/master/operator/roles/kiali-deploy/templates/dashboards
+
+```bash
+kubectl apply -f dashboards
+```
 
 ## Get the yml files locally
 
