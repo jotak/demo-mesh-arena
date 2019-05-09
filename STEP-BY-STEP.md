@@ -24,6 +24,14 @@ kubectl apply -f install/kubernetes/istio-demo.yaml
 bash <(curl -L https://git.io/getLatestKialiOperator)
 ```
 
+In a new terminal, you can forward Kiali's route:
+
+```bash
+kubectl port-forward svc/kiali 20001:20001 -n istio-system
+```
+
+Open http://localhost:20001/kiali
+
 ## Get the yml files locally
 
 - Clone this repo locally, `cd` to it.
