@@ -103,8 +103,8 @@ kubectl apply -f <(istioctl kube-inject -f ./services/ball/Deployment-v2.yml)
 
 ## Apply weight on balls
 ```bash
-istioctl create -f ./services/ball/destrule.yml
-istioctl create -f ./services/ball/virtualservice-75-25.yml
+kubectl apply -f ./services/ball/destrule.yml
+kubectl apply -f ./services/ball/virtualservice-75-25.yml
 ```
 
 ## Messi / Mbappé
@@ -115,31 +115,31 @@ kubectl apply -f <(istioctl kube-inject -f ./services/ai/Deployment-Mbappe.yml)
 
 ## Each his ball
 ```bash
-istioctl replace -f ./services/ball/virtualservice-by-label.yml
+kubectl apply -f ./services/ball/virtualservice-by-label.yml
 ```
 
 ## Reset
 ```bash
 kubectl delete -f ./services/ai/Deployment-Messi.yml
 kubectl delete -f ./services/ai/Deployment-Mbappe.yml
-istioctl delete -f ./services/ball/virtualservice-by-label.yml
+kubectl delete -f ./services/ball/virtualservice-by-label.yml
 ```
 
 ## Deploying burst ball (500 errors) unused
 ```bash
-istioctl create -f ./services/ball/virtualservice-all-to-v1.yml
+kubectl apply -f ./services/ball/virtualservice-all-to-v1.yml
 kubectl apply -f <(istioctl kube-inject -f ./services/ball/Deployment-burst.yml)
 ```
 
 ## Burst ball with shadowing
 ```bash
-istioctl replace -f ./services/ball/virtualservice-mirrored.yml
+kubectl apply -f ./services/ball/virtualservice-mirrored.yml
 ```
 
 ## Remove shadowing, put circuit breaking
 ```bash
-istioctl delete -f ./services/ball/virtualservice-mirrored.yml
-istioctl replace -f ./services/ball/destrule-outlier.yml
+kubectl delete -f ./services/ball/virtualservice-mirrored.yml
+kubectl apply -f ./services/ball/destrule-outlier.yml
 ````
 
 ## El Clasico, Caramba!
