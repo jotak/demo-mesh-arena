@@ -17,7 +17,9 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
 
+import java.security.SecureRandom;
 import java.util.Optional;
+import java.util.Random;
 
 import static demo.mesharena.common.Commons.*;
 
@@ -46,6 +48,7 @@ public class Stadium extends AbstractVerticle {
       new Segment(new Point(LEFT, TOP+HEIGHT), new Point(LEFT, TOP))
   };
 
+  private final Random rnd = new SecureRandom();
   private final WebClient client;
   private final JsonObject stadiumJson;
   private final JsonObject scoreJson;
@@ -89,7 +92,8 @@ public class Stadium extends AbstractVerticle {
     });
 
     router.get("/health").handler(ctx -> ctx.response().end());
-    router.get("/start").handler(this::startGame);
+    router.get("/centerBall").handler(this::startGame);
+    router.get("/randomBall").handler(this::randomBall);
     router.post("/bounce").handler(this::bounce);
     router.get("/info").handler(this::info);
     vertx.createHttpServer().requestHandler(router)
@@ -110,6 +114,21 @@ public class Stadium extends AbstractVerticle {
       display();
     });
     resetBall(ctx);
+    ctx.response().end();
+  }
+
+  private void randomBall(RoutingContext ctx) {
+    JsonObject json = new JsonObject()
+        .put("x", LEFT + rnd.nextInt(WIDTH))
+        .put("y", TOP + rnd.nextInt(HEIGHT));
+
+    HttpRequest<Buffer> request = client.put(BALL_PORT, BALL_HOST, "/setPosition");
+    TRACER.ifPresent(tracer -> tracer.inject(TracingHandler.serverSpanContext(ctx), Builtin.HTTP_HEADERS, new TracingContext(request.headers())));
+    request.sendJson(json, ar -> {
+      if (!ar.succeeded()) {
+        ar.cause().printStackTrace();
+      }
+    });
     ctx.response().end();
   }
 

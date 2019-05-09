@@ -24,7 +24,7 @@ spec:
         version: basic
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ai:1.1.2
+      - image: jotak/demo-mesh-arena-ai:1.1.3
         imagePullPolicy: IfNotPresent
         name: ai-visitors
         env:

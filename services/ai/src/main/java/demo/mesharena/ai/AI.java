@@ -182,44 +182,15 @@ public class AI extends AbstractVerticle {
   }
 
   private void lookForBall(Optional<SpanContext> spanContext, double delta) {
-    final Point shootDest;
-    Point goal = (arenaInfo == null) ? randomDestination() : arenaInfo.goal;
-    if (role == Role.ATTACK) {
-      Point direction = randomishSegmentNormalized(new Segment(pos, goal));
-      // Go forward or try to shoot
-      int rndNum = rnd.nextInt(100);
-      if (rndNum < ATT_SHOOT_FAST) {
-        // Try to shoot (if close enough to ball)
-        shootDest = direction.mult(SHOOT_STRENGTH).add(pos);
-      } else {
-        // Go forward
-        shootDest = direction.mult(SPEED * 1.8).add(pos);
-      }
-    } else {
-      // Defensive shoot
-      Point direction = randomishSegmentNormalized(new Segment(pos, goal));
-      // Go forward or defensive shoot
-      int rndNum = rnd.nextInt(100);
-      if (rndNum < DEF_SHOOT_FAST) {
-        // Defensive shoot, randomise a second time, shoot stronger
-        direction = randomishSegmentNormalized(new Segment(pos, pos.add(direction)));
-        shootDest = direction.mult(SHOOT_STRENGTH * 1.5).add(pos);
-      } else {
-        // Go forward
-        shootDest = direction.mult(SPEED * 1.8).add(pos);
-      }
-    }
     JsonObject json = new JsonObject()
         .put("playerX", pos.x())
         .put("playerY", pos.y())
-        .put("shootX", shootDest.x())
-        .put("shootY", shootDest.y())
         .put("playerSkill", SKILL)
         .put("playerID", id)
         .put("playerName", NAME)
         .put("playerTeam", TEAM);
 
-    HttpRequest<Buffer> request = client.get(BALL_PORT, BALL_HOST, "/interact");
+    HttpRequest<Buffer> request = client.get(BALL_PORT, BALL_HOST, "/tryGet");
     spanContext.ifPresent(sc -> TRACER.ifPresent(tracer -> tracer.inject(sc, Builtin.HTTP_HEADERS, new TracingContext(request.headers()))));
     request.sendJson(json, ar -> {
       if (!ar.succeeded()) {
@@ -238,10 +209,57 @@ public class AI extends AbstractVerticle {
           } else {
             currentDestination = defendPoint;
           }
+          if (Boolean.TRUE.equals(obj.getBoolean("success"))) {
+            shoot(spanContext, Boolean.TRUE.equals(obj.getBoolean("takesBall")));
+          }
         }
         walkToDestination(spanContext, delta);
       }
     });
+  }
+
+  private void shoot(Optional<SpanContext> spanContext, boolean takesBall) {
+    final Point shootVector;
+    final String kind;
+    Point goal = (arenaInfo == null) ? randomDestination() : arenaInfo.goal;
+    if (role == Role.ATTACK) {
+      Point direction = randomishSegmentNormalized(new Segment(pos, goal));
+      // Go forward or try to shoot
+      int rndNum = rnd.nextInt(100);
+      if (rndNum < ATT_SHOOT_FAST) {
+        // Try to shoot (if close enough to ball)
+        shootVector = direction.mult(SHOOT_STRENGTH);
+        kind = "togoal";
+      } else {
+        // Go forward
+        shootVector = direction.mult(SPEED * 1.8);
+        kind = takesBall ? "control" : "forward";
+      }
+    } else {
+      // Defensive shoot
+      Point direction = randomishSegmentNormalized(new Segment(pos, goal));
+      // Go forward or defensive shoot
+      int rndNum = rnd.nextInt(100);
+      if (rndNum < DEF_SHOOT_FAST) {
+        // Defensive shoot, randomise a second time, shoot stronger
+        direction = randomishSegmentNormalized(new Segment(pos, pos.add(direction)));
+        shootVector = direction.mult(SHOOT_STRENGTH * 1.5);
+        kind = "defensive";
+      } else {
+        // Go forward
+        shootVector = direction.mult(SPEED * 1.8);
+        kind = takesBall ? "control" : "forward";
+      }
+    }
+    JsonObject json = new JsonObject()
+        .put("dx", shootVector.x())
+        .put("dy", shootVector.y())
+        .put("kind", kind)
+        .put("playerID", id);
+
+    HttpRequest<Buffer> request = client.put(BALL_PORT, BALL_HOST, "/shoot");
+    spanContext.ifPresent(sc -> TRACER.ifPresent(tracer -> tracer.inject(sc, Builtin.HTTP_HEADERS, new TracingContext(request.headers()))));
+    request.sendJson(json, ar -> {});
   }
 
   private void idle() {

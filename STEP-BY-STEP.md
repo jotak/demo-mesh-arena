@@ -137,7 +137,7 @@ kubectl apply -f ./services/ball/virtualservice-by-label.yml
 kubectl delete -f ./services/ai/Deployment-Messi.yml
 kubectl delete -f ./services/ai/Deployment-Mbappe.yml
 kubectl delete -f ./services/ball/virtualservice-by-label.yml
-kubectl delete -f ./services/ui/Deployment-v2.yml
+kubectl delete -f ./services/ball/Deployment-v2.yml
 ```
 
 ## Burst ball (500 errors) with shadowing

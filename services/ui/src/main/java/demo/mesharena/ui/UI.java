@@ -59,7 +59,8 @@ public class UI extends AbstractVerticle {
         .addOutboundPermitted(new PermittedOptions().setAddress("displayGameObject"))
         .addOutboundPermitted(new PermittedOptions().setAddress("removeGameObject"))
         .addInboundPermitted(new PermittedOptions().setAddress("init-session"))
-        .addInboundPermitted(new PermittedOptions().setAddress("on-start"));
+        .addInboundPermitted(new PermittedOptions().setAddress("centerBall"))
+        .addInboundPermitted(new PermittedOptions().setAddress("randomBall"));
 
     // Create the event bus bridge and add it to the router.
     SockJSHandler sockJSHandler = SockJSHandler.create(vertx);
@@ -95,11 +96,22 @@ public class UI extends AbstractVerticle {
       }).collect(Collectors.toList());
       msg.reply(new JsonArray(objects));
     });
-    eb.consumer("on-start", msg -> {
-      Optional<Span> span = TRACER.map(tracer -> tracer.buildSpan("on-start").start());
-      System.out.println("Starting new game!");
+    eb.consumer("centerBall", msg -> {
+      Optional<Span> span = TRACER.map(tracer -> tracer.buildSpan("centerBall").start());
       HttpRequest<Buffer> request = WebClient.create(vertx)
-          .get(STADIUM_PORT, STADIUM_HOST, "/start");
+          .get(STADIUM_PORT, STADIUM_HOST, "/centerBall");
+      span.ifPresent(s -> TRACER.get().inject(s.context(), Builtin.HTTP_HEADERS, new TracingContext(request.headers())));
+      request.send(ar -> {
+        span.ifPresent(Span::finish);
+        if (!ar.succeeded()) {
+          ar.cause().printStackTrace();
+        }
+      });
+    });
+    eb.consumer("randomBall", msg -> {
+      Optional<Span> span = TRACER.map(tracer -> tracer.buildSpan("randomBall").start());
+      HttpRequest<Buffer> request = WebClient.create(vertx)
+          .get(STADIUM_PORT, STADIUM_HOST, "/randomBall");
       span.ifPresent(s -> TRACER.get().inject(s.context(), Builtin.HTTP_HEADERS, new TracingContext(request.headers())));
       request.send(ar -> {
         span.ifPresent(Span::finish);

@@ -46,7 +46,10 @@ eb.onreconnect = function() {
   $('#board').contents().remove();
 };
 
+function centerBall() {
+  eb.send("centerBall", "");
+}
 
-function onStart() {
-  eb.send("on-start", "");
+function randomBall() {
+  eb.send("randomBall", "");
 }

@@ -1,4 +1,4 @@
-# Generated template (mer. avril 24 13:22:30 CEST 2019)
+# Generated template (jeu. mai  9 21:18:54 CEST 2019)
 # Source: services/ui/Deployment.yml
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -20,13 +20,14 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
+        status.sidecar.istio.io/port: "0"
       labels:
         project: mesh-arena
         app: ui
         version: v1
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ui:1.1.2
+      - image: jotak/demo-mesh-arena-ui:1.1.3
         imagePullPolicy: IfNotPresent
         name: ui
         ports:
@@ -35,7 +36,7 @@ spec:
           protocol: TCP
         env:
         - name: METRICS_ENABLED
-          value: "0"
+          value: "1"
         - name: TRACING_ENABLED
           value: "1"
         - name: AB_OFF
@@ -53,7 +54,7 @@ spec:
         - name: JAEGER_SAMPLER_TYPE
           value: const
         - name: JAEGER_SAMPLER_PARAM
-          value: 1
+          value: "1"
         - name: JAEGER_PROPAGATION
           value: b3
         - name: JAEGER_ENDPOINT
@@ -114,13 +115,14 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
+        status.sidecar.istio.io/port: "0"
       labels:
         project: mesh-arena
         app: stadium
         version: small
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-stadium:1.1.2
+      - image: jotak/demo-mesh-arena-stadium:1.1.3
         imagePullPolicy: IfNotPresent
         name: stadium
         ports:
@@ -227,13 +229,14 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
+        status.sidecar.istio.io/port: "0"
       labels:
         project: mesh-arena
         app: ball
         version: v1
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ball:1.1.2
+      - image: jotak/demo-mesh-arena-ball:1.1.3
         imagePullPolicy: IfNotPresent
         name: ball
         ports:
@@ -242,7 +245,7 @@ spec:
           protocol: TCP
         env:
         - name: METRICS_ENABLED
-          value: "0"
+          value: "1"
         - name: TRACING_ENABLED
           value: "1"
         - name: AB_OFF
@@ -325,13 +328,14 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/scheme: "http"
         prometheus.io/port: "9090"
+        status.sidecar.istio.io/port: "0"
       labels:
         project: mesh-arena
         app: ai-locals
         version: basic
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ai:1.1.2
+      - image: jotak/demo-mesh-arena-ai:1.1.3
         imagePullPolicy: IfNotPresent
         name: ai-locals
         env:
@@ -418,7 +422,7 @@ spec:
         version: basic
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ai:1.1.2
+      - image: jotak/demo-mesh-arena-ai:1.1.3
         imagePullPolicy: IfNotPresent
         name: ai-visitors
         env:

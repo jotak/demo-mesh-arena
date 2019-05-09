@@ -30,7 +30,7 @@ import static demo.mesharena.common.Commons.*;
 public class Ball extends AbstractVerticle {
 
   private static final long DELTA_MS = 100;
-  private static final double RESISTANCE = 80;
+  private static final double RESISTANCE = Commons.getIntEnv("RESISTANCE", 80);
   private static final double PCT_ERRORS = Commons.getIntEnv("PCT_ERRORS", 0);
   private static final String IMAGE = Commons.getStringEnv("IMAGE", "ball");
 
@@ -46,7 +46,7 @@ public class Ball extends AbstractVerticle {
   private int controllingPlayerSkill;
   private double controllingPlayerSkillTimer;
   private String controllingPlayerTeam;
-  private Point pos = Point.ZERO;
+  private Point pos = new Point(50, 50);
   private double interactTimer;
   private double errorTimer;
 
@@ -90,7 +90,7 @@ public class Ball extends AbstractVerticle {
 
     router.get("/health").handler(ctx -> ctx.response().end());
     router.put("/shoot").handler(this::shoot);
-    router.get("/interact").handler(this::interact);
+    router.get("/tryGet").handler(this::tryGet);
     router.put("/setPosition").handler(this::setPosition);
     vertx.createHttpServer().requestHandler(router)
         .listen(serverOptions.getPort(), serverOptions.getHost());
@@ -102,7 +102,7 @@ public class Ball extends AbstractVerticle {
     vertx.setPeriodic(DELTA_MS, loopId -> this.update((double)DELTA_MS / 1000.0));
   }
 
-  private void interact(RoutingContext ctx) {
+  private void tryGet(RoutingContext ctx) {
     ctx.request().bodyHandler(buf -> {
       if (rnd.nextInt(100) < PCT_ERRORS) {
         errorTimer = 0;
@@ -113,44 +113,20 @@ public class Ball extends AbstractVerticle {
       JsonObject input = buf.toJsonObject();
       double playerX = input.getDouble("playerX");
       double playerY = input.getDouble("playerY");
-      double shootX = input.getDouble("shootX");
-      double shootY = input.getDouble("shootY");
       String playerID = input.getString("playerID");
       int playerSkill = input.getInteger("playerSkill");
       String playerName = input.getString("playerName");
       String playerTeam = input.getString("playerTeam");
       JsonObject output = new JsonObject()
           .put("x", pos.x())
-          .put("y", pos.y());
+          .put("y", pos.y())
+          .put("id", id);
 
       double distanceToBall = pos.diff(new Point(playerX, playerY)).size();
       if (distanceToBall < 15) {
+        controllingPlayerSkill = playerSkill;
         if (playerID.equals(controllingPlayer)) {
-          if (distanceToBall < 5) {
-            // Shoot
-            controllingPlayerSkill = playerSkill;
-            speed = new Point(shootX, shootY).diff(pos);
-            int commentRnd = rnd.nextInt(2);
-            if (speed.size() > 200) {
-              if (commentRnd == 0) {
-                comment(playerName + " shooting!");
-              } else {
-                comment("Wooow " + playerName + " tries his luck!");
-              }
-              registry.ifPresent(reg -> Counter.builder("mesharena_shoots")
-                  .description("Shoots counter")
-                  .tag("team", controllingPlayerTeam)
-                  .tag("player", controllingPlayerName)
-                  .register(reg)
-                  .increment());
-            } else {
-              if (commentRnd == 0) {
-                comment("Still " + playerName + "...");
-              } else {
-                comment(playerName + " again...");
-              }
-            }
-          }
+          output.put("success", true);
         } else if (controllingPlayer == null || rnd.nextInt(2 * controllingPlayerSkill + playerSkill) < playerSkill) {
           if (controllingPlayer != null) {
             registry.ifPresent(reg -> Counter.builder("mesharena_take_ball")
@@ -161,22 +137,55 @@ public class Ball extends AbstractVerticle {
                 .increment());
           }
           controllingPlayer = playerID;
-          controllingPlayerSkill = playerSkill;
           controllingPlayerName = playerName;
           controllingPlayerTeam = playerTeam;
-          // Shoot
-          speed = new Point(shootX, shootY).diff(pos);
-          double size = speed.size();
-          if (size > 310) {
-            comment("Defensive shooting from " + playerName);
-          } else if (size > 200) {
-            comment(playerName + " takes the ball and shoots!");
-          } else {
-            comment(playerName + " takes the ball back");
-          }
+          output.put("success", true).put("takesBall", true);
         }
       }
+
       ctx.response().end(output.toString());
+    });
+  }
+
+  private void shoot(RoutingContext ctx) {
+    ctx.request().bodyHandler(buf -> {
+      JsonObject json = buf.toJsonObject();
+//      String playerID = json.getString("playerID");
+      double dx = json.getDouble("dx");
+      double dy = json.getDouble("dy");
+      String kind = json.getString("kind");
+      if (controllingPlayer != null) {
+//      if (playerID.equals(controllingPlayer)) {
+        speed = new Point(dx, dy);
+        if ("togoal".equals(kind)) {
+          if (rnd.nextInt(2) == 0) {
+            comment(controllingPlayerName + " shooting!");
+          } else {
+            comment("Wooow " + controllingPlayerName + " tries his luck!");
+          }
+          registry.ifPresent(reg -> Counter.builder("mesharena_shoots")
+              .description("Shoots counter")
+              .tag("team", controllingPlayerTeam)
+              .tag("player", controllingPlayerName)
+              .register(reg)
+              .increment());
+        } else if ("forward".equals(kind)) {
+          if (rnd.nextInt(2) == 0) {
+            comment("Still " + controllingPlayerName + "...");
+          } else {
+            comment(controllingPlayerName + " again...");
+          }
+        } else if ("defensive".equals(kind)) {
+          if (rnd.nextInt(2) == 0) {
+            comment("Defensive shooting from " + controllingPlayerName);
+          } else {
+            comment(controllingPlayerName + " takes the ball and shoots!");
+          }
+        } else if ("control".equals(kind)) {
+          comment(controllingPlayerName + " takes the ball back");
+        }
+      }
+      ctx.response().end();
     });
   }
 
@@ -204,18 +213,6 @@ public class Ball extends AbstractVerticle {
       controllingPlayerSkill = 0;
       ctx.response().end();
       display();
-    });
-  }
-
-  private void shoot(RoutingContext ctx) {
-    ctx.request().bodyHandler(buf -> {
-      JsonObject json = buf.toJsonObject();
-      double dx = json.getDouble("dx");
-      double dy = json.getDouble("dy");
-      speed = new Point(dx, dy);
-      controllingPlayer = null;
-      controllingPlayerSkill = 0;
-      ctx.response().end();
     });
   }
 
