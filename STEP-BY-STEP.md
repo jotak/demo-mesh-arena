@@ -12,6 +12,18 @@ This demo was presented at [DevopsDday](http://2018.devops-dday.com/) in the Vel
 - Kubernetes or OpenShift cluster running (ex: minikube 0.27+ / minishift)
 - Istio with Kiali installed
 
+### Example of Istio + Kiali install:
+
+```bash
+curl -L https://git.io/getLatestIstio | ISTIO_VERSION=1.1.5 sh -
+# Don't forget to export istio-1.1.5/bin to your path (as said in terminal output)
+cd istio-1.1.5
+for i in install/kubernetes/helm/istio-init/files/crd*yaml; do kubectl apply -f $i; done
+kubectl apply -f install/kubernetes/istio-demo.yaml
+
+bash <(curl -L https://git.io/getLatestKialiOperator)
+```
+
 ## Get the yml files locally
 
 - Clone this repo locally, `cd` to it.
