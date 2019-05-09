@@ -4,11 +4,12 @@ metadata:
   name: mesh-arena
   labels:
     project: mesh-arena
-    runtime: "mesh-arena"
 spec:
   title: Mesh Arena Metrics
-  charts:
-    - name: "Goals"
+  discoverOn: "mesharena_goals_total"
+  items:
+  - chart:
+      name: "Goals"
       unit: ""
       spans: 6
       metricName: "mesharena_goals_total"
@@ -20,7 +21,8 @@ spec:
           displayName: "Team"
         - label: "own_goal"
           displayName: "Own goal"
-    - name: "Shoots"
+  - chart:
+      name: "Shoots"
       unit: "ops"
       spans: 6
       metricName: "mesharena_shoots_total"
@@ -30,7 +32,8 @@ spec:
           displayName: "Player"
         - label: "team"
           displayName: "Team"
-    - name: "Taking ball"
+  - chart:
+      name: "Taking ball"
       unit: "ops"
       spans: 6
       metricName: "mesharena_take_ball_total"
@@ -40,7 +43,8 @@ spec:
           displayName: "Player"
         - label: "team"
           displayName: "Team"
-    - name: "Ball speed"
+  - chart:
+      name: "Ball speed"
       unit: "pxl/s"
       spans: 6
       metricName: "mesharena_ball_speed"

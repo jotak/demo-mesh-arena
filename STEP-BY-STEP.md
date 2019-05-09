@@ -34,7 +34,9 @@ In a new terminal, you can forward Kiali's route:
 kubectl port-forward svc/kiali 20001:20001 -n istio-system
 ```
 
-Open http://localhost:20001/kiali
+Open https://localhost:20001/kiali
+
+(Might be an insecure connection / invalid certificate, to allow in Chrome go to chrome://flags/#allow-insecure-localhost )
 
 ### Install dashboards
 
