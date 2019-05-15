@@ -55,7 +55,7 @@ public class Stadium extends AbstractVerticle {
 
   private int scoreA = 0;
   private int scoreB = 0;
-  private long startTime = 0;
+  private long startTime = System.currentTimeMillis();
 
   private Stadium(Vertx vertx) {
     Optional<Span> span = TRACER.map(t -> t.buildSpan("application_start").start());
