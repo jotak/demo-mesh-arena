@@ -6,7 +6,6 @@ import io.opentracing.Span;
 import io.opentracing.contrib.vertx.ext.web.TracingHandler;
 import io.opentracing.propagation.Format.Builtin;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerOptions;
@@ -27,9 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static demo.mesharena.common.Commons.STADIUM_HOST;
-import static demo.mesharena.common.Commons.STADIUM_PORT;
-import static demo.mesharena.common.Commons.TRACER;
+import static demo.mesharena.common.Commons.*;
 
 public class UI extends AbstractVerticle {
 
@@ -39,7 +36,7 @@ public class UI extends AbstractVerticle {
   }
 
   public static void main(String[] args) {
-    Vertx.vertx(Commons.vertxOptions()).deployVerticle(new UI());
+    Commons.vertx().deployVerticle(new UI());
   }
 
   @Override

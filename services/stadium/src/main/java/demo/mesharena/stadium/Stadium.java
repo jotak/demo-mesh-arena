@@ -75,7 +75,7 @@ public class Stadium extends AbstractVerticle {
   }
 
   public static void main(String[] args) {
-    Vertx vertx = Vertx.vertx(Commons.vertxOptions());
+    Vertx vertx = Commons.vertx();
     vertx.deployVerticle(new Stadium(vertx));
   }
 

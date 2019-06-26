@@ -3,14 +3,14 @@ kind: Deployment
 metadata:
   labels:
     project: mesh-arena
-    app: ai-locals
+    app: ai
     version: mbappe
-  name: ai-locals-mbappe
+  name: ai-mbappe
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ai-locals
+      app: ai
       version: mbappe
   template:
     metadata:
@@ -20,11 +20,12 @@ spec:
         prometheus.io/port: "9090"
       labels:
         project: mesh-arena
-        app: ai-locals
+        app: ai
         version: mbappe
+        vm: hotspot
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ai:1.1.3
+      - image: jotak/demo-mesh-arena-ai:1.1.4
         imagePullPolicy: IfNotPresent
         name: ai-locals
         env:

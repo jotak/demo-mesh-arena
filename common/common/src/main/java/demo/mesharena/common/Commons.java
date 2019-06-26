@@ -1,12 +1,18 @@
 package demo.mesharena.common;
 
 import io.jaegertracing.Configuration;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics;
+import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics;
 import io.opentracing.Tracer;
+import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.micrometer.Label;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
+import io.vertx.micrometer.backends.BackendRegistries;
 
 import java.util.EnumSet;
 import java.util.Optional;
@@ -74,17 +80,29 @@ public final class Commons {
     return out.toString();
   }
 
-  public static VertxOptions vertxOptions() {
+  public static Vertx vertx() {
     if (METRICS_ENABLED == 1) {
-      return new VertxOptions().setMetricsOptions(new MicrometerMetricsOptions()
+      Vertx vertx = Vertx.vertx(new VertxOptions().setMetricsOptions(new MicrometerMetricsOptions()
           .setPrometheusOptions(new VertxPrometheusOptions()
               .setStartEmbeddedServer(true)
               .setEmbeddedServerOptions(new HttpServerOptions().setPort(9090))
               .setPublishQuantiles(true)
               .setEnabled(true))
           .setLabels(EnumSet.of(Label.POOL_TYPE, Label.POOL_NAME, Label.CLASS_NAME, Label.HTTP_CODE, Label.HTTP_METHOD, Label.HTTP_PATH, Label.EB_ADDRESS, Label.EB_FAILURE, Label.EB_SIDE))
-          .setEnabled(true));
+          .setEnabled(true)));
+
+      // Instrument JVM
+      MeterRegistry registry = BackendRegistries.getDefaultNow();
+      if (registry != null) {
+        new ClassLoaderMetrics().bindTo(registry);
+        new JvmMemoryMetrics().bindTo(registry);
+        // new JvmGcMetrics().bindTo(registry);
+        // new ProcessorMetrics().bindTo(registry);
+        new JvmThreadMetrics().bindTo(registry);
+      }
+
+      return vertx;
     }
-    return new VertxOptions();
+    return Vertx.vertx();
   }
 }

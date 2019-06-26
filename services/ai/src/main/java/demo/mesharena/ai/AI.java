@@ -81,7 +81,7 @@ public class AI extends AbstractVerticle {
   }
 
   public static void main(String[] args) {
-    Vertx vertx = Vertx.vertx(Commons.vertxOptions());
+    Vertx vertx = Commons.vertx();
     vertx.deployVerticle(new AI(vertx));
   }
 
