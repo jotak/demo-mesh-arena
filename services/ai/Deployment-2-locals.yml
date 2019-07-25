@@ -16,8 +16,6 @@ spec:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/scheme: "http"
-        prometheus.io/port: "9090"
       labels:
         project: mesh-arena
         app: ai
@@ -25,9 +23,13 @@ spec:
         vm: hotspot
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ai:1.1.4
+      - image: jotak/demo-mesh-arena-ai:1.1.5
         imagePullPolicy: IfNotPresent
         name: ai-locals
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
         env:
         - name: METRICS_ENABLED
           value: "0"

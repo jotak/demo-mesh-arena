@@ -13,10 +13,13 @@ import io.opentracing.propagation.Format.Builtin;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.Router;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.micrometer.PrometheusScrapingHandler;
 
 import java.security.SecureRandom;
 import java.util.Optional;
@@ -87,6 +90,18 @@ public class AI extends AbstractVerticle {
 
   @Override
   public void start() throws Exception {
+    // Start metrics server
+    HttpServerOptions serverOptions = new HttpServerOptions().setPort(8080);
+
+    Router router = Router.router(vertx);
+    router.get("/health").handler(ctx -> ctx.response().end());
+
+    if (Commons.METRICS_ENABLED == 1) {
+      router.route("/metrics").handler(PrometheusScrapingHandler.create());
+    }
+    vertx.createHttpServer().requestHandler(router)
+        .listen(serverOptions.getPort(), serverOptions.getHost());
+
     // First display
     Optional<Span> startSpan = TRACER.map(t -> t.buildSpan("start").start());
     display(startSpan.map(Span::context));

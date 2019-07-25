@@ -16,6 +16,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.micrometer.PrometheusScrapingHandler;
 
 import java.security.SecureRandom;
 import java.util.Optional;
@@ -90,6 +91,10 @@ public class Stadium extends AbstractVerticle {
           .order(-1).handler(handler)
           .failureHandler(handler);
     });
+
+    if (Commons.METRICS_ENABLED == 1) {
+      router.route("/metrics").handler(PrometheusScrapingHandler.create());
+    }
 
     router.get("/health").handler(ctx -> ctx.response().end());
     router.get("/centerBall").handler(this::startGame);

@@ -1,4 +1,4 @@
-# Generated template (mer. juin 26 12:19:29 CEST 2019)
+# Generated template (jeu. juil. 25 11:51:58 CEST 2019)
 # Source: services/ui/Deployment.yml
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -18,16 +18,13 @@ spec:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/scheme: "http"
-        prometheus.io/port: "9090"
-        status.sidecar.istio.io/port: "0"
       labels:
         project: mesh-arena
         app: ui
         version: v1
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ui:1.1.4
+      - image: jotak/demo-mesh-arena-ui:1.1.5
         imagePullPolicy: IfNotPresent
         name: ui
         ports:
@@ -113,16 +110,13 @@ spec:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/scheme: "http"
-        prometheus.io/port: "9090"
-        status.sidecar.istio.io/port: "0"
       labels:
         project: mesh-arena
         app: stadium
         version: small
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-stadium:1.1.4
+      - image: jotak/demo-mesh-arena-stadium:1.1.5
         imagePullPolicy: IfNotPresent
         name: stadium
         ports:
@@ -227,16 +221,13 @@ spec:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/scheme: "http"
-        prometheus.io/port: "9090"
-        status.sidecar.istio.io/port: "0"
       labels:
         project: mesh-arena
         app: ball
         version: v1
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ball:1.1.4
+      - image: jotak/demo-mesh-arena-ball:1.1.5
         imagePullPolicy: IfNotPresent
         name: ball
         ports:
@@ -326,8 +317,6 @@ spec:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/scheme: "http"
-        prometheus.io/port: "9090"
       labels:
         project: mesh-arena
         app: ai
@@ -335,9 +324,13 @@ spec:
         vm: hotspot
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ai:1.1.4
+      - image: jotak/demo-mesh-arena-ai:1.1.5
         imagePullPolicy: IfNotPresent
         name: ai-locals
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
         env:
         - name: METRICS_ENABLED
           value: "0"
@@ -414,8 +407,6 @@ spec:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/scheme: "http"
-        prometheus.io/port: "9090"
       labels:
         project: mesh-arena
         app: ai
@@ -423,9 +414,13 @@ spec:
         vm: openj9
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-oj9-ai:1.1.4
+      - image: jotak/demo-mesh-arena-oj9-ai:1.1.5
         imagePullPolicy: IfNotPresent
         name: ai-visitors-oj9
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
         env:
         - name: METRICS_ENABLED
           value: "0"

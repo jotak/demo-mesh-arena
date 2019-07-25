@@ -16,16 +16,13 @@ spec:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/scheme: "http"
-        prometheus.io/port: "9090"
-        status.sidecar.istio.io/port: "0"
       labels:
         project: mesh-arena
         app: ui
         version: v1
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ui:1.1.4
+      - image: jotak/demo-mesh-arena-ui:1.1.5
         imagePullPolicy: IfNotPresent
         name: ui
         ports:

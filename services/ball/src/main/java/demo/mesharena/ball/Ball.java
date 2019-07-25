@@ -18,6 +18,7 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.micrometer.PrometheusScrapingHandler;
 import io.vertx.micrometer.backends.BackendRegistries;
 
 import java.security.SecureRandom;
@@ -87,6 +88,10 @@ public class Ball extends AbstractVerticle {
           .order(-1).handler(handler)
           .failureHandler(handler);
     });
+
+    if (Commons.METRICS_ENABLED == 1) {
+      router.route("/metrics").handler(PrometheusScrapingHandler.create());
+    }
 
     router.get("/health").handler(ctx -> ctx.response().end());
     router.put("/shoot").handler(this::shoot);

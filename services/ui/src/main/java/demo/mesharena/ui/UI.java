@@ -19,6 +19,7 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
+import io.vertx.micrometer.PrometheusScrapingHandler;
 
 import java.util.HashMap;
 import java.util.List;
@@ -64,6 +65,9 @@ public class UI extends AbstractVerticle {
     sockJSHandler.bridge(opts);
     router.route("/eventbus/*").handler(sockJSHandler);
 
+    if (Commons.METRICS_ENABLED == 1) {
+      router.route("/metrics").handler(PrometheusScrapingHandler.create());
+    }
     router.get("/health").handler(ctx -> ctx.response().end());
 
     // TODO: replace http API with eventbus messages

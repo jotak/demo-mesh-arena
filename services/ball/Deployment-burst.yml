@@ -16,16 +16,13 @@ spec:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
-        prometheus.io/scheme: "http"
-        prometheus.io/port: "9090"
-        status.sidecar.istio.io/port: "0"
       labels:
         project: mesh-arena
         app: ball
         version: v2
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ball:1.1.4
+      - image: jotak/demo-mesh-arena-ball:1.1.5
         imagePullPolicy: IfNotPresent
         name: ball
         ports:
@@ -34,7 +31,7 @@ spec:
           protocol: TCP
         env:
         - name: METRICS_ENABLED
-          value: "1"
+          value: "0"
         - name: TRACING_ENABLED
           value: "0"
         - name: AB_OFF
