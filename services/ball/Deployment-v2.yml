@@ -16,6 +16,7 @@ spec:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
+        prometheus.io/scheme: "http"
       labels:
         project: mesh-arena
         app: ball

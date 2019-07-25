@@ -1,4 +1,4 @@
-# Generated template (jeu. juil. 25 11:51:58 CEST 2019)
+# Generated template (jeu. juil. 25 12:10:07 CEST 2019)
 # Source: services/ui/Deployment.yml
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -18,6 +18,7 @@ spec:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
+        prometheus.io/scheme: "http"
       labels:
         project: mesh-arena
         app: ui
@@ -110,6 +111,7 @@ spec:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
+        prometheus.io/scheme: "http"
       labels:
         project: mesh-arena
         app: stadium
@@ -221,6 +223,7 @@ spec:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
+        prometheus.io/scheme: "http"
       labels:
         project: mesh-arena
         app: ball
@@ -317,6 +320,7 @@ spec:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
+        prometheus.io/scheme: "http"
       labels:
         project: mesh-arena
         app: ai
@@ -407,6 +411,7 @@ spec:
     metadata:
       annotations:
         prometheus.io/scrape: "true"
+        prometheus.io/scheme: "http"
       labels:
         project: mesh-arena
         app: ai
