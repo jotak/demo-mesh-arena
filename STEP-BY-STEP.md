@@ -105,9 +105,8 @@ kubectl create -f ./services/ball/Service.yml
 ## Deploy 2x2 players
 ```bash
 kubectl apply -f <(istioctl kube-inject -f ./services/ai/Deployment-2-locals.yml)
-kubectl create -f ./services/ai/Service-locals.yml
 kubectl apply -f <(istioctl kube-inject -f ./services/ai/Deployment-2-visitors.yml)
-kubectl create -f ./services/ai/Service-visitors.yml
+kubectl create -f ./services/ai/Service.yml
 ```
 
 ## Second ball
@@ -151,19 +150,6 @@ kubectl apply -f <(istioctl kube-inject -f ./services/ball/Deployment-burst.yml)
 kubectl delete -f ./services/ball/virtualservice-mirrored.yml
 kubectl apply -f ./services/ball/destrule-outlier.yml
 ````
-
-## El Clasico, Caramba!
-
-**D-I-S-C-L-A-I-M-E-R**
-This is going to deploy 20 players on the field, it's quite CPU intensive, it is NOT recommended to run on a PC / single-node cluster, or your cluster may suffer.
-
-```bash
-kubectl delete -f ./services/ball/Deployment-v2.yml
-kubectl delete -f ./services/ai/Deployment-2-locals.yml
-kubectl delete -f ./services/ai/Deployment-2-visitors.yml
-kubectl apply -f <(istioctl kube-inject -f ./services/ai/Deployment-OM.yml)
-kubectl apply -f <(istioctl kube-inject -f ./services/ai/Deployment-PSG.yml)
-```
 
 ## To clean up everything
 

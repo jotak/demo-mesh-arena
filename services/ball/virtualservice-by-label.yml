@@ -12,11 +12,18 @@ spec:
   http:
   - match:
     - sourceLabels:
-        version: basic
+        version: locals
     route:
     - destination:
         host: ball
         subset: ball-v1
+  - match:
+    - sourceLabels:
+        version: visitors
+    route:
+      - destination:
+          host: ball
+          subset: ball-v1
   - route:
     - destination:
         host: ball
