@@ -15,6 +15,9 @@ For a step-by-step walk-through, [read this](./STEP-BY-STEP.md).
 - Istio with Kiali installed
 - Repo cloned locally (actually, only YML files are necessary)
 
+Below instructions are given for OpenShift, but this is almost the same with standard Kubernetes.
+Just replace `oc` with `kubectl`, ignore `oc expose`, ignore the `oc adm policy` stuff.
+
 ## OpenShift
 
 For OpenShift users, you may have to grant extended permissions for Istio, logged as admin:
@@ -24,7 +27,7 @@ oc new-project mesh-arena
 oc adm policy add-scc-to-user privileged -z default
 ```
 
-## Deploy services
+### Deploy all
 
 Without runtimes metrics & tracing:
 
@@ -50,59 +53,13 @@ With everything:
 oc apply -f <(istioctl kube-inject -f full-metrics-tracing.yml)
 ```
 
-## Expose route
+### Expose route
 
 ```bash
 oc expose service ui
 ```
 
-## Second ball
-```bash
-oc apply -f <(istioctl kube-inject -f ./services/ball/Deployment-v2.yml)
-````
-
-## Weighting
-```bash
-oc apply -f ./services/ball/destrule.yml
-oc apply -f ./services/ball/virtualservice-75-25.yml
-```
-
-## Messi / Mbappé
-```bash
-oc apply -f <(istioctl kube-inject -f ./services/ai/Deployment-Messi.yml)
-oc apply -f <(istioctl kube-inject -f ./services/ai/Deployment-Mbappe.yml)
-```
-
-## 2 games
-```bash
-oc apply -f ./services/ball/virtualservice-by-label.yml
-```
-
-## Reset
-```bash
-oc delete -f ./services/ai/Deployment-Messi.yml
-oc delete -f ./services/ai/Deployment-Mbappe.yml
-oc delete -f ./services/ball/virtualservice-by-label.yml
-```
-
-## Deploying burst ball (500 errors) unused
-```bash
-oc apply -f ./services/ball/virtualservice-all-to-v1.yml
-oc apply -f <(istioctl kube-inject -f ./services/ball/Deployment-burst.yml)
-```
-
-## Burst ball with shadowing
-```bash
-oc apply -f ./services/ball/virtualservice-mirrored.yml
-```
-
-## Remove shadowing, put circuit breaking
-```bash
-oc delete -f ./services/ball/virtualservice-mirrored.yml
-oc apply -f ./services/ball/destrule-outlier.yml
-```
-
-## To clean up everything
+### Clean up everything
 
 ```bash
 oc delete deployments -l project=mesh-arena
@@ -111,7 +68,7 @@ oc delete virtualservices -l project=mesh-arena
 oc delete destinationrules -l project=mesh-arena
 ```
 
-## To build the demo
+## Build the demo
 
 For the first build, it is necessary to get the JS dependencies on your filesystem:
 
@@ -132,7 +89,7 @@ Then build everything:
 
 Then update all the deployment YAML to have the correct docker tag on images
 
-## To generate the full-* templates
+## Generate the full-* templates
 ```bash
 ./gentemplate.sh
 ```
