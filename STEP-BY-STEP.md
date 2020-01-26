@@ -225,8 +225,5 @@ corresponding to the time when it's put back in LB pool.
 ## To clean up everything
 
 ```bash
-kubectl delete deployments -l project=mesh-arena
-kubectl delete svc -l project=mesh-arena
-kubectl delete virtualservices -l project=mesh-arena
-kubectl delete destinationrules -l project=mesh-arena
+kubectl delete all -l project=mesh-arena
 ```
