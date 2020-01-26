@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -23,7 +23,7 @@ spec:
         version: v1
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ui:1.1.5
+      - image: jotak/demo-mesh-arena-ui:1.1.6
         imagePullPolicy: IfNotPresent
         name: ui
         ports:

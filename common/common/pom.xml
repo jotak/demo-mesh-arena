@@ -24,6 +24,10 @@
       <artifactId>micrometer-registry-prometheus</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-opentracing</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.jaegertracing</groupId>
       <artifactId>jaeger-client</artifactId>
       <version>0.33.1</version>

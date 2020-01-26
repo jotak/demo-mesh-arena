@@ -1,6 +1,6 @@
-# Generated template (mer. oct.  9 14:06:56 CEST 2019)
+# Generated template (dim. janv. 26 10:12:10 CET 2020)
 # Source: services/ui/Deployment.yml
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -25,7 +25,7 @@ spec:
         version: v1
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ui:1.1.5
+      - image: jotak/demo-mesh-arena-ui:1.1.6
         imagePullPolicy: IfNotPresent
         name: ui
         ports:
@@ -93,7 +93,7 @@ spec:
     app: ui
 ---
 # Source: services/stadium/Deployment-Smaller.yml
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -118,7 +118,7 @@ spec:
         version: small
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-stadium:1.1.5
+      - image: jotak/demo-mesh-arena-stadium:1.1.6
         imagePullPolicy: IfNotPresent
         name: stadium
         ports:
@@ -205,7 +205,7 @@ spec:
 
 ---
 # Source: services/ball/Deployment.yml
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -230,7 +230,7 @@ spec:
         version: v1
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ball:1.1.5
+      - image: jotak/demo-mesh-arena-ball:1.1.6
         imagePullPolicy: IfNotPresent
         name: ball
         ports:
@@ -302,7 +302,7 @@ spec:
     app: ball
 ---
 # Source: services/ai/Deployment-2-locals.yml
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -328,7 +328,7 @@ spec:
         vm: hotspot
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ai:1.1.5
+      - image: jotak/demo-mesh-arena-ai:1.1.6
         imagePullPolicy: IfNotPresent
         name: ai-locals
         ports:
@@ -393,7 +393,7 @@ spec:
 
 ---
 # Source: services/ai/Deployment-2-visitors.yml
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -419,7 +419,7 @@ spec:
         vm: openj9
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-oj9-ai:1.1.5
+      - image: jotak/demo-mesh-arena-oj9-ai:1.1.6
         imagePullPolicy: IfNotPresent
         name: ai-visitors-oj9
         ports:

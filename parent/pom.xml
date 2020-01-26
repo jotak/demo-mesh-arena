@@ -10,7 +10,7 @@
   <version>1</version>
 
   <properties>
-    <vertx.version>3.6.0</vertx.version>
+    <vertx.version>4.0.0-SNAPSHOT</vertx.version>
   </properties>
 
   <dependencyManagement>
@@ -28,6 +28,11 @@
       <dependency>
         <groupId>io.vertx</groupId>
         <artifactId>vertx-web-client</artifactId>
+        <version>${vertx.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-opentracing</artifactId>
         <version>${vertx.version}</version>
       </dependency>
       <dependency>
@@ -71,4 +76,14 @@
       </plugin>
     </plugins>
   </build>
+
+     <repositories>
+       <repository>
+         <id>snapshots-repo</id>
+         <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+         <releases><enabled>false</enabled></releases>
+         <snapshots><enabled>true</enabled></snapshots>
+       </repository>
+     </repositories>
+
 </project>

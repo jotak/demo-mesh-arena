@@ -30,7 +30,7 @@ import static demo.mesharena.common.Commons.*;
 
 public class Ball extends AbstractVerticle {
 
-  private static final long DELTA_MS = 100;
+  private static final long DELTA_MS = 200;
   private static final double RESISTANCE = Commons.getIntEnv("RESISTANCE", 80);
   private static final double PCT_ERRORS = Commons.getIntEnv("PCT_ERRORS", 0);
   private static final String IMAGE = Commons.getStringEnv("IMAGE", "ball");

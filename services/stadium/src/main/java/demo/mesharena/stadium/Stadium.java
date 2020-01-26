@@ -81,7 +81,7 @@ public class Stadium extends AbstractVerticle {
   }
 
   @Override
-  public void start() throws Exception {
+  public void start() {
     // Register stadium API
     HttpServerOptions serverOptions = new HttpServerOptions().setPort(Commons.STADIUM_PORT);
     Router router = Router.router(vertx);

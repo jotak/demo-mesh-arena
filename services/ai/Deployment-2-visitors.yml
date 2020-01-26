@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -24,7 +24,7 @@ spec:
         vm: openj9
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-oj9-ai:1.1.5
+      - image: jotak/demo-mesh-arena-oj9-ai:1.1.6
         imagePullPolicy: IfNotPresent
         name: ai-visitors-oj9
         ports:

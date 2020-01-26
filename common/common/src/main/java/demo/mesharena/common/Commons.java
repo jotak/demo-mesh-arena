@@ -12,6 +12,7 @@ import io.vertx.micrometer.Label;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
+import io.vertx.tracing.opentracing.OpenTracingOptions;
 
 import java.util.EnumSet;
 import java.util.Optional;
@@ -30,8 +31,7 @@ public final class Commons {
   private static Optional<Tracer> initTracer() {
     int tracingEnabled = Commons.getIntEnv("TRACING_ENABLED", 0);
     if (tracingEnabled == 1) {
-      Configuration configuration = Configuration.fromEnv();
-      return Optional.of(configuration.getTracer());
+      return Optional.of(Configuration.fromEnv().getTracer());
     }
     return Optional.empty();
   }
@@ -99,6 +99,10 @@ public final class Commons {
       }
 
       return vertx;
+    }
+    if (TRACER.isPresent()) {
+      return Vertx.vertx(new VertxOptions().setTracingOptions(
+          new OpenTracingOptions(TRACER.get()).setEnabled(true)));
     }
     return Vertx.vertx();
   }

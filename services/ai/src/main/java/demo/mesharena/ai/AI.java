@@ -4,11 +4,8 @@ import demo.mesharena.common.Commons;
 import demo.mesharena.common.Point;
 import demo.mesharena.common.Segment;
 import demo.mesharena.common.TracingContext;
-import io.opentracing.References;
 import io.opentracing.Scope;
 import io.opentracing.Span;
-import io.opentracing.SpanContext;
-import io.opentracing.Tracer.SpanBuilder;
 import io.opentracing.propagation.Format.Builtin;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
@@ -67,9 +64,6 @@ public class AI extends AbstractVerticle {
   private enum Role { ATTACK, DEFEND }
   private Role role;
 
-  private Optional<Span> currentSpan = Optional.empty();
-  private Optional<Span> newGameSpan = Optional.empty();
-
   public AI(Vertx vertx) {
     Optional<Span> span = TRACER.map(t -> t.buildSpan("application_start").start());
 
@@ -89,7 +83,7 @@ public class AI extends AbstractVerticle {
   }
 
   @Override
-  public void start() throws Exception {
+  public void start() {
     // Start metrics server
     HttpServerOptions serverOptions = new HttpServerOptions().setPort(8080);
 
@@ -104,7 +98,7 @@ public class AI extends AbstractVerticle {
 
     // First display
     Optional<Span> startSpan = TRACER.map(t -> t.buildSpan("start").start());
-    display(startSpan.map(Span::context));
+    display();
 
     // Check regularly about arena info
     checkArenaInfo();
@@ -131,54 +125,24 @@ public class AI extends AbstractVerticle {
             int defendZoneBottom = obj.getInteger("defendZoneBottom");
             int defendZoneLeft = obj.getInteger("defendZoneLeft");
             int defendZoneRight = obj.getInteger("defendZoneRight");
-            int scoreA = obj.getInteger("scoreA");
-            int scoreB = obj.getInteger("scoreB");
 
-            if (arenaInfo == null || (arenaInfo.scoreA != scoreA || arenaInfo.scoreA != scoreB)) {
-              // the goals changed - new game started
-              newGameSpan = Optional.empty();
-              TRACER.ifPresent(tracer -> {
-                try (Scope startGame = tracer.buildSpan("new_game")
-                    .withTag("name", NAME)
-                    .withTag("id", id)
-                    .ignoreActiveSpan()
-                    .startActive(true)) {
-                  newGameSpan = Optional.of(startGame.span());
-                }
-              });
-            }
-
-            arenaInfo = new ArenaInfo(defendZoneTop, defendZoneLeft, defendZoneBottom, defendZoneRight, new Point(goalX, goalY), scoreA, scoreB);
+            arenaInfo = new ArenaInfo(defendZoneTop, defendZoneLeft, defendZoneBottom, defendZoneRight, new Point(goalX, goalY));
           }
         });
   }
 
   private void update(double delta) {
-    Optional<Span> updateSpan = TRACER.map(tracer -> {
-      SpanBuilder updateSpanBuilder = tracer.buildSpan("update")
-          .withTag("x", pos != null ? pos.x() :  0)
-          .withTag("x", pos != null ? pos.y() : 0)
-          .withTag("role", role != null ? role.name(): "unknown");
-      SpanContext followsFrom = newGameSpan.map(Span::context).orElse(currentSpan.map(Span::context).orElse(null));
-      newGameSpan = Optional.empty();
-      updateSpanBuilder.addReference(References.FOLLOWS_FROM, followsFrom);
-      return updateSpanBuilder.start();
-    });
-
     if (idleTimer > 0) {
       idleTimer -= delta;
-      walkRandom(updateSpan.map(Span::context), delta);
+      walkRandom(delta);
     } else {
       roleTimer -= delta;
       if (roleTimer < 0) {
         roleTimer = ROLE_TIMER;
         chooseRole();
       }
-      lookForBall(updateSpan.map(Span::context), delta);
+      lookForBall(delta);
     }
-
-    updateSpan.ifPresent(Span::finish);
-    currentSpan = updateSpan;
   }
 
   private void chooseRole() {
@@ -196,7 +160,7 @@ public class AI extends AbstractVerticle {
     }
   }
 
-  private void lookForBall(Optional<SpanContext> spanContext, double delta) {
+  private void lookForBall(double delta) {
     JsonObject json = new JsonObject()
         .put("playerX", pos.x())
         .put("playerY", pos.y())
@@ -206,7 +170,6 @@ public class AI extends AbstractVerticle {
         .put("playerTeam", TEAM);
 
     HttpRequest<Buffer> request = client.get(BALL_PORT, BALL_HOST, "/tryGet");
-    spanContext.ifPresent(sc -> TRACER.ifPresent(tracer -> tracer.inject(sc, Builtin.HTTP_HEADERS, new TracingContext(request.headers()))));
     request.sendJson(json, ar -> {
       if (!ar.succeeded()) {
         // No ball? What a pity. Walk randomly in sadness.
@@ -225,15 +188,15 @@ public class AI extends AbstractVerticle {
             currentDestination = defendPoint;
           }
           if (Boolean.TRUE.equals(obj.getBoolean("success"))) {
-            shoot(spanContext, Boolean.TRUE.equals(obj.getBoolean("takesBall")));
+            shoot(Boolean.TRUE.equals(obj.getBoolean("takesBall")));
           }
         }
-        walkToDestination(spanContext, delta);
+        walkToDestination(delta);
       }
     });
   }
 
-  private void shoot(Optional<SpanContext> spanContext, boolean takesBall) {
+  private void shoot(boolean takesBall) {
     final Point shootVector;
     final String kind;
     Point goal = (arenaInfo == null) ? randomDestination() : arenaInfo.goal;
@@ -273,7 +236,18 @@ public class AI extends AbstractVerticle {
         .put("playerID", id);
 
     HttpRequest<Buffer> request = client.put(BALL_PORT, BALL_HOST, "/shoot");
-    spanContext.ifPresent(sc -> TRACER.ifPresent(tracer -> tracer.inject(sc, Builtin.HTTP_HEADERS, new TracingContext(request.headers()))));
+    TRACER.ifPresent(tracer -> {
+      try (Scope shootScope = tracer.buildSpan("player_shoot")
+          .withTag("name", NAME)
+          .withTag("id", id)
+          .withTag("kind", kind)
+          .withTag("strength", shootVector.size())
+          .ignoreActiveSpan()
+          .startActive(true)) {
+        tracer.inject(shootScope.span().context(), Builtin.HTTP_HEADERS, new TracingContext(request.headers()));
+      }
+    });
+
     request.sendJson(json, ar -> {});
   }
 
@@ -285,14 +259,14 @@ public class AI extends AbstractVerticle {
     return new Point(rnd.nextInt(500), rnd.nextInt(500));
   }
 
-  private void walkRandom(Optional<SpanContext> spanContext, double delta) {
+  private void walkRandom(double delta) {
     if (currentDestination == null || new Segment(pos, currentDestination).size() < 10) {
       currentDestination = randomDestination();
     }
-    walkToDestination(spanContext, delta);
+    walkToDestination(delta);
   }
 
-  private void walkToDestination(Optional<SpanContext> spanContext, double delta) {
+  private void walkToDestination(double delta) {
     if (currentDestination != null) {
       // Speed and angle are modified by accuracy
       Segment segToDest = new Segment(pos, currentDestination);
@@ -303,7 +277,7 @@ public class AI extends AbstractVerticle {
       double speed = delta * (minSpeed + rnd.nextDouble() * (maxSpeed - minSpeed));
       Point relativeMove = randomishSegmentNormalized(segToDest).mult(speed);
       pos = pos.add(relativeMove);
-      display(spanContext);
+      display();
     }
   }
 
@@ -315,13 +289,11 @@ public class AI extends AbstractVerticle {
     return segToDest.derivate().normalize().rotate(angle);
   }
 
-  private void display(Optional<SpanContext> spanContext) {
+  private void display() {
     json.put("x", pos.x() - 15)
         .put("y", pos.y() - 15);
 
-    HttpRequest<Buffer> request = client.post(UI_PORT, UI_HOST, "/display");
-    spanContext.ifPresent(sc -> TRACER.ifPresent(tracer -> tracer.inject(sc, Builtin.HTTP_HEADERS, new TracingContext(request.headers()))));
-    request.sendJson(json, ar -> {
+    client.post(UI_PORT, UI_HOST, "/display").sendJson(json, ar -> {
       if (!ar.succeeded()) {
         ar.cause().printStackTrace();
       }
@@ -331,14 +303,10 @@ public class AI extends AbstractVerticle {
   private static class ArenaInfo {
     private final Segment defendZoneTLBR;
     private final Point goal;
-    private final int scoreA;
-    private final int scoreB;
 
-    private ArenaInfo(int defendZoneTop, int defendZoneLeft, int defendZoneBottom, int defendZoneRight, Point goal, int scoreA, int scoreB) {
+    private ArenaInfo(int defendZoneTop, int defendZoneLeft, int defendZoneBottom, int defendZoneRight, Point goal) {
       this.defendZoneTLBR = new Segment(new Point(defendZoneLeft, defendZoneTop), new Point(defendZoneRight, defendZoneBottom));
       this.goal = goal;
-      this.scoreA = scoreA;
-      this.scoreB = scoreB;
     }
   }
 }
