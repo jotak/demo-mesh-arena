@@ -15,16 +15,7 @@ Check the slides, [in French](https://docs.google.com/presentation/d/1PzRD3BquEI
 ### Example of Istio + Kiali install:
 
 ```bash
-curl -L https://git.io/getLatestIstio | ISTIO_VERSION=1.1.5 sh -
-# Don't forget to export istio-1.1.5/bin to your path (as said in terminal output)
-cd istio-1.1.5
-for i in install/kubernetes/helm/istio-init/files/crd*yaml; do kubectl apply -f $i; done
-kubectl apply -f install/kubernetes/istio-demo.yaml
-
-# Remove old Kiali:
-kubectl delete deployment kiali-operator -n kiali-operator
-kubectl delete deployment kiali -n istio-system
-
+istioctl manifest apply --set profile=demo
 bash <(curl -L https://git.io/getLatestKialiOperator)
 ```
 
@@ -37,14 +28,6 @@ kubectl port-forward svc/kiali 20001:20001 -n istio-system
 Open https://localhost:20001/kiali
 
 (Might be an insecure connection / invalid certificate, to allow in Chrome go to chrome://flags/#allow-insecure-localhost )
-
-### Install dashboards
-
-From there: https://github.com/kiali/kiali/tree/master/operator/roles/kiali-deploy/templates/dashboards
-
-```bash
-kubectl apply -f dashboards
-```
 
 ## Get the yml files locally
 
@@ -67,7 +50,7 @@ Tracing data generated from microservices and Istio can be viewed in Jaeger by p
 `jaeger-query` service.
 
 ```bash
-kubectl port-forward svc/jaeger-query 16686:16686 -n istio-system
+istioctl dashboard jaeger
 ```
 
 AI service generates trace named `new_game` for each game. This way we are able to trace player's
@@ -81,7 +64,6 @@ steps performed at the beginning of the game.
 ```bash
 kubectl apply -f <(istioctl kube-inject -f ./services/ui/Deployment.yml)
 kubectl create -f ./services/ui/Service.yml
-kubectl apply -f mesh-arena-gateway.yaml 
 ```
 
 ## Open in browser
@@ -89,7 +71,7 @@ kubectl apply -f mesh-arena-gateway.yaml
 (Wait a little bit because port-forward?)
 
 ```bash
-kubectl port-forward svc/istio-ingressgateway 8080:80 -n istio-system
+kubectl port-forward svc/ui 8080:8080
 ```
 
 Open http://localhost:8080 in a browser.
