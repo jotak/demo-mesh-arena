@@ -1,4 +1,4 @@
-# Generated template (dim. janv. 26 10:12:10 CET 2020)
+# Generated template (lun. janv. 27 13:47:47 CET 2020)
 # Source: services/ui/Deployment.yml
 apiVersion: apps/v1
 kind: Deployment
@@ -239,7 +239,7 @@ spec:
           protocol: TCP
         env:
         - name: METRICS_ENABLED
-          value: "1"
+          value: "0"
         - name: TRACING_ENABLED
           value: "0"
         - name: AB_OFF

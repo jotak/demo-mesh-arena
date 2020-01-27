@@ -32,7 +32,7 @@ spec:
           protocol: TCP
         env:
         - name: METRICS_ENABLED
-          value: "1"
+          value: "0"
         - name: TRACING_ENABLED
           value: "0"
         - name: AB_OFF

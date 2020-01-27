@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
 
 if [[ "$1" = "metrics" ]]; then
-    kubectl apply -f <(istioctl kube-inject -f full-metrics.yml)
+    cat full.yml | ./with_metrics.sh | istioctl kube-inject -f - | kubectl apply -f -
     exit
 fi
 
 if [[ "$1" = "tracing" ]]; then
-    kubectl apply -f <(istioctl kube-inject -f full-tracing.yml)
+    cat full.yml | ./with_tracing.sh | istioctl kube-inject -f - | kubectl apply -f -
     exit
 fi
 
 if [[ "$1" = "both" ]]; then
-    kubectl apply -f <(istioctl kube-inject -f full-metrics-tracing.yml)
+    cat full.yml | ./with_metrics.sh | ./with_tracing.sh | istioctl kube-inject -f - | kubectl apply -f -
     exit
 fi
 
 if [[ "$1" = "naked" ]]; then
-    kubectl apply -f <(istioctl kube-inject -f full.yml)
+    cat full.yml | istioctl kube-inject -f - | kubectl apply -f -
     exit
 fi
 
