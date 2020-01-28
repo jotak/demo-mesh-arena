@@ -5,7 +5,7 @@ import demo.mesharena.common.Point;
 import demo.mesharena.common.Segment;
 import demo.mesharena.common.TracingContext;
 import io.opentracing.Scope;
-import io.opentracing.Span;
+import io.opentracing.Tracer;
 import io.opentracing.propagation.Format.Builtin;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
@@ -27,6 +27,7 @@ import static demo.mesharena.common.Commons.*;
 
 public class AI extends AbstractVerticle {
 
+  private static final Optional<Tracer> TRACER = getTracer("ai");
   private static final long DELTA_MS = 300;
   private static final double IDLE_TIMER = 2.0;
   private static final double ROLE_TIMER = 10.0;
@@ -65,8 +66,6 @@ public class AI extends AbstractVerticle {
   private Role role;
 
   public AI(Vertx vertx) {
-    Optional<Span> span = TRACER.map(t -> t.buildSpan("application_start").start());
-
     client = WebClient.create(vertx);
     id = UUID.randomUUID().toString();
     this.isVisitors = !TEAM.equals("locals");
@@ -74,7 +73,6 @@ public class AI extends AbstractVerticle {
         .put("id", id)
         .put("style", "position: absolute; background-color: " + COLOR + "; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms; height: 30px; width: 30px; border-radius: 50%; z-index: 8;")
         .put("text", "");
-    span.ifPresent(Span::finish);
   }
 
   public static void main(String[] args) {
@@ -97,7 +95,6 @@ public class AI extends AbstractVerticle {
         .listen(serverOptions.getPort(), serverOptions.getHost());
 
     // First display
-    Optional<Span> startSpan = TRACER.map(t -> t.buildSpan("start").start());
     display();
 
     // Check regularly about arena info
@@ -106,7 +103,6 @@ public class AI extends AbstractVerticle {
 
     // Start game loop
     vertx.setPeriodic(DELTA_MS, loopId -> update((double)DELTA_MS / 1000.0));
-    startSpan.ifPresent(Span::finish);
   }
 
   private void checkArenaInfo() {
@@ -176,22 +172,24 @@ public class AI extends AbstractVerticle {
         idle();
       } else {
         HttpResponse<Buffer> response = ar.result();
-        JsonObject obj = response.bodyAsJsonObject();
-        if (obj != null) {
-          double x = obj.getDouble("x");
-          double y = obj.getDouble("y");
-          Point ball = new Point(x, y);
-          if (role == Role.ATTACK || pos.diff(ball).size() < 70) {
-            // Go to the ball
-            currentDestination = ball;
-          } else {
-            currentDestination = defendPoint;
+        if (response.statusCode() == 200) {
+          JsonObject obj = response.bodyAsJsonObject();
+          if (obj != null) {
+            double x = obj.getDouble("x");
+            double y = obj.getDouble("y");
+            Point ball = new Point(x, y);
+            if (role == Role.ATTACK || pos.diff(ball).size() < 70) {
+              // Go to the ball
+              currentDestination = ball;
+            } else {
+              currentDestination = defendPoint;
+            }
+            if (Boolean.TRUE.equals(obj.getBoolean("success"))) {
+              shoot(Boolean.TRUE.equals(obj.getBoolean("takesBall")));
+            }
           }
-          if (Boolean.TRUE.equals(obj.getBoolean("success"))) {
-            shoot(Boolean.TRUE.equals(obj.getBoolean("takesBall")));
-          }
+          walkToDestination(delta);
         }
-        walkToDestination(delta);
       }
     });
   }

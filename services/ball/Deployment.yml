@@ -23,7 +23,7 @@ spec:
         version: v1
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ball:1.1.6
+      - image: jotak/demo-mesh-arena-ball:1.1.7
         imagePullPolicy: IfNotPresent
         name: ball
         ports:

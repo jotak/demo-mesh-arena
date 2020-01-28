@@ -24,7 +24,7 @@ spec:
         vm: openj9
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-oj9-ai:1.1.6
+      - image: jotak/demo-mesh-arena-oj9-ai:1.1.7
         imagePullPolicy: IfNotPresent
         name: ai-visitors-oj9
         ports:

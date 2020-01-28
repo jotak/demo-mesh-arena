@@ -3,7 +3,7 @@ package demo.mesharena.ui;
 import demo.mesharena.common.Commons;
 import demo.mesharena.common.TracingContext;
 import io.opentracing.Span;
-import io.opentracing.contrib.vertx.ext.web.TracingHandler;
+import io.opentracing.Tracer;
 import io.opentracing.propagation.Format.Builtin;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.buffer.Buffer;
@@ -31,6 +31,7 @@ import static demo.mesharena.common.Commons.*;
 
 public class UI extends AbstractVerticle {
 
+  private static final Optional<Tracer> TRACER = getTracer("ui");
   private final Map<String, GameObject> gameObjects = new HashMap<>();
 
   private UI() {
@@ -45,12 +46,6 @@ public class UI extends AbstractVerticle {
     HttpServerOptions serverOptions = new HttpServerOptions().setPort(Commons.UI_PORT);
 
     Router router = Router.router(vertx);
-    TRACER.ifPresent(tracer -> {
-      TracingHandler handler = new TracingHandler(tracer);
-      router.route()
-          .order(-1).handler(handler)
-          .failureHandler(handler);
-    });
 
     // Allow events for the designated addresses in/out of the event bus bridge
     BridgeOptions opts = new BridgeOptions()
@@ -70,7 +65,6 @@ public class UI extends AbstractVerticle {
     }
     router.get("/health").handler(ctx -> ctx.response().end());
 
-    // TODO: replace http API with eventbus messages
     // Listen to objects creation
     router.post("/display").handler(this::displayGameObject);
 

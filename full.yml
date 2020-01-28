@@ -1,4 +1,4 @@
-# Generated template (lun. janv. 27 13:47:47 CET 2020)
+# Generated template (mar. janv. 28 23:20:32 CET 2020)
 # Source: services/ui/Deployment.yml
 apiVersion: apps/v1
 kind: Deployment
@@ -25,7 +25,7 @@ spec:
         version: v1
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ui:1.1.6
+      - image: jotak/demo-mesh-arena-ui:1.1.7
         imagePullPolicy: IfNotPresent
         name: ui
         ports:
@@ -118,7 +118,7 @@ spec:
         version: small
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-stadium:1.1.6
+      - image: jotak/demo-mesh-arena-stadium:1.1.7
         imagePullPolicy: IfNotPresent
         name: stadium
         ports:
@@ -230,7 +230,7 @@ spec:
         version: v1
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ball:1.1.6
+      - image: jotak/demo-mesh-arena-ball:1.1.7
         imagePullPolicy: IfNotPresent
         name: ball
         ports:
@@ -328,7 +328,7 @@ spec:
         vm: hotspot
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ai:1.1.6
+      - image: jotak/demo-mesh-arena-ai:1.1.7
         imagePullPolicy: IfNotPresent
         name: ai-locals
         ports:
@@ -419,7 +419,7 @@ spec:
         vm: openj9
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-oj9-ai:1.1.6
+      - image: jotak/demo-mesh-arena-oj9-ai:1.1.7
         imagePullPolicy: IfNotPresent
         name: ai-visitors-oj9
         ports:

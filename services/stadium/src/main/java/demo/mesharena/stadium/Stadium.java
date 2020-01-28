@@ -5,6 +5,7 @@ import demo.mesharena.common.Point;
 import demo.mesharena.common.Segment;
 import demo.mesharena.common.TracingContext;
 import io.opentracing.Span;
+import io.opentracing.Tracer;
 import io.opentracing.contrib.vertx.ext.web.TracingHandler;
 import io.opentracing.propagation.Format.Builtin;
 import io.vertx.core.AbstractVerticle;
@@ -26,6 +27,7 @@ import static demo.mesharena.common.Commons.*;
 
 public class Stadium extends AbstractVerticle {
 
+  private static final Optional<Tracer> TRACER = getTracer("stadium");
   private static final String LOCALS = Commons.getStringEnv("STADIUM_LOCALS", "Locals");
   private static final String VISITORS = Commons.getStringEnv("STADIUM_VISITORS", "Visitors");
   private static final String NAME = Commons.getStringEnv("STADIUM_NAME", "stadium");
@@ -59,8 +61,6 @@ public class Stadium extends AbstractVerticle {
   private long startTime = System.currentTimeMillis();
 
   private Stadium(Vertx vertx) {
-    Optional<Span> span = TRACER.map(t -> t.buildSpan("application_start").start());
-
     client = WebClient.create(vertx);
     stadiumJson = new JsonObject()
         .put("id", NAME + "-stadium")
@@ -71,8 +71,6 @@ public class Stadium extends AbstractVerticle {
         .put("id", NAME + "-score")
         .put("style", "position: absolute; top: " + (TX_TOP + 5) + "px; left: " + (TX_LEFT + 5) + "px; color: black; font-weight: bold; z-index: 10;")
         .put("text", "");
-
-    span.ifPresent(Span::finish);
   }
 
   public static void main(String[] args) {
@@ -85,12 +83,6 @@ public class Stadium extends AbstractVerticle {
     // Register stadium API
     HttpServerOptions serverOptions = new HttpServerOptions().setPort(Commons.STADIUM_PORT);
     Router router = Router.router(vertx);
-    TRACER.ifPresent(tracer -> {
-      TracingHandler handler = new TracingHandler(tracer);
-      router.route()
-          .order(-1).handler(handler)
-          .failureHandler(handler);
-    });
 
     if (Commons.METRICS_ENABLED == 1) {
       router.route("/metrics").handler(PrometheusScrapingHandler.create());

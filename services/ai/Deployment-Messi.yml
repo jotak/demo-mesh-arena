@@ -24,7 +24,7 @@ spec:
         vm: hotspot
     spec:
       containers:
-      - image: jotak/demo-mesh-arena-ai:1.1.6
+      - image: jotak/demo-mesh-arena-ai:1.1.7
         imagePullPolicy: IfNotPresent
         name: ai-visitors
         ports:
