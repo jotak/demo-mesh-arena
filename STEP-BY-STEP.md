@@ -63,7 +63,8 @@ steps performed at the beginning of the game.
 
 ```bash
 kubectl apply -f <(istioctl kube-inject -f ./services/ui/Deployment.yml)
-kubectl create -f ./services/ui/Service.yml
+kubectl apply -f ./services/ui/Service.yml
+kubectl apply -f mesh-arena-gateway.yaml 
 ```
 
 ## Open in browser
@@ -71,7 +72,7 @@ kubectl create -f ./services/ui/Service.yml
 (Wait a little bit because port-forward?)
 
 ```bash
-kubectl port-forward svc/ui 8080:8080
+kubectl port-forward svc/istio-ingressgateway 8080:80 -n istio-system
 ```
 
 Open http://localhost:8080 in a browser.
@@ -80,9 +81,9 @@ Open http://localhost:8080 in a browser.
 
 ```bash
 kubectl apply -f <(istioctl kube-inject -f ./services/stadium/Deployment-Smaller.yml)
-kubectl create -f ./services/stadium/Service.yml
+kubectl apply -f ./services/stadium/Service.yml
 kubectl apply -f <(istioctl kube-inject -f ./services/ball/Deployment.yml)
-kubectl create -f ./services/ball/Service.yml
+kubectl apply -f ./services/ball/Service.yml
 ```
 
 ## Deploy 2x2 players
@@ -90,7 +91,7 @@ kubectl create -f ./services/ball/Service.yml
 ```bash
 kubectl apply -f <(istioctl kube-inject -f ./services/ai/Deployment-2-locals.yml)
 kubectl apply -f <(istioctl kube-inject -f ./services/ai/Deployment-2-visitors.yml)
-kubectl create -f ./services/ai/Service.yml
+kubectl apply -f ./services/ai/Service.yml
 ```
 
 <details><summary>Kiali TIP</summary>
