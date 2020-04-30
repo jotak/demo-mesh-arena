@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "dependencies": {
-    "jquery": "~3.4.0",
+    "jquery": "~3.5.0",
     "sockjs-client": "~1.1.4",
     "vertx3-eventbus-client": "~3.5.1"
   }
