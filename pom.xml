@@ -6,16 +6,15 @@
   <packaging>pom</packaging>
 
   <groupId>demo.mesh-arena</groupId>
-  <artifactId>demo-mesh-all</artifactId>
+  <artifactId>mesharena-all</artifactId>
   <version>0.0.1</version>
 
   <modules>
-    <module>parent</module>
-    <module>common/common</module>
-    <module>services/ui</module>
-    <module>services/ball</module>
-    <module>services/stadium</module>
-    <module>services/ai</module>
+    <module>common</module>
+    <module>ui</module>
+    <module>ball</module>
+    <module>stadium</module>
+    <module>ai</module>
   </modules>
 
 </project>

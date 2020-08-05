@@ -1,0 +1,68 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: istio-attributegen-filter
+spec:
+  workloadSelector:
+    labels:
+      project: mesh-arena
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: SIDECAR_INBOUND
+      proxy:
+        proxyVersion: '1\.6.*'
+      listener:
+        filterChain:
+          filter:
+            name: "envoy.http_connection_manager"
+            subFilter:
+              name: "istio.stats"
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: istio.attributegen
+        typed_config:
+          "@type": type.googleapis.com/udpa.type.v1.TypedStruct
+          type_url: type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm
+          value:
+            config:
+              configuration: |
+                {
+                  "attributes": [
+                    {
+                      "output_attribute": "istio_operationId",
+                      "match": [
+                        {
+                          "value": "TryGet",
+                          "condition": "request.url_path == '/tryGet'"
+                        },
+                        {
+                          "value": "Shoot",
+                          "condition": "request.url_path == '/shoot'"
+                        },
+                        {
+                          "value": "Bounce",
+                          "condition": "request.url_path == '/bounce'"
+                        },
+                        {
+                          "value": "SetPos",
+                          "condition": "request.url_path == '/setPosition'"
+                        },
+                        {
+                          "value": "Display",
+                          "condition": "request.url_path == '/display'"
+                        },
+                        {
+                          "value": "Info",
+                          "condition": "request.url_path == '/info'"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              vm_config:
+                runtime: envoy.wasm.runtime.null
+                code:
+                  local: { inline_string: "envoy.wasm.attributegen" }
+

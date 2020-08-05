@@ -1,0 +1,21 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: ball-dr
+  labels:
+    project: mesh-arena
+spec:
+  host: ball
+  subsets:
+  - name: ball-v1
+    labels:
+      version: j11hs
+  - name: ball-v2
+    labels:
+      version: j11oj9
+# Scenario 3: With outlier detection
+  trafficPolicy:
+    outlierDetection:
+      consecutiveErrors: 1
+      baseEjectionTime: 10s
+      maxEjectionPercent: 50

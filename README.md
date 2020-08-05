@@ -14,58 +14,36 @@ For a step-by-step walk-through, [read this](./STEP-BY-STEP.md).
 - Kubernetes or OpenShift cluster running (ex: minikube 0.27+ / minishift)
 - Istio with Kiali installed
 - Repo cloned locally (actually, only YML files are necessary)
+- `yq` is needed, grab it from there: https://github.com/mikefarah/yq/releases (Last version known to work here: 3.1.1)
 
-Below instructions are given for OpenShift, but this is almost the same with standard Kubernetes.
-Just replace `oc` with `kubectl`, ignore `oc expose`, ignore the `oc adm policy` stuff.
+## Deploy all
 
-## OpenShift
-
-For OpenShift users, you may have to grant extended permissions for Istio, logged as admin:
+Quick start, using latest version:
 
 ```bash
-oc new-project mesh-arena
-oc adm policy add-scc-to-user privileged -z default
+make deploy-latest
 ```
 
-### Deploy all
+This deployment method includes runtime metrics.
 
-Without runtimes metrics & tracing:
+More options are available in Makefile. E.g:
 
 ```bash
-oc apply -f <(istioctl kube-inject -f full.yml)
+NAMESPACE=mesh-arena TAG=1.1.8 REMOTE=true GENTPL_OPTS="--tracing --metrics" make deploy
 ```
 
-With runtimes metrics:
-
-```bash
-oc apply -f <(istioctl kube-inject -f full-metrics.yml)
-```
-
-With tracing:
-
-```bash
-oc apply -f <(istioctl kube-inject -f full-tracing.yml)
-```
-
-With everything:
-
-```bash
-oc apply -f <(istioctl kube-inject -f full-metrics-tracing.yml)
-```
+This will deploy images tagged 1.1.8 with both runtime metrics and tracing to namespace mesh-arena.
 
 ### Expose route
 
 ```bash
-oc expose service ui
+make expose
 ```
 
 ### Clean up everything
 
 ```bash
-oc delete deployments -l project=mesh-arena
-oc delete svc -l project=mesh-arena
-oc delete virtualservices -l project=mesh-arena
-oc delete destinationrules -l project=mesh-arena
+make undeploy
 ```
 
 ## Build the demo
@@ -73,23 +51,17 @@ oc delete destinationrules -l project=mesh-arena
 For the first build, it is necessary to get the JS dependencies on your filesystem:
 
 ```bash
-cd services/ui/src/main/resources/webroot/
-npm install
-# back to project root
-cd -
+make prepare
 ```
 
-Then build everything:
+Then build everything, with images tagged for local usage with Minikube, and deploy:
 
 ```bash
-# Trigger maven build + docker builds
-# Ex: for docker namespace "myname" and tag "dev"
-./buildall.sh myname dev
+make build images deploy
 ```
 
-Then update all the deployment YAML to have the correct docker tag on images
+More options are possible. E.g. to build and push to quay.io, with a specific user and tag:
 
-## Generate the full-* templates
 ```bash
-./gentemplate.sh
+OCI_USER=myself TAG=1.2.3 REMOTE=true make build images
 ```

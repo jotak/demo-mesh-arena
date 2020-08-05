@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    project: mesh-arena
+    app: ball
+    version: base
+  name: ball
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ball
+      version: base
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+      labels:
+        project: mesh-arena
+        app: ball
+        version: base
+    spec:
+      containers:
+      - image:
+        imagePullPolicy: Never
+        name: ball
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: PCT_ERRORS
+          value: "0"
+        - name: RESISTANCE
+          value: "80"
+        - name: METRICS_ENABLED
+          value: "0"
+        - name: TRACING_ENABLED
+          value: "0"
+        - name: MESHARENA_UI_PORT
+          value: "8080"
+        - name: MESHARENA_UI_HOST
+          value: ui
+        - name: MESHARENA_BALL_PORT
+          value: "8080"
+        - name: MESHARENA_STADIUM_PORT
+          value: "8080"
+        - name: MESHARENA_STADIUM_HOST
+          value: stadium
+        - name: JAEGER_SERVICE_NAME
+          value: ball.default
+        - name: JAEGER_SAMPLER_TYPE
+          value: const
+        - name: JAEGER_SAMPLER_PARAM
+          value: "1"
+        - name: JAEGER_PROPAGATION
+          value: b3
+        - name: JAEGER_ENDPOINT
+          value: http://tracing.istio-system.svc/api/traces
+        securityContext:
+          privileged: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ball
+  labels:
+    project: mesh-arena
+    app: ball
+spec:
+  ports:
+  - name: http
+    port: 8080
+  selector:
+    app: ball

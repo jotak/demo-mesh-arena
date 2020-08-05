@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    project: mesh-arena
+    app: stadium
+    version: base
+  name: stadium
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stadium
+      version: base
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+      labels:
+        project: mesh-arena
+        app: stadium
+        version: base
+    spec:
+      containers:
+      - image:
+        imagePullPolicy: Never
+        name: stadium
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: METRICS_ENABLED
+          value: "0"
+        - name: TRACING_ENABLED
+          value: "0"
+        - name: MESHARENA_UI_PORT
+          value: "8080"
+        - name: MESHARENA_UI_HOST
+          value: ui
+        - name: MESHARENA_BALL_PORT
+          value: "8080"
+        - name: MESHARENA_BALL_HOST
+          value: ball
+        - name: MESHARENA_STADIUM_PORT
+          value: "8080"
+        - name: STADIUM_LOCALS
+          value: Locals
+        - name: STADIUM_VISITORS
+          value: Visitors
+        - name: STADIUM_NAME
+          value: Commanderie
+        - name: STADIUM_TOP
+          value: "50"
+        - name: STADIUM_LEFT
+          value: "20"
+        - name: STADIUM_SCALE
+          value: "1.0"
+        - name: STADIUM_MATCH_TIME
+          value: "120"
+        - name: JAEGER_SERVICE_NAME
+          value: stadium.default
+        - name: JAEGER_SAMPLER_TYPE
+          value: const
+        - name: JAEGER_SAMPLER_PARAM
+          value: "1"
+        - name: JAEGER_PROPAGATION
+          value: b3
+        - name: JAEGER_ENDPOINT
+          value: http://tracing.istio-system.svc/api/traces
+        securityContext:
+          privileged: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stadium
+  labels:
+    project: mesh-arena
+    app: stadium
+spec:
+  ports:
+  - name: http
+    port: 8080
+  selector:
+    app: stadium
