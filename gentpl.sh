@@ -9,16 +9,16 @@ fi
 FULL_NAME="$1"
 
 # Split on first '-': https://www.linuxjournal.com/article/8919
-# E.g. for FULL_NAME=ball-j11oj9 => BASE_NAME=ball, VARIANT=j11oj9
+# E.g. for FULL_NAME=ball-openj9 => BASE_NAME=ball, VM=openj9
 BASE_NAME="${1%-*}"
-VARIANT="${1##*-}"
+VM="${1##*-}"
 
 PULL_POLICY="Never"
 DOMAIN=""
 USER="jotak"
 TAG="dev"
 NAMESPACE="default"
-TPL="base"
+VERSION="base"
 METRICS_ENABLED="0"
 TRACING_ENABLED="0"
 LAST_ARG=""
@@ -29,8 +29,8 @@ do
         METRICS_ENABLED="1"
     elif [[ "$arg" = "--tracing" ]]; then
         TRACING_ENABLED="1"
-    elif [[ "$LAST_ARG" = "-tpl" ]]; then
-        TPL="$arg"
+    elif [[ "$LAST_ARG" = "-v" ]]; then
+        VERSION="$arg"
         LAST_ARG=""
     elif [[ "$LAST_ARG" = "-pp" ]]; then
         PULL_POLICY="$arg"
@@ -52,16 +52,32 @@ do
     fi
 done
 
+# Special case for AIs where base VERSION is actually "locals" or "visitors"
+if [[ "$VERSION" = "base" && "$FULL_NAME" = "ai-hotspot" ]]; then
+  VERSION="locals"
+elif [[ "$VERSION" = "base" && "$FULL_NAME" = "ai-openj9" ]]; then
+  VERSION="visitors"
+fi
+
 IMAGE="${DOMAIN}${USER}/mesharena-$FULL_NAME:$TAG"
 
-cat ./k8s/$BASE_NAME-$TPL.yml \
-    | yq w - metadata.labels.version $VARIANT \
-    | yq w - metadata.name $FULL_NAME \
-    | yq w - spec.selector.matchLabels.version $VARIANT \
-    | yq w - spec.template.metadata.labels.version $VARIANT \
-    | yq w - spec.template.spec.containers[0].imagePullPolicy $PULL_POLICY \
-    | yq w - spec.template.spec.containers[0].image $IMAGE \
-    | yq w - spec.template.spec.containers[0].name $FULL_NAME \
-    | yq w - --tag '!!str' "spec.template.spec.containers[0].env.(name==METRICS_ENABLED).value" $METRICS_ENABLED \
-    | yq w - --tag '!!str' "spec.template.spec.containers[0].env.(name==TRACING_ENABLED).value" $TRACING_ENABLED \
-    | yq w - "spec.template.spec.containers[0].env.(name==JAEGER_SERVICE_NAME).value" $BASE_NAME.$NAMESPACE
+for v in ${VERSION} ; do
+  if [[ -f "./k8s/$BASE_NAME-$v.yml" ]] ; then
+    cat "./k8s/$BASE_NAME-$v.yml" \
+        | yq w - metadata.labels.version $v \
+        | yq w - metadata.labels.vm $VM \
+        | yq w - metadata.name "$BASE_NAME-$VERSION" \
+        | yq w - spec.selector.matchLabels.version $v \
+        | yq w - spec.selector.matchLabels.vm $VM \
+        | yq w - spec.template.metadata.labels.version $v \
+        | yq w - spec.template.metadata.labels.vm $VM \
+        | yq w - spec.template.spec.containers[0].imagePullPolicy $PULL_POLICY \
+        | yq w - spec.template.spec.containers[0].image $IMAGE \
+        | yq w - spec.template.spec.containers[0].name $FULL_NAME \
+        | ( [ "$METRICS_ENABLED" = "1" ] && yq w - --tag '!!str' "spec.template.metadata.annotations.(prometheus.io/scrape)" "true" || cat ) \
+        | yq w - --tag '!!str' "spec.template.spec.containers[0].env.(name==METRICS_ENABLED).value" $METRICS_ENABLED \
+        | yq w - --tag '!!str' "spec.template.spec.containers[0].env.(name==TRACING_ENABLED).value" $TRACING_ENABLED \
+        | yq w - "spec.template.spec.containers[0].env.(name==JAEGER_SERVICE_NAME).value" $BASE_NAME.$NAMESPACE
+    echo "---"
+  fi
+done

@@ -3,15 +3,16 @@ kind: Deployment
 metadata:
   labels:
     project: mesh-arena
-    app: ui
-    version: base
-  name: ui
+    app: ai
+    version: messi
+    vm: unknown
+  name: ai-messi
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ui
-      version: base
+      app: ai
+      version: messi
   template:
     metadata:
       annotations:
@@ -19,13 +20,14 @@ spec:
         prometheus.io/path: "/metrics"
       labels:
         project: mesh-arena
-        app: ui
-        version: base
+        app: ai
+        version: messi
+        vm: unknown
     spec:
       containers:
       - image:
         imagePullPolicy: Never
-        name: ui
+        name: ai
         ports:
         - containerPort: 8080
           name: http
@@ -37,12 +39,38 @@ spec:
           value: "0"
         - name: MESHARENA_UI_PORT
           value: "8080"
+        - name: MESHARENA_UI_HOST
+          value: ui
+        - name: MESHARENA_BALL_PORT
+          value: "8080"
+        - name: MESHARENA_BALL_HOST
+          value: ball
         - name: MESHARENA_STADIUM_PORT
           value: "8080"
         - name: MESHARENA_STADIUM_HOST
           value: stadium
+        - name: PLAYER_TEAM
+          value: visitors
+        - name: PLAYER_NAME
+          value: Messi
+        - name: PLAYER_SPEED
+          value: "85"
+        - name: PLAYER_ACCURACY
+          value: "0.95"
+        - name: PLAYER_SKILL
+          value: "15"
+        - name: PLAYER_SHOOT
+          value: "300"
+        - name: PLAYER_ATTACKING
+          value: "90"
+        - name: PLAYER_ATT_SHOOT_FAST
+          value: "20"
+        - name: PLAYER_DEF_SHOOT_FAST
+          value: "40"
+        - name: PLAYER_COLOR
+          value: orange
         - name: JAEGER_SERVICE_NAME
-          value: ui.default
+          value: ai.default
         - name: JAEGER_SAMPLER_TYPE
           value: const
         - name: JAEGER_SAMPLER_PARAM
@@ -53,17 +81,3 @@ spec:
           value: http://tracing.istio-system.svc/api/traces
         securityContext:
           privileged: false
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: ui
-  labels:
-    project: mesh-arena
-    app: ui
-spec:
-  ports:
-  - name: http
-    port: 8080
-  selector:
-    app: ui

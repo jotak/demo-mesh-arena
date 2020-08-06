@@ -7,10 +7,10 @@ OCI_USER ?= jotak
 # Set REMOTE=true if you want to use remote (quay.io) images
 REMOTE ?= false
 NAMESPACE ?= default
-# List of all services (for image building / deploying)
-BUILDS ?= ai-locals-j11hs ai-visitors-j11oj9 ball-j11hs ball-j11oj9 stadium-j11hs ui-j11hs
-DEPLOYMENTS ?= ai-locals-j11hs ai-visitors-j11oj9 ball-j11hs stadium-j11hs ui-j11hs
-GENTPL_TPL ?= base
+# List of images
+TO_BUILD ?= ai-hotspot ai-openj9 ball-hotspot ball-openj9 stadium-hotspot ui-hotspot
+TO_DEPLOY ?= ai-hotspot ai-openj9 ball-hotspot stadium-hotspot ui-hotspot
+GENTPL_VERSION ?= base
 
 ifeq ($(REMOTE),true)
 OCI_DOMAIN ?= quay.io
@@ -50,7 +50,7 @@ endif
 
 images-push:
 	@echo "Building images..."
-	for svc in ${BUILDS} ; do \
+	for svc in ${TO_BUILD} ; do \
 		echo "Building $$svc:" ; \
 		${OCI_BIN_SHORT} build -t ${OCI_DOMAIN}/${OCI_USER}/mesharena-$$svc:${TAG} -f ./k8s/$$svc.dockerfile . ; \
 		${OCI_BIN_SHORT} push ${PUSH_OPTS} ${OCI_DOMAIN}/${OCI_USER}/mesharena-$$svc:${TAG} ; \
@@ -58,14 +58,14 @@ images-push:
 
 tag-minikube:
 	@echo "Tagging for Minikube..."
-	for svc in ${BUILDS} ; do \
+	for svc in ${TO_BUILD} ; do \
 		${OCI_BIN_SHORT} tag ${OCI_DOMAIN}/${OCI_USER}/mesharena-$$svc:${TAG} ${OCI_DOMAIN_IN_CLUSTER}/${OCI_USER}/mesharena-$$svc:${TAG} ; \
 	done
 
 deploy: .ensure-yq
 	kubectl label namespace ${NAMESPACE} istio-injection=enabled ; \
-	for svc in ${DEPLOYMENTS} ; do \
-		./gentpl.sh $$svc -tpl ${GENTPL_TPL} -pp ${PULL_POLICY} -d "${OCI_DOMAIN_IN_CLUSTER}" -u ${OCI_USER} -t ${TAG} -n ${NAMESPACE} ${GENTPL_OPTS} | kubectl -n ${NAMESPACE} apply -f - ; \
+	for svc in ${TO_DEPLOY} ; do \
+		./gentpl.sh $$svc -v ${GENTPL_VERSION} -pp ${PULL_POLICY} -d "${OCI_DOMAIN_IN_CLUSTER}" -u ${OCI_USER} -t ${TAG} -n ${NAMESPACE} ${GENTPL_OPTS} | kubectl -n ${NAMESPACE} apply -f - ; \
 	done
 
 deploy-tracing: GENTPL_OPTS=--tracing
@@ -83,15 +83,21 @@ scen-burst-current:
 scen-unburst-current:
 	kubectl -n ${NAMESPACE} set env deployment -l app=ball PCT_ERRORS=0
 
-scen-add-ball: DEPLOYMENTS=ball-j11oj9
+scen-add-ball: TO_DEPLOY=ball-openj9
 scen-add-ball: deploy
 
 scen-75-25:
 	kubectl apply -f ./istio/destrule.yml -n ${NAMESPACE} ; \
 	kubectl apply -f ./istio/virtualservice-75-25.yml -n ${NAMESPACE}
 
-scen-add-burst: GENTPL_TPL=burst
-scen-add-burst: DEPLOYMENTS=ball-j11oj9
+scen-add-players: GENTPL_VERSION="mbappe messi"
+scen-add-players: TO_DEPLOY=ai-hotspot ai-openj9
+scen-add-players: deploy
+	kubectl apply -f ./istio/destrule.yml -n ${NAMESPACE} ; \
+	kubectl apply -f ./istio/virtualservice-by-label.yml -n ${NAMESPACE}
+
+scen-add-burst: GENTPL_VERSION=burst
+scen-add-burst: TO_DEPLOY=ball-openj9
 scen-add-burst: deploy
 
 scen-mirroring:
@@ -107,9 +113,15 @@ expose:
 	kubectl -n ${NAMESPACE} port-forward svc/ui 8080:8080
 
 undeploy:
-	kubectl -n ${NAMESPACE} delete all -l "project=mesh-arena"
+	kubectl -n ${NAMESPACE} delete all -l "project=mesh-arena" ; \
+	kubectl -n ${NAMESPACE} delete destinationrule -l "project=mesh-arena" ; \
+	kubectl -n ${NAMESPACE} delete virtualservice -l "project=mesh-arena" ; \
+	kubectl -n ${NAMESPACE} delete gateway -l "project=mesh-arena" ; \
+	kubectl -n ${NAMESPACE} delete envoyfilter -l "project=mesh-arena"
 
 deploy-latest: TAG=1.1.8
-deploy-latest: REMOTE=true
+deploy-latest: OCI_DOMAIN_IN_CLUSTER=quay.io
+deploy-latest: PULL_POLICY=IfNotPresent
+deploy-latest: TAG_MINIKUBE=false
 deploy-latest: GENTPL_OPTS=--metrics
 deploy-latest: deploy

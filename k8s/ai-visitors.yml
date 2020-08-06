@@ -3,15 +3,16 @@ kind: Deployment
 metadata:
   labels:
     project: mesh-arena
-    app: ui
-    version: base
-  name: ui
+    app: ai
+    version: visitors
+    vm: unknown
+  name: ai-visitors
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
-      app: ui
-      version: base
+      app: ai
+      version: visitors
   template:
     metadata:
       annotations:
@@ -19,13 +20,14 @@ spec:
         prometheus.io/path: "/metrics"
       labels:
         project: mesh-arena
-        app: ui
-        version: base
+        app: ai
+        version: visitors
+        vm: unknown
     spec:
       containers:
       - image:
         imagePullPolicy: Never
-        name: ui
+        name: ai
         ports:
         - containerPort: 8080
           name: http
@@ -37,12 +39,24 @@ spec:
           value: "0"
         - name: MESHARENA_UI_PORT
           value: "8080"
+        - name: MESHARENA_UI_HOST
+          value: ui
+        - name: MESHARENA_BALL_PORT
+          value: "8080"
+        - name: MESHARENA_BALL_HOST
+          value: ball
         - name: MESHARENA_STADIUM_PORT
           value: "8080"
         - name: MESHARENA_STADIUM_HOST
           value: stadium
+        - name: PLAYER_TEAM
+          value: visitors
+        - name: PLAYER_COLOR
+          value: yellow
+        - name: PLAYER_NAME
+          value: yellow goat
         - name: JAEGER_SERVICE_NAME
-          value: ui.default
+          value: ai.default
         - name: JAEGER_SAMPLER_TYPE
           value: const
         - name: JAEGER_SAMPLER_PARAM
@@ -57,13 +71,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ui
+  name: ai
   labels:
     project: mesh-arena
-    app: ui
+    app: ai
 spec:
   ports:
   - name: http
     port: 8080
   selector:
-    app: ui
+    app: ai

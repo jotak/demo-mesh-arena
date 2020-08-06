@@ -4,27 +4,25 @@ metadata:
   labels:
     project: mesh-arena
     app: ai
-    version: base
-    side: locals
-  name: ai-locals
+    version: mbappe
+    vm: unknown
+  name: ai-mbappe
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: ai
-      side: locals
-      version: base
+      version: mbappe
   template:
     metadata:
       annotations:
-        prometheus.io/scrape: "true"
         prometheus.io/port: "8080"
         prometheus.io/path: "/metrics"
       labels:
         project: mesh-arena
         app: ai
-        side: locals
-        version: base
+        version: mbappe
+        vm: unknown
     spec:
       containers:
       - image:
@@ -53,10 +51,24 @@ spec:
           value: stadium
         - name: PLAYER_TEAM
           value: locals
-        - name: PLAYER_COLOR
-          value: blue
         - name: PLAYER_NAME
-          value: blue goat
+          value: "Mbappé"
+        - name: PLAYER_SPEED
+          value: "95"
+        - name: PLAYER_ACCURACY
+          value: "0.89"
+        - name: PLAYER_SKILL
+          value: "11"
+        - name: PLAYER_SHOOT
+          value: "300"
+        - name: PLAYER_ATTACKING
+          value: "90"
+        - name: PLAYER_ATT_SHOOT_FAST
+          value: "20"
+        - name: PLAYER_DEF_SHOOT_FAST
+          value: "40"
+        - name: PLAYER_COLOR
+          value: cyan
         - name: JAEGER_SERVICE_NAME
           value: ai.default
         - name: JAEGER_SAMPLER_TYPE
@@ -69,17 +81,3 @@ spec:
           value: http://tracing.istio-system.svc/api/traces
         securityContext:
           privileged: false
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: ai
-  labels:
-    project: mesh-arena
-    app: ai
-spec:
-  ports:
-  - name: http
-    port: 8080
-  selector:
-    app: ai

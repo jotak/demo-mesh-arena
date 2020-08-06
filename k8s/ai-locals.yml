@@ -4,27 +4,25 @@ metadata:
   labels:
     project: mesh-arena
     app: ai
-    version: base
-    side: visitors
-  name: ai-visitors
+    version: locals
+    vm: unknown
+  name: ai-locals
 spec:
   replicas: 2
   selector:
     matchLabels:
       app: ai
-      side: visitors
-      version: base
+      version: locals
   template:
     metadata:
       annotations:
-        prometheus.io/scrape: "true"
         prometheus.io/port: "8080"
         prometheus.io/path: "/metrics"
       labels:
         project: mesh-arena
         app: ai
-        side: visitors
-        version: base
+        version: locals
+        vm: unknown
     spec:
       containers:
       - image:
@@ -52,11 +50,11 @@ spec:
         - name: MESHARENA_STADIUM_HOST
           value: stadium
         - name: PLAYER_TEAM
-          value: visitors
+          value: locals
         - name: PLAYER_COLOR
-          value: yellow
+          value: blue
         - name: PLAYER_NAME
-          value: yellow goat
+          value: blue goat
         - name: JAEGER_SERVICE_NAME
           value: ai.default
         - name: JAEGER_SAMPLER_TYPE

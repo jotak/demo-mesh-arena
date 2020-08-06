@@ -9,7 +9,7 @@ spec:
   subsets:
   - name: ball-v1
     labels:
-      version: j11hs
+      version: base
   - name: ball-v2
     labels:
-      version: j11oj9
+      version: burst
