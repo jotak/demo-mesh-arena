@@ -3,10 +3,10 @@ package demo.mesharena.ai;
 import demo.mesharena.common.Commons;
 import demo.mesharena.common.Point;
 import demo.mesharena.common.Segment;
-import demo.mesharena.common.TracingContext;
-import io.opentracing.Scope;
+import demo.mesharena.common.TracingHeaders;
+import io.opentracing.Span;
+import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
-import io.opentracing.propagation.Format.Builtin;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -27,7 +27,7 @@ import static demo.mesharena.common.Commons.*;
 
 public class AI extends AbstractVerticle {
 
-  private static final Optional<Tracer> TRACER = getTracer("ai");
+  private static final Optional<Tracer> TRACER = createTracerFromEnv();
   private static final long DELTA_MS = 300;
   private static final double IDLE_TIMER = 2.0;
   private static final double ROLE_TIMER = 10.0;
@@ -76,7 +76,7 @@ public class AI extends AbstractVerticle {
   }
 
   public static void main(String[] args) {
-    Vertx vertx = Commons.vertx();
+    Vertx vertx = Commons.vertx(TRACER);
     vertx.deployVerticle(new AI(vertx));
   }
 
@@ -166,7 +166,16 @@ public class AI extends AbstractVerticle {
         .put("playerTeam", TEAM);
 
     HttpRequest<Buffer> request = client.get(BALL_PORT, BALL_HOST, "/tryGet");
+    Optional<Span> tryGetSpan = TRACER.map(tracer -> {
+      Span span = tracer.buildSpan("try_get")
+          .withTag("name", NAME)
+          .withTag("id", id)
+          .start();
+      TracingHeaders.inject(tracer, span.context(), request.headers());
+      return span;
+    });
     request.sendJson(json, ar -> {
+      tryGetSpan.ifPresent(Span::finish);
       if (!ar.succeeded()) {
         // No ball? What a pity. Walk randomly in sadness.
         idle();
@@ -185,7 +194,7 @@ public class AI extends AbstractVerticle {
               currentDestination = defendPoint;
             }
             if (Boolean.TRUE.equals(obj.getBoolean("success"))) {
-              shoot(Boolean.TRUE.equals(obj.getBoolean("takesBall")));
+              shoot(Boolean.TRUE.equals(obj.getBoolean("takesBall")), tryGetSpan.map(Span::context));
             }
           }
           walkToDestination(delta);
@@ -194,7 +203,7 @@ public class AI extends AbstractVerticle {
     });
   }
 
-  private void shoot(boolean takesBall) {
+  private void shoot(boolean takesBall, Optional<SpanContext> spanContext) {
     final Point shootVector;
     final String kind;
     Point goal = (arenaInfo == null) ? randomDestination() : arenaInfo.goal;
@@ -234,19 +243,19 @@ public class AI extends AbstractVerticle {
         .put("playerID", id);
 
     HttpRequest<Buffer> request = client.put(BALL_PORT, BALL_HOST, "/shoot");
-    TRACER.ifPresent(tracer -> {
-      try (Scope shootScope = tracer.buildSpan("player_shoot")
-          .withTag("name", NAME)
-          .withTag("id", id)
-          .withTag("kind", kind)
-          .withTag("strength", shootVector.size())
-          .ignoreActiveSpan()
-          .startActive(true)) {
-        tracer.inject(shootScope.span().context(), Builtin.HTTP_HEADERS, new TracingContext(request.headers()));
-      }
+    Optional<Span> shootSpan = spanContext.map(sc -> {
+      Span span = TRACER.get().buildSpan("player_shoot")
+        .withTag("name", NAME)
+        .withTag("id", id)
+        .withTag("kind", kind)
+        .withTag("strength", shootVector.size())
+        .asChildOf(sc)
+        .start();
+      TracingHeaders.inject(TRACER.get(), span.context(), request.headers());
+      return span;
     });
 
-    request.sendJson(json, ar -> {});
+    request.sendJson(json, ar -> shootSpan.ifPresent(Span::finish));
   }
 
   private void idle() {

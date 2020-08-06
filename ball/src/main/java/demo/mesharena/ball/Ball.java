@@ -2,14 +2,13 @@ package demo.mesharena.ball;
 
 import demo.mesharena.common.Commons;
 import demo.mesharena.common.Point;
-import demo.mesharena.common.TracingContext;
+import demo.mesharena.common.TracingHeaders;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.opentracing.References;
 import io.opentracing.Span;
+import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
-import io.opentracing.propagation.Format;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -23,7 +22,6 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.micrometer.PrometheusScrapingHandler;
 import io.vertx.micrometer.backends.BackendRegistries;
-import io.vertx.tracing.opentracing.OpenTracingUtil;
 
 import java.security.SecureRandom;
 import java.util.Optional;
@@ -34,7 +32,7 @@ import static demo.mesharena.common.Commons.*;
 
 public class Ball extends AbstractVerticle {
 
-  private static final Optional<Tracer> TRACER = getTracer("ball");
+  private static final Optional<Tracer> TRACER = createTracerFromEnv();
   private static final long DELTA_MS = 200;
   private static final double RESISTANCE = Commons.getIntEnv("RESISTANCE", 80);
   private static final double PCT_ERRORS = Commons.getIntEnv("PCT_ERRORS", 0);
@@ -57,6 +55,7 @@ public class Ball extends AbstractVerticle {
   private double errorTimer;
 
   private Optional<Span> shootSpan = Optional.empty();
+  private SpanContext lastShootRef = null;
 
   private Ball(Vertx vertx) {
     client = WebClient.create(vertx);
@@ -77,7 +76,7 @@ public class Ball extends AbstractVerticle {
   }
 
   public static void main(String[] args) {
-    Vertx vertx = Commons.vertx();
+    Vertx vertx = Commons.vertx(TRACER);
     vertx.deployVerticle(new Ball(vertx));
   }
 
@@ -159,16 +158,14 @@ public class Ball extends AbstractVerticle {
       if (controllingPlayer != null) {
         shootSpan.ifPresent(Span::finish);
         shootSpan = TRACER.map(tracer -> {
-          Tracer.SpanBuilder shootSpanBuilder = tracer.buildSpan("ball_shot")
+          SpanContext parent = TracingHeaders.extract(tracer, ctx.request().headers());
+          return tracer.buildSpan("ball_shot")
               .withTag("team", controllingPlayerTeam)
-              .withTag("player", controllingPlayerName);
-          Span ctxSpan = OpenTracingUtil.getSpan();
-          if (ctxSpan != null) {
-            shootSpanBuilder.asChildOf(ctxSpan);
-          }
-          return shootSpanBuilder.start();
+              .withTag("player", controllingPlayerName)
+              .asChildOf(parent)
+              .start();
         });
-        shootSpan.ifPresent(OpenTracingUtil::setSpan);
+        lastShootRef = shootSpan.map(Span::context).orElse(null);
         speed = new Point(dx, dy);
         if ("togoal".equals(kind)) {
           if (rnd.nextInt(2) == 0) {
@@ -248,7 +245,7 @@ public class Ball extends AbstractVerticle {
       // Shoot finished
       shootSpan.ifPresent(Span::finish);
       shootSpan = Optional.empty();
-      OpenTracingUtil.clearContext();
+      lastShootRef = null;
     }
     // Decrease controlling skill
     if (controllingPlayerSkill > 0) {
@@ -270,8 +267,16 @@ public class Ball extends AbstractVerticle {
         .put("yEnd", newPos.y());
 
     HttpRequest<Buffer> request = client.post(STADIUM_PORT, STADIUM_HOST, "/bounce");
-    shootSpan.ifPresent(span -> TRACER.ifPresent(tracer -> tracer.inject(span.context(), Format.Builtin.HTTP_HEADERS, new TracingContext(request.headers()))));
+    Optional<Span> checkSpan = TRACER.map(tracer -> {
+      Span s = tracer.buildSpan("check_bounce")
+          .asChildOf(lastShootRef)
+          .start();
+      TracingHeaders.inject(tracer, s.context(), request.headers());
+      lastShootRef = s.context();
+      return s;
+    });
     request.sendJson(json, ar -> {
+      checkSpan.ifPresent(Span::finish);
       if (!ar.succeeded()) {
         // No stadium => no bounce
         handler.handle(false);
@@ -294,14 +299,17 @@ public class Ball extends AbstractVerticle {
               .register(reg)
               .increment());
           // Span update
-          shootSpan.ifPresent(parent -> TRACER.ifPresent(tracer -> {
+          TRACER.ifPresent(tracer -> {
             Tracer.SpanBuilder goalSpan = tracer.buildSpan("goal")
                 .withTag("team", team)
                 .withTag("player", controllingPlayerName)
                 .withTag("own_goal", isOwn ? "yes" : "no")
-                .asChildOf(parent);
+                .asChildOf(lastShootRef);
             goalSpan.start().finish();
-          }));
+            shootSpan.ifPresent(Span::finish);
+            shootSpan = Optional.empty();
+            lastShootRef = null;
+          });
           // Do not update position, Stadium will do it
           controllingPlayer = null;
           speed = Point.ZERO;
@@ -315,13 +323,15 @@ public class Ball extends AbstractVerticle {
           double normDy = obj.getDouble("dy");
           speed = new Point(normDx * newSpeed, normDy * newSpeed);
           // Span update
-          shootSpan.ifPresent(parent -> TRACER.ifPresent(tracer -> {
-            Tracer.SpanBuilder bounceSpan = tracer.buildSpan("bounce")
+          TRACER.ifPresent(tracer -> {
+            Span bounceSpan = tracer.buildSpan("bounce")
                 .withTag("x", x)
                 .withTag("y", y)
-                .asChildOf(parent);
-            bounceSpan.start().finish();
-          }));
+                .asChildOf(lastShootRef)
+                .start();
+            lastShootRef = bounceSpan.context();
+            bounceSpan.finish();
+          });
           handler.handle(true);
         } else {
           handler.handle(false);

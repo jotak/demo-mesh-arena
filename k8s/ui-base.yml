@@ -50,7 +50,7 @@ spec:
         - name: JAEGER_PROPAGATION
           value: b3
         - name: JAEGER_ENDPOINT
-          value: http://tracing.istio-system.svc/api/traces
+          value: http://jaeger-collector.istio-system.svc/api/traces
         securityContext:
           privileged: false
 ---

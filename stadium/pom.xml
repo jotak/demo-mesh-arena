@@ -39,11 +39,6 @@
       <artifactId>mesharena-common</artifactId>
       <version>0.0.1</version>
     </dependency>
-    <dependency>
-      <groupId>io.opentracing.contrib</groupId>
-      <artifactId>opentracing-vertx-web</artifactId>
-      <version>0.1.0</version>
-    </dependency>
   </dependencies>
 
   <build>

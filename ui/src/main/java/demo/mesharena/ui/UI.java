@@ -1,10 +1,9 @@
 package demo.mesharena.ui;
 
 import demo.mesharena.common.Commons;
-import demo.mesharena.common.TracingContext;
+import demo.mesharena.common.TracingHeaders;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
-import io.opentracing.propagation.Format.Builtin;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
@@ -31,14 +30,14 @@ import static demo.mesharena.common.Commons.*;
 
 public class UI extends AbstractVerticle {
 
-  private static final Optional<Tracer> TRACER = getTracer("ui");
+  private static final Optional<Tracer> TRACER = createTracerFromEnv();
   private final Map<String, GameObject> gameObjects = new HashMap<>();
 
   private UI() {
   }
 
   public static void main(String[] args) {
-    Commons.vertx().deployVerticle(new UI());
+    Commons.vertx(TRACER).deployVerticle(new UI());
   }
 
   @Override
@@ -95,7 +94,7 @@ public class UI extends AbstractVerticle {
       Optional<Span> span = TRACER.map(tracer -> tracer.buildSpan("centerBall").start());
       HttpRequest<Buffer> request = WebClient.create(vertx)
           .get(STADIUM_PORT, STADIUM_HOST, "/centerBall");
-      span.ifPresent(s -> TRACER.get().inject(s.context(), Builtin.HTTP_HEADERS, new TracingContext(request.headers())));
+      span.ifPresent(s -> TracingHeaders.inject(TRACER.get(), s.context(), request.headers()));
       request.send(ar -> {
         span.ifPresent(Span::finish);
         if (!ar.succeeded()) {
@@ -107,7 +106,7 @@ public class UI extends AbstractVerticle {
       Optional<Span> span = TRACER.map(tracer -> tracer.buildSpan("randomBall").start());
       HttpRequest<Buffer> request = WebClient.create(vertx)
           .get(STADIUM_PORT, STADIUM_HOST, "/randomBall");
-      span.ifPresent(s -> TRACER.get().inject(s.context(), Builtin.HTTP_HEADERS, new TracingContext(request.headers())));
+      span.ifPresent(s -> TracingHeaders.inject(TRACER.get(), s.context(), request.headers()));
       request.send(ar -> {
         span.ifPresent(Span::finish);
         if (!ar.succeeded()) {

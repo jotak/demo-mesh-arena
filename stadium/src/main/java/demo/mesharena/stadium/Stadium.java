@@ -3,11 +3,7 @@ package demo.mesharena.stadium;
 import demo.mesharena.common.Commons;
 import demo.mesharena.common.Point;
 import demo.mesharena.common.Segment;
-import demo.mesharena.common.TracingContext;
-import io.opentracing.Span;
 import io.opentracing.Tracer;
-import io.opentracing.contrib.vertx.ext.web.TracingHandler;
-import io.opentracing.propagation.Format.Builtin;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -27,7 +23,7 @@ import static demo.mesharena.common.Commons.*;
 
 public class Stadium extends AbstractVerticle {
 
-  private static final Optional<Tracer> TRACER = getTracer("stadium");
+  private static final Optional<Tracer> TRACER = createTracerFromEnv();
   private static final String LOCALS = Commons.getStringEnv("STADIUM_LOCALS", "Locals");
   private static final String VISITORS = Commons.getStringEnv("STADIUM_VISITORS", "Visitors");
   private static final String NAME = Commons.getStringEnv("STADIUM_NAME", "stadium");
@@ -74,7 +70,7 @@ public class Stadium extends AbstractVerticle {
   }
 
   public static void main(String[] args) {
-    Vertx vertx = Commons.vertx();
+    Vertx vertx = Commons.vertx(TRACER);
     vertx.deployVerticle(new Stadium(vertx));
   }
 
@@ -120,7 +116,6 @@ public class Stadium extends AbstractVerticle {
         .put("y", TOP + rnd.nextInt(HEIGHT));
 
     HttpRequest<Buffer> request = client.put(BALL_PORT, BALL_HOST, "/setPosition");
-    TRACER.ifPresent(tracer -> tracer.inject(TracingHandler.serverSpanContext(ctx), Builtin.HTTP_HEADERS, new TracingContext(request.headers())));
     request.sendJson(json, ar -> {
       if (!ar.succeeded()) {
         ar.cause().printStackTrace();
@@ -145,7 +140,6 @@ public class Stadium extends AbstractVerticle {
         .put("y", TOP + HEIGHT / 2);
 
     HttpRequest<Buffer> request = client.put(BALL_PORT, BALL_HOST, "/setPosition");
-    TRACER.ifPresent(tracer -> tracer.inject(TracingHandler.serverSpanContext(ctx), Builtin.HTTP_HEADERS, new TracingContext(request.headers())));
     request.sendJson(json, ar -> {
       if (!ar.succeeded()) {
         ar.cause().printStackTrace();

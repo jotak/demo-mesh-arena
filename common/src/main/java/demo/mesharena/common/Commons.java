@@ -28,26 +28,26 @@ public final class Commons {
   public static final int STADIUM_PORT = getIntEnv("MESHARENA_STADIUM_PORT", 8082);
   public static final String STADIUM_HOST = getStringEnv("MESHARENA_STADIUM_HOST", "localhost");
 
-  private static Optional<Tracer> tracer = Optional.empty();
-  private static boolean tracerSet = false;
-
-  public static Optional<Tracer> getTracer(String service) {
-    if (!tracerSet) {
-      if (TRACING_ENABLED == 1) {
-        Configuration c = Configuration.fromEnv();
-//        Configuration c = new Configuration(service)
-//            .withSampler(new Configuration.SamplerConfiguration()
-//                .withType("const")
-//                .withParam(1))
-//            .withCodec(new Configuration.CodecConfiguration()
-//                .withPropagation(Configuration.Propagation.B3))
-//            .withReporter(new Configuration.ReporterConfiguration()
-//                .withSender(new Configuration.SenderConfiguration().withEndpoint("http://localhost:14268/api/traces")));
-        tracer = Optional.of(c.getTracer());
-      }
-      tracerSet = true;
+  public static Optional<Tracer> createTracerFromEnv() {
+    if (TRACING_ENABLED == 1) {
+      return Optional.of(Configuration.fromEnv().getTracer());
     }
-    return tracer;
+    return Optional.empty();
+  }
+
+  public static Optional<Tracer> createHardcodedTracer(String service) {
+    if (TRACING_ENABLED == 1) {
+      Configuration c = new Configuration(service)
+          .withSampler(new Configuration.SamplerConfiguration()
+              .withType("const")
+              .withParam(1))
+          .withCodec(new Configuration.CodecConfiguration()
+              .withPropagation(Configuration.Propagation.B3))
+          .withReporter(new Configuration.ReporterConfiguration()
+              .withSender(new Configuration.SenderConfiguration().withEndpoint("http://localhost:14268/api/traces")));
+      return Optional.of(c.getTracer());
+    }
+    return Optional.empty();
   }
 
   private Commons() {
@@ -93,9 +93,10 @@ public final class Commons {
     return out.toString();
   }
 
-  public static Vertx vertx() {
+  public static Vertx vertx(Optional<Tracer> tracer) {
     VertxOptions opts = new VertxOptions();
-    tracer.ifPresent(t -> opts.setTracingOptions(new OpenTracingOptions(t)));
+    // Uncomment to turn on vertx-powered traces (they are redundant with istio ones)
+//    tracer.ifPresent(t -> opts.setTracingOptions(new OpenTracingOptions(t)));
     if (METRICS_ENABLED == 1) {
       opts.setMetricsOptions(new MicrometerMetricsOptions()
           .setPrometheusOptions(new VertxPrometheusOptions()

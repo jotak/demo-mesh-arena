@@ -125,3 +125,6 @@ deploy-latest: PULL_POLICY=IfNotPresent
 deploy-latest: TAG_MINIKUBE=false
 deploy-latest: GENTPL_OPTS=--metrics
 deploy-latest: deploy
+
+expose-jaeger-collector:
+	kubectl apply -f ./istio/jaeger-collector.yml
