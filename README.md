@@ -60,6 +60,14 @@ Then build everything, with images tagged for local usage with Minikube, and dep
 make build images deploy
 ```
 
+To deploy from local with custom metrics and/or tracing:
+
+```bash
+make deploy-metrics
+make deploy-tracing
+make deploy-both
+```
+
 More options are possible. E.g. to build and push to quay.io, with a specific user and tag:
 
 ```bash
