@@ -1,9 +1,6 @@
 package demo.mesharena.ai;
 
-import demo.mesharena.common.Commons;
-import demo.mesharena.common.Point;
-import demo.mesharena.common.Segment;
-import demo.mesharena.common.TracingHeaders;
+import demo.mesharena.common.*;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
@@ -31,9 +28,9 @@ public class AI extends AbstractVerticle {
   private static final long DELTA_MS = 300;
   private static final double IDLE_TIMER = 2.0;
   private static final double ROLE_TIMER = 10.0;
-  private static final String NAME = Commons.getStringEnv("PLAYER_NAME", "Goat");
-  private static final String COLOR = Commons.getStringEnv("PLAYER_COLOR", "blue");
-  private static final String TEAM = Commons.getStringEnv("PLAYER_TEAM", "locals");
+  private static final String NAME = Commons.getHTMLStringEnv("PLAYER_NAME", "Goat");
+  private static final String COLOR = Commons.getHTMLStringEnv("PLAYER_COLOR", "blue");
+  private static final String TEAM = Commons.getHTMLStringEnv("PLAYER_TEAM", "locals");
   // Speed = open scale
   private static final double SPEED = Commons.getIntEnv("PLAYER_SPEED", 60);
   // Accuracy [0, 1]
@@ -55,6 +52,7 @@ public class AI extends AbstractVerticle {
   private final String id;
   private final boolean isVisitors;
   private final JsonObject json;
+  private final DisplayMessager displayMessager;
   private Point pos = Point.ZERO;
   private ArenaInfo arenaInfo;
   private Point currentDestination = null;
@@ -73,6 +71,7 @@ public class AI extends AbstractVerticle {
         .put("id", id)
         .put("style", "position: absolute; background-color: " + COLOR + "; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms; height: 30px; width: 30px; border-radius: 50%; z-index: 8;")
         .put("text", "");
+    displayMessager = new DisplayMessager(vertx, client);
   }
 
   public static void main(String[] args) {
@@ -299,12 +298,7 @@ public class AI extends AbstractVerticle {
   private void display() {
     json.put("x", pos.x() - 15)
         .put("y", pos.y() - 15);
-
-    client.post(UI_PORT, UI_HOST, "/display").sendJson(json, ar -> {
-      if (!ar.succeeded()) {
-        ar.cause().printStackTrace();
-      }
-    });
+    displayMessager.send(json);
   }
 
   private static class ArenaInfo {

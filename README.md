@@ -73,3 +73,21 @@ More options are possible. E.g. to build and push to quay.io, with a specific us
 ```bash
 OCI_USER=myself TAG=1.2.3 REMOTE=true make build images
 ```
+
+## Using Kafka
+
+Display requests can be switched to Kafka messages.
+In order to have it working, all services need to have the KAFKA_ADDRESS env defined; else, it will fall back to the good old HTTP methods.
+
+To deploy Kafka (using Strimzi):
+
+```bash
+make kafka
+# wait until all is ready
+kubectl get pods -n kafka -w
+```
+
+Scenario with Kafka is still under progress (but PoC is working). TODO:
+- Infer KAFKA_ADDRESS via make targets
+- Enable tracing via Kafka
+- Kafka with Istio: either put kafka under mesh, or setup service entry

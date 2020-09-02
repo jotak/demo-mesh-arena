@@ -35,12 +35,14 @@ spec:
           value: "0"
         - name: TRACING_ENABLED
           value: "0"
+        - name: KAFKA_ADDRESS
+          value: messaging-kafka-bootstrap.kafka:9092
         - name: MESHARENA_UI_PORT
           value: "8080"
         - name: MESHARENA_STADIUM_PORT
           value: "8080"
         - name: MESHARENA_STADIUM_HOST
-          value: stadium
+          value: stadiumsvc
         - name: JAEGER_SERVICE_NAME
           value: ui.default
         - name: JAEGER_SAMPLER_TYPE

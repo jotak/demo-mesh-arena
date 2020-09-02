@@ -8,25 +8,34 @@ import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics;
 import io.opentracing.Tracer;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
+import io.vertx.core.json.JsonObject;
+import io.vertx.kafka.client.consumer.KafkaConsumer;
+import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.micrometer.Label;
 import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
-import io.vertx.tracing.opentracing.OpenTracingOptions;
 
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 public final class Commons {
 
   public static final int METRICS_ENABLED = Commons.getIntEnv("METRICS_ENABLED", 0);
   public static final int TRACING_ENABLED = Commons.getIntEnv("TRACING_ENABLED", 0);
+  public static final String KAFKA_ADDRESS = Commons.getStringEnv("KAFKA_ADDRESS", "");
+
   public static final int UI_PORT = getIntEnv("MESHARENA_UI_PORT", 8080);
   public static final String UI_HOST = getStringEnv("MESHARENA_UI_HOST", "localhost");
   public static final int BALL_PORT = getIntEnv("MESHARENA_BALL_PORT", 8081);
   public static final String BALL_HOST = getStringEnv("MESHARENA_BALL_HOST", "localhost");
   public static final int STADIUM_PORT = getIntEnv("MESHARENA_STADIUM_PORT", 8082);
   public static final String STADIUM_HOST = getStringEnv("MESHARENA_STADIUM_HOST", "localhost");
+
+  private Commons() {
+  }
 
   public static Optional<Tracer> createTracerFromEnv() {
     if (TRACING_ENABLED == 1) {
@@ -50,10 +59,40 @@ public final class Commons {
     return Optional.empty();
   }
 
-  private Commons() {
+  public static Optional<KafkaConsumer<String, JsonObject>> kafkaConsumer(Vertx vertx, String groupId) {
+    if (KAFKA_ADDRESS.equals("")) {
+      return Optional.empty();
+    }
+    Map<String, String> config = new HashMap<>();
+    config.put("bootstrap.servers", KAFKA_ADDRESS);
+    config.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+    config.put("value.deserializer", "io.vertx.kafka.client.serialization.JsonObjectDeserializer");
+    config.put("group.id", groupId);
+    config.put("auto.offset.reset", "latest");
+    config.put("enable.auto.commit", "false");
+    return Optional.of(KafkaConsumer.create(vertx, config));
+  }
+
+  public static Optional<KafkaProducer<String, JsonObject>> kafkaProducer(Vertx vertx) {
+    if (KAFKA_ADDRESS.equals("")) {
+      return Optional.empty();
+    }
+    Map<String, String> config = new HashMap<>();
+    config.put("bootstrap.servers", KAFKA_ADDRESS);
+    config.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+    config.put("value.serializer", "io.vertx.kafka.client.serialization.JsonObjectSerializer");
+    config.put("acks", "0");
+    KafkaProducer<String, JsonObject> p = KafkaProducer.create(vertx, config);
+    p.exceptionHandler(Throwable::printStackTrace);
+    return Optional.of(p);
   }
 
   public static String getStringEnv(String varname, String def) {
+    String val = System.getenv(varname);
+    return (val == null || val.isEmpty()) ? def : val;
+  }
+
+  public static String getHTMLStringEnv(String varname, String def) {
     String val = System.getenv(varname);
     if (val == null || val.isEmpty()) {
       return def;

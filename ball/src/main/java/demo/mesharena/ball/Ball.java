@@ -1,6 +1,7 @@
 package demo.mesharena.ball;
 
 import demo.mesharena.common.Commons;
+import demo.mesharena.common.DisplayMessager;
 import demo.mesharena.common.Point;
 import demo.mesharena.common.TracingHeaders;
 import io.micrometer.core.instrument.Counter;
@@ -43,6 +44,7 @@ public class Ball extends AbstractVerticle {
   private final Random rnd = new SecureRandom();
   private final JsonObject json;
   private final Optional<MeterRegistry> registry;
+  private final DisplayMessager displayMessager;
 
   private Point speed = Point.ZERO;
   private String controllingPlayer;
@@ -73,6 +75,7 @@ public class Ball extends AbstractVerticle {
     if (!registry.isPresent()) {
       System.out.println("No metrics");
     }
+    displayMessager = new DisplayMessager(vertx, client);
   }
 
   public static void main(String[] args) {
@@ -205,11 +208,7 @@ public class Ball extends AbstractVerticle {
         .put("style", "position: absolute; color: brown; font-weight: bold; z-index: 10; top: " + (pos.y() + 10) + "px; left: " + (pos.x() - 10) + "px;")
         .put("text", text);
 
-    client.post(UI_PORT, UI_HOST, "/display").sendJson(json, ar -> {
-      if (!ar.succeeded()) {
-        ar.cause().printStackTrace();
-      }
-    });
+    displayMessager.send(json);
   }
 
   private void setPosition(RoutingContext ctx) {
@@ -344,12 +343,7 @@ public class Ball extends AbstractVerticle {
     json.put("x", pos.x() - 10)
         .put("y", pos.y() - 10)
         .put("style", getStyle());
-
-    client.post(UI_PORT, UI_HOST, "/display").sendJson(json, ar -> {
-      if (!ar.succeeded()) {
-        ar.cause().printStackTrace();
-      }
-    });
+    displayMessager.send(json);
   }
 
   private String getStyle() {

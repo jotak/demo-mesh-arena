@@ -1,6 +1,7 @@
 package demo.mesharena.stadium;
 
 import demo.mesharena.common.Commons;
+import demo.mesharena.common.DisplayMessager;
 import demo.mesharena.common.Point;
 import demo.mesharena.common.Segment;
 import io.opentracing.Tracer;
@@ -51,6 +52,7 @@ public class Stadium extends AbstractVerticle {
   private final WebClient client;
   private final JsonObject stadiumJson;
   private final JsonObject scoreJson;
+  private final DisplayMessager displayMessager;
 
   private int scoreA = 0;
   private int scoreB = 0;
@@ -67,6 +69,8 @@ public class Stadium extends AbstractVerticle {
         .put("id", NAME + "-score")
         .put("style", "position: absolute; top: " + (TX_TOP + 5) + "px; left: " + (TX_LEFT + 5) + "px; color: black; font-weight: bold; z-index: 10;")
         .put("text", "");
+
+    displayMessager = new DisplayMessager(vertx, client);
   }
 
   public static void main(String[] args) {
@@ -272,19 +276,8 @@ public class Stadium extends AbstractVerticle {
   }
 
   private void display() {
-    // Stadium
-    client.post(UI_PORT, UI_HOST, "/display").sendJson(stadiumJson, ar -> {
-      if (!ar.succeeded()) {
-        ar.cause().printStackTrace();
-      }
-    });
-
-    // Score
+    displayMessager.send(stadiumJson);
     scoreJson.put("text", NAME + " - " + getScoreText());
-    client.post(UI_PORT, UI_HOST, "/display").sendJson(scoreJson, ar -> {
-      if (!ar.succeeded()) {
-        ar.cause().printStackTrace();
-      }
-    });
+    displayMessager.send(scoreJson);
   }
 }

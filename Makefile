@@ -110,6 +110,7 @@ scen-outlier:
 
 expose:
 	@echo "URL: http://localhost:8080/"
+	kubectl wait pod -l app=ui --for=condition=Ready --timeout=300s -n ${NAMESPACE} ; \
 	kubectl -n ${NAMESPACE} port-forward svc/ui 8080:8080
 
 undeploy:
@@ -118,6 +119,9 @@ undeploy:
 	kubectl -n ${NAMESPACE} delete virtualservice -l "project=mesh-arena" ; \
 	kubectl -n ${NAMESPACE} delete gateway -l "project=mesh-arena" ; \
 	kubectl -n ${NAMESPACE} delete envoyfilter -l "project=mesh-arena"
+
+kill:
+	kubectl -n ${NAMESPACE} delete pods -l "project=mesh-arena"
 
 deploy-latest: TAG=1.1.8
 deploy-latest: OCI_DOMAIN_IN_CLUSTER=quay.io
@@ -128,3 +132,8 @@ deploy-latest: deploy
 
 expose-jaeger-collector:
 	kubectl apply -f ./istio/jaeger-collector.yml
+
+kafka:
+	kubectl create namespace kafka ; \
+	kubectl apply -f 'https://strimzi.io/install/latest?namespace=kafka' -n kafka ; \
+	kubectl apply -f ./k8s/strimzi.yaml -n kafka

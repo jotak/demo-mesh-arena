@@ -65,7 +65,7 @@ public class UI extends AbstractVerticle {
     router.get("/health").handler(ctx -> ctx.response().end());
 
     // Listen to objects creation
-    router.post("/display").handler(this::displayGameObject);
+    router.post("/display").handler(this::displayRoute);
 
     // Create a router endpoint for the static content.
     router.route().handler(StaticHandler.create());
@@ -73,6 +73,12 @@ public class UI extends AbstractVerticle {
     // Start the web server and tell it to use the router to handle requests.
     vertx.createHttpServer().requestHandler(router)
         .listen(serverOptions.getPort(), serverOptions.getHost());
+
+    // Init Kafka to receive display events (can be used instead of the REST endpoint)
+    Commons.kafkaConsumer(vertx, "ui").ifPresent(c -> {
+      c.subscribe("display").onSuccess(v -> c.handler(rec -> display(rec.value())))
+        .onFailure(Throwable::printStackTrace);
+    });
 
     EventBus eb = vertx.eventBus();
     eb.consumer("init-session", msg -> {
@@ -128,18 +134,22 @@ public class UI extends AbstractVerticle {
     });
   }
 
-  private void displayGameObject(RoutingContext ctx) {
+  private void displayRoute(RoutingContext ctx) {
     ctx.request().bodyHandler(buf -> {
       JsonObject json = buf.toJsonObject();
       ctx.response().end();
-      gameObjects.compute(json.getString("id"), (key, go) -> {
-        GameObject out = (go == null) ? new GameObject() : go;
-        boolean changed = out.mergeWithJson(json);
-        if (changed) {
-          vertx.eventBus().publish("displayGameObject", json);
-        }
-        return out;
-      });
+      display(json);
+    });
+  }
+
+  private void display(JsonObject data) {
+    gameObjects.compute(data.getString("id"), (key, go) -> {
+      GameObject out = (go == null) ? new GameObject() : go;
+      boolean changed = out.mergeWithJson(data);
+      if (changed) {
+        vertx.eventBus().publish("displayGameObject", data);
+      }
+      return out;
     });
   }
 
