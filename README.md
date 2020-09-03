@@ -85,9 +85,9 @@ To deploy Kafka (using Strimzi):
 make kafka
 # wait until all is ready
 kubectl get pods -n kafka -w
+GENTPL_OPTS="--kafka" make deploy
 ```
 
 Scenario with Kafka is still under progress (but PoC is working). TODO:
-- Infer KAFKA_ADDRESS via make targets
 - Enable tracing via Kafka
 - Kafka with Istio: either put kafka under mesh, or setup service entry

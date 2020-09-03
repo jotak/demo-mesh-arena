@@ -68,6 +68,11 @@ deploy: .ensure-yq
 		./gentpl.sh $$svc -v ${GENTPL_VERSION} -pp ${PULL_POLICY} -d "${OCI_DOMAIN_IN_CLUSTER}" -u ${OCI_USER} -t ${TAG} -n ${NAMESPACE} ${GENTPL_OPTS} | kubectl -n ${NAMESPACE} apply -f - ; \
 	done
 
+dry-deploy: .ensure-yq
+	for svc in ${TO_DEPLOY} ; do \
+		./gentpl.sh $$svc -v ${GENTPL_VERSION} -pp ${PULL_POLICY} -d "${OCI_DOMAIN_IN_CLUSTER}" -u ${OCI_USER} -t ${TAG} -n ${NAMESPACE} ${GENTPL_OPTS} ; \
+	done
+
 deploy-tracing: GENTPL_OPTS=--tracing
 deploy-tracing: deploy
 

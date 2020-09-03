@@ -36,7 +36,7 @@ spec:
         - name: TRACING_ENABLED
           value: "0"
         - name: KAFKA_ADDRESS
-          value: messaging-kafka-bootstrap.kafka:9092
+          value: ""
         - name: MESHARENA_UI_PORT
           value: "8080"
         - name: MESHARENA_STADIUM_PORT

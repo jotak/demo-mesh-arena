@@ -21,6 +21,7 @@ NAMESPACE="default"
 VERSION="base"
 METRICS_ENABLED="0"
 TRACING_ENABLED="0"
+KAFKA_ADDRESS=""
 LAST_ARG=""
 
 for arg in "$@"
@@ -29,6 +30,8 @@ do
         METRICS_ENABLED="1"
     elif [[ "$arg" = "--tracing" ]]; then
         TRACING_ENABLED="1"
+    elif [[ "$arg" = "--kafka" ]]; then
+        KAFKA_ADDRESS="messaging-kafka-bootstrap.kafka:9092"
     elif [[ "$LAST_ARG" = "-v" ]]; then
         VERSION="$arg"
         LAST_ARG=""
@@ -77,6 +80,7 @@ for v in ${VERSION} ; do
         | ( [ "$METRICS_ENABLED" = "1" ] && yq w - --tag '!!str' "spec.template.metadata.annotations.(prometheus.io/scrape)" "true" || cat ) \
         | yq w - --tag '!!str' "spec.template.spec.containers[0].env.(name==METRICS_ENABLED).value" $METRICS_ENABLED \
         | yq w - --tag '!!str' "spec.template.spec.containers[0].env.(name==TRACING_ENABLED).value" $TRACING_ENABLED \
+        | ( [ "$KAFKA_ADDRESS" != "" ] && yq w - --tag '!!str' "spec.template.spec.containers[0].env.(name==KAFKA_ADDRESS).value" $KAFKA_ADDRESS || cat ) \
         | yq w - "spec.template.spec.containers[0].env.(name==JAEGER_SERVICE_NAME).value" $BASE_NAME.$NAMESPACE
     echo "---"
   fi
