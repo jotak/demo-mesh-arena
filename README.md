@@ -7,7 +7,7 @@ This demo was presented at [DevopsDday](http://2018.devops-dday.com/) in the Vel
 
 ## Step-by-step
 
-For a step-by-step walk-through, [read this](./STEP-BY-STEP.md).
+For a step-by-step walk-through, [read this](./STEP-BY-STEP.md) (outdated - you might run through the "scenario" steps instead, read `make man`).
 
 ## Pre-requisite
 
@@ -46,7 +46,7 @@ kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-are
 - Read the manual!
 
 ```bash
-make help
+make man
 ```
 
 It covers a bunch of make targets, deployment options, Istio scenario, with or without Kafka, etc.
