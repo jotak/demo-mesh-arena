@@ -251,7 +251,10 @@ kafka:
 	kubectl apply -f ./k8s/kafka-se.yml
 
 gen-quickstart:
-	TAG=${LATEST} OCI_DOMAIN_IN_CLUSTER=quay.io PULL_POLICY=IfNotPresent TAG_MINIKUBE=false make dry-deploy > quickstart-naked.yml ; \
-	TAG=${LATEST} OCI_DOMAIN_IN_CLUSTER=quay.io PULL_POLICY=IfNotPresent TAG_MINIKUBE=false GENTPL_OPTS=--metrics make dry-deploy > quickstart-metrics.yml ; \
-	TAG=${LATEST} OCI_DOMAIN_IN_CLUSTER=quay.io PULL_POLICY=IfNotPresent TAG_MINIKUBE=false GENTPL_OPTS=--tracing make dry-deploy > quickstart-tracing.yml ; \
-	TAG=${LATEST} OCI_DOMAIN_IN_CLUSTER=quay.io PULL_POLICY=IfNotPresent TAG_MINIKUBE=false GENTPL_OPTS="--metrics --tracing" make dry-deploy > quickstart-both.yml
+	rm quickstart-naked.yml quickstart-metrics.yml quickstart-tracing.yml quickstart-both.yml ; \
+	for svc in ${TO_DEPLOY} ; do \
+		./gentpl.sh $$svc -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default >> quickstart-naked.yml ; \
+		./gentpl.sh $$svc -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default --tracing >> quickstart-tracing.yml ; \
+		./gentpl.sh $$svc -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default --metrics >> quickstart-metrics.yml ; \
+		./gentpl.sh $$svc -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default --tracing --metrics >> quickstart-both.yml ; \
+	done

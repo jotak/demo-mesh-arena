@@ -28,16 +28,16 @@ Run one of the commands below:
 
 ```bash
 # With app metrics enabled:
-kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/quickstart-metrics.yaml) -n default
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/quickstart-metrics.yml) -n default
 
 # With app traces enabled:
-kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/quickstart-tracing.yaml) -n default
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/quickstart-tracing.yml) -n default
 
 # With both enabled:
-kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/quickstart-both.yaml) -n default
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/quickstart-both.yml) -n default
 
 # With both disabled:
-kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/quickstart-naked.yaml) -n default
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/quickstart-naked.yml) -n default
 ```
 
 ## Advanced

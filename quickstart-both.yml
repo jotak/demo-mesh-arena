@@ -1,7 +1,3 @@
-make[1] : on entre dans le répertoire « /work/demo-mesh-arena »
-for svc in ai-hotspot ai-openj9 ball-hotspot stadium-hotspot ui-hotspot ; do \
-	./gentpl.sh $svc -v base -pp IfNotPresent -d "quay.io" -u jotak -t 1.2.0 -n default --metrics --tracing ; \
-done
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -432,4 +428,3 @@ spec:
   selector:
     app: ui
 ---
-make[1] : on quitte le répertoire « /work/demo-mesh-arena »
