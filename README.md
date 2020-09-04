@@ -17,7 +17,7 @@ For a step-by-step walk-through, [read this](./STEP-BY-STEP.md).
 
 ## Quick start
 
-This quick start doesn't require to clone the repo, but offers less interactivity.
+This quick start doesn't require you to clone the repo, but offers less interactivity.
 
 If not already done, enable istio injection:
 ```bash
@@ -36,7 +36,7 @@ kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-are
 # With both enabled:
 kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/quickstart-both.yml) -n default
 
-# With both disabled:
+# With none enabled:
 kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/quickstart-naked.yml) -n default
 ```
 
