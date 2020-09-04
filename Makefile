@@ -12,6 +12,8 @@ TO_BUILD ?= ai-hotspot ai-openj9 ball-hotspot ball-openj9 stadium-hotspot ui-hot
 TO_DEPLOY ?= ai-hotspot ai-openj9 ball-hotspot stadium-hotspot ui-hotspot
 GENTPL_VERSION ?= base
 
+LATEST = 1.2.0
+
 ifeq ($(REMOTE),true)
 OCI_DOMAIN ?= quay.io
 OCI_DOMAIN_IN_CLUSTER ?= quay.io
@@ -85,6 +87,7 @@ help:
 	@echo ""
 	@echo "$(smul)Special targets$(sgr0):"
 	@echo "- $(bold)kafka$(sgr0):                    Deploy a kafka cluster (uses Strimzi); necessary to use with --kafka deploy option"
+	@echo "- $(bold)gen-quickstart$(sgr0):           Generate the quickstart templates with latest tag"
 	@echo "- $(bold)expose-jaeger-collector$(sgr0):  In case jaeger-collector isn't exosed by default in Istio, run this target if you use the --tracing deploy option"
 	@echo ""
 	@echo "$(smul)Examples$(sgr0):"
@@ -92,8 +95,8 @@ help:
 	@echo "$(bold)make deploy-latest$(sgr0)"
 	@echo "  Quick start, using latest images. Runtime metrics are enabled."
 	@echo ""
-	@echo "$(bold)NAMESPACE=mesh-arena TAG=1.1.8 REMOTE=true GENTPL_OPTS="--tracing --metrics" make deploy$(sgr0)"
-	@echo "  Deploy images from quay.io, tagged 1.1.8, to namespace 'mesh-arena', with application traces & metrics enabled"
+	@echo "$(bold)NAMESPACE=mesh-arena TAG=1.2.0 REMOTE=true GENTPL_OPTS="--tracing --metrics" make deploy$(sgr0)"
+	@echo "  Deploy images from quay.io, tagged 1.2.0, to namespace 'mesh-arena', with application traces & metrics enabled"
 	@echo ""
 	@echo "$(bold)make prepare build images deploy$(sgr0)"
 	@echo "$(bold)make build images deploy$(sgr0)"
@@ -200,7 +203,7 @@ deploy-kt: deploy
 deploy-ktm: GENTPL_OPTS=--tracing --metrics --kafka
 deploy-ktm: deploy
 
-deploy-latest: TAG=1.1.8
+deploy-latest: TAG=${LATEST}
 deploy-latest: OCI_DOMAIN_IN_CLUSTER=quay.io
 deploy-latest: PULL_POLICY=IfNotPresent
 deploy-latest: TAG_MINIKUBE=false
@@ -246,3 +249,9 @@ kafka:
 	kubectl apply -f 'https://strimzi.io/install/latest?namespace=kafka' -n kafka ; \
 	kubectl apply -f ./k8s/strimzi.yml -n kafka ; \
 	kubectl apply -f ./k8s/kafka-se.yml
+
+gen-quickstart:
+	TAG=${LATEST} OCI_DOMAIN_IN_CLUSTER=quay.io PULL_POLICY=IfNotPresent TAG_MINIKUBE=false make dry-deploy > quickstart-naked.yml ; \
+	TAG=${LATEST} OCI_DOMAIN_IN_CLUSTER=quay.io PULL_POLICY=IfNotPresent TAG_MINIKUBE=false GENTPL_OPTS=--metrics make dry-deploy > quickstart-metrics.yml ; \
+	TAG=${LATEST} OCI_DOMAIN_IN_CLUSTER=quay.io PULL_POLICY=IfNotPresent TAG_MINIKUBE=false GENTPL_OPTS=--tracing make dry-deploy > quickstart-tracing.yml ; \
+	TAG=${LATEST} OCI_DOMAIN_IN_CLUSTER=quay.io PULL_POLICY=IfNotPresent TAG_MINIKUBE=false GENTPL_OPTS="--metrics --tracing" make dry-deploy > quickstart-both.yml

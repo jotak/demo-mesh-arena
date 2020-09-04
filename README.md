@@ -11,42 +11,42 @@ For a step-by-step walk-through, [read this](./STEP-BY-STEP.md).
 
 ## Pre-requisite
 
-- Kubernetes or OpenShift cluster running (ex: minikube 0.27+ / minishift)
-- Istio with Kiali installed
-- Repo cloned locally (actually, only YML files are necessary)
-- `yq` is needed, grab it from there: https://github.com/mikefarah/yq/releases (Last version known to work here: 3.1.1)
+- Kubernetes cluster running
+- Istio installed (much better with Kiali!)
+- `yq` might be needed at some point, if you use deploy targets; grab it from there: https://github.com/mikefarah/yq/releases (Last version known to work here: 3.1.1)
 
+## Quick start
 
-## Man
+This quick start doesn't require to clone the repo, but offers less interactivity.
 
-Most doc is contained there:
+If not already done, enable istio injection:
+```bash
+kubectl label namespace default istio-injection=enabled
+```
+
+Run one of the commands below:
+
+```bash
+# With app metrics enabled:
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/quickstart-metrics.yaml) -n default
+
+# With app traces enabled:
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/quickstart-tracing.yaml) -n default
+
+# With both enabled:
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/quickstart-both.yaml) -n default
+
+# With both disabled:
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/quickstart-naked.yaml) -n default
+```
+
+## Advanced
+
+- Clone this repo
+- Read the manual!
 
 ```bash
 make help
 ```
 
-This README will only cover a little.
-
-## Deploy all
-
-Quick start, using latest version:
-
-```bash
-make deploy-latest
-```
-
-This deployment method includes runtime metrics.
-
-## Build the demo
-
-For the first build, it is necessary to get the JS dependencies on your filesystem:
-
-```bash
-make prepare
-```
-
-Then build everything, with images tagged for local usage with Minikube, and deploy:
-
-```bash
-make build images deploy
-```
+It covers a bunch of make targets, deployment options, Istio scenario, with or without Kafka, etc.
