@@ -112,7 +112,7 @@ help:
 	@echo "  Build everything and push to quay.io"
 	@echo ""
 	@echo "$(bold)make kafka$(sgr0)"
-	@echo "$(bold)# wait until all is ready$(sgr0)"
+	@echo "# wait until all is ready"
 	@echo "$(bold)kubectl get pods -n kafka -w$(sgr0)"
 	@echo "$(bold)make deploy-kafka$(sgr0)"
 	@echo "  Deploy with Kafka (strimzi)"
@@ -123,11 +123,11 @@ help:
 	@command -v yq >/dev/null 2>&1 || { echo >&2 "yq is required. Grab it on https://github.com/mikefarah/yq"; exit 1; }
 
 prepare:
-	@echo "Installing frontend dependencies..."
+	@echo "⚽ Installing frontend dependencies..."
 	cd ui/src/main/resources/webroot && npm install
 
 build:
-	@echo "Building services..."
+	@echo "⚽ Building services..."
 	mvn clean package dependency:copy-dependencies
 
 ifeq ($(TAG_MINIKUBE),true)
@@ -137,21 +137,21 @@ images: images-build
 endif
 
 images-build:
-	@echo "Building images..."
+	@echo "⚽ Building images..."
 	for svc in ${TO_BUILD} ; do \
 		echo "Building $$svc:" ; \
 		${OCI_BIN_SHORT} build -t ${OCI_DOMAIN}/${OCI_USER}/mesharena-$$svc:${TAG} -f ./k8s/$$svc.dockerfile . ; \
 	done
 
 push-minikube:
-	@echo "Tagging for Minikube..."
+	@echo "⚽ Tagging for Minikube..."
 	for svc in ${TO_BUILD} ; do \
 		${OCI_BIN_SHORT} push ${PUSH_OPTS} ${OCI_DOMAIN}/${OCI_USER}/mesharena-$$svc:${TAG} ; \
 		${OCI_BIN_SHORT} tag ${OCI_DOMAIN}/${OCI_USER}/mesharena-$$svc:${TAG} ${OCI_DOMAIN_IN_CLUSTER}/${OCI_USER}/mesharena-$$svc:${TAG} ; \
 	done
 
 push:
-	@echo "Pushing images..."
+	@echo "⚽ Pushing images..."
 	for svc in ${TO_BUILD} ; do \
 		${OCI_BIN_SHORT} push ${PUSH_OPTS} ${OCI_DOMAIN}/${OCI_USER}/mesharena-$$svc:${TAG} ; \
 	done
@@ -171,7 +171,7 @@ kill:
 	kubectl -n ${NAMESPACE} delete pods -l "project=mesh-arena"
 
 expose:
-	@echo "URL: http://localhost:8080/"
+	@echo "⚽ URL: http://localhost:8080/"
 	kubectl wait pod -l app=ui --for=condition=Ready --timeout=300s -n ${NAMESPACE} ; \
 	kubectl -n ${NAMESPACE} port-forward svc/ui 8080:8080
 
@@ -251,6 +251,7 @@ kafka:
 	kubectl apply -f ./k8s/kafka-se.yml
 
 gen-quickstart:
+	@echo "⚽ Generating quickstart templates..."
 	rm quickstart-naked.yml quickstart-metrics.yml quickstart-tracing.yml quickstart-both.yml ; \
 	for svc in ${TO_DEPLOY} ; do \
 		./gentpl.sh $$svc -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default >> quickstart-naked.yml ; \
