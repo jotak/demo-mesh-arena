@@ -1,0 +1,22 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: kafka
+  labels:
+    project: mesh-arena
+spec:
+  hosts:
+    - messaging-kafka-brokers.kafka.svc.cluster.local
+    - messaging-kafka-bootstrap.kafka.svc.cluster.local
+  ports:
+    - name: tcp-replication
+      number: 9091
+      protocol: tcp
+    - name: tcp-clients
+      number: 9092
+      protocol: tcp
+    - name: tcp-clientstls
+      number: 9093
+      protocol: tcp
+  location: MESH_EXTERNAL
+  resolution: NONE
