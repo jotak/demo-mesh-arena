@@ -71,7 +71,7 @@ public class AI extends AbstractVerticle {
         .put("id", id)
         .put("style", "position: absolute; background-color: " + COLOR + "; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms; height: 30px; width: 30px; border-radius: 50%; z-index: 8;")
         .put("text", "");
-    displayMessager = new DisplayMessager(vertx, client);
+    displayMessager = new DisplayMessager(vertx, client, TRACER);
   }
 
   public static void main(String[] args) {

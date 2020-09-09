@@ -189,7 +189,7 @@ deploy-metrics: GENTPL_OPTS=--metrics
 deploy-metrics: deploy
 
 deploy-kafka: GENTPL_OPTS=--kafka
-deploy-metrics: deploy
+deploy-kafka: deploy
 
 deploy-km: GENTPL_OPTS=--metrics --kafka
 deploy-km: deploy
@@ -248,7 +248,7 @@ kafka:
 	kubectl create namespace kafka ; \
 	kubectl apply -f 'https://strimzi.io/install/latest?namespace=kafka' -n kafka ; \
 	kubectl apply -f ./k8s/strimzi.yml -n kafka ; \
-	kubectl apply -f ./k8s/kafka-se.yml
+	kubectl apply -f ./istio/kafka-se.yml
 
 gen-quickstart:
 	@echo "⚽ Generating quickstart templates..."

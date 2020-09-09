@@ -16,6 +16,8 @@ import io.vertx.micrometer.MicrometerMetricsOptions;
 import io.vertx.micrometer.VertxPrometheusOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +29,7 @@ public final class Commons {
   public static final int TRACING_ENABLED = Commons.getIntEnv("TRACING_ENABLED", 0);
   public static final String KAFKA_ADDRESS = Commons.getStringEnv("KAFKA_ADDRESS", "");
 
+  public static final String HOSTNAME = getHostname();
   public static final int UI_PORT = getIntEnv("MESHARENA_UI_PORT", 8080);
   public static final String UI_HOST = getStringEnv("MESHARENA_UI_HOST", "localhost");
   public static final int BALL_PORT = getIntEnv("MESHARENA_BALL_PORT", 8081);
@@ -35,6 +38,14 @@ public final class Commons {
   public static final String STADIUM_HOST = getStringEnv("MESHARENA_STADIUM_HOST", "localhost");
 
   private Commons() {
+  }
+
+  public static String getHostname() {
+    try {
+      return InetAddress.getLocalHost().getHostName();
+    } catch (UnknownHostException e) {
+      return "unknown";
+    }
   }
 
   public static Optional<Tracer> createTracerFromEnv() {

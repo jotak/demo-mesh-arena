@@ -75,7 +75,7 @@ public class Ball extends AbstractVerticle {
     if (!registry.isPresent()) {
       System.out.println("No metrics");
     }
-    displayMessager = new DisplayMessager(vertx, client);
+    displayMessager = new DisplayMessager(vertx, client, TRACER);
   }
 
   public static void main(String[] args) {

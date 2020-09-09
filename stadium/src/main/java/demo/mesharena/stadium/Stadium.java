@@ -70,7 +70,7 @@ public class Stadium extends AbstractVerticle {
         .put("style", "position: absolute; top: " + (TX_TOP + 5) + "px; left: " + (TX_LEFT + 5) + "px; color: black; font-weight: bold; z-index: 10;")
         .put("text", "");
 
-    displayMessager = new DisplayMessager(vertx, client);
+    displayMessager = new DisplayMessager(vertx, client, TRACER);
   }
 
   public static void main(String[] args) {

@@ -1,6 +1,8 @@
 package demo.mesharena.ui;
 
 import demo.mesharena.common.Commons;
+import demo.mesharena.common.DisplayMessager;
+import demo.mesharena.common.KafkaTracer;
 import demo.mesharena.common.TracingHeaders;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
@@ -41,7 +43,7 @@ public class UI extends AbstractVerticle {
   }
 
   @Override
-  public void start() throws Exception {
+  public void start() {
     HttpServerOptions serverOptions = new HttpServerOptions().setPort(Commons.UI_PORT);
 
     Router router = Router.router(vertx);
@@ -75,10 +77,8 @@ public class UI extends AbstractVerticle {
         .listen(serverOptions.getPort(), serverOptions.getHost());
 
     // Init Kafka to receive display events (can be used instead of the REST endpoint)
-    Commons.kafkaConsumer(vertx, "ui").ifPresent(c -> {
-      c.subscribe("display").onSuccess(v -> c.handler(rec -> display(rec.value())))
-        .onFailure(Throwable::printStackTrace);
-    });
+    Commons.kafkaConsumer(vertx, "ui").ifPresent(c ->
+        KafkaTracer.receive(c, TRACER, DisplayMessager.EVENT_NAME, this::display));
 
     EventBus eb = vertx.eventBus();
     eb.consumer("init-session", msg -> {
@@ -138,17 +138,18 @@ public class UI extends AbstractVerticle {
     ctx.request().bodyHandler(buf -> {
       JsonObject json = buf.toJsonObject();
       ctx.response().end();
-      display(json);
+      display(json, Optional.empty());
     });
   }
 
-  private void display(JsonObject data) {
+  private void display(JsonObject data, Optional<Span> span) {
     gameObjects.compute(data.getString("id"), (key, go) -> {
       GameObject out = (go == null) ? new GameObject() : go;
       boolean changed = out.mergeWithJson(data);
       if (changed) {
         vertx.eventBus().publish("displayGameObject", data);
       }
+      span.ifPresent(s -> s.setTag("changed", changed).finish());
       return out;
     });
   }
