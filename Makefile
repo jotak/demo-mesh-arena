@@ -12,7 +12,7 @@ TO_BUILD ?= ai-hotspot ai-openj9 ball-hotspot ball-openj9 stadium-hotspot ui-hot
 TO_DEPLOY ?= ai-hotspot ai-openj9 ball-hotspot stadium-hotspot ui-hotspot
 GENTPL_VERSION ?= base
 
-LATEST = 1.2.0
+LATEST = 1.2.1
 
 ifeq ($(REMOTE),true)
 OCI_DOMAIN ?= quay.io
@@ -95,8 +95,8 @@ help:
 	@echo "$(bold)make deploy-latest$(sgr0)"
 	@echo "  Quick start, using latest images. Runtime metrics are enabled."
 	@echo ""
-	@echo "$(bold)NAMESPACE=mesh-arena TAG=1.2.0 REMOTE=true GENTPL_OPTS="--tracing --metrics" make deploy$(sgr0)"
-	@echo "  Deploy images from quay.io, tagged 1.2.0, to namespace 'mesh-arena', with application traces & metrics enabled"
+	@echo "$(bold)NAMESPACE=mesh-arena TAG=$(LATEST) REMOTE=true GENTPL_OPTS="--tracing --metrics" make deploy$(sgr0)"
+	@echo "  Deploy images from quay.io, tagged $(LATEST), to namespace 'mesh-arena', with application traces & metrics enabled"
 	@echo ""
 	@echo "$(bold)make prepare build images deploy$(sgr0)"
 	@echo "$(bold)make build images deploy$(sgr0)"
@@ -108,7 +108,7 @@ help:
 	@echo "$(bold)make deploy-tm$(sgr0)"
 	@echo "  Deploy with app metrics / app traces / both"
 	@echo ""
-	@echo "$(bold)OCI_USER=myself TAG=1.2.3 REMOTE=true make build images push$(sgr0)"
+	@echo "$(bold)OCI_USER=myself TAG=$(LATEST) REMOTE=true make build images push$(sgr0)"
 	@echo "  Build everything and push to quay.io"
 	@echo ""
 	@echo "$(bold)make kafka$(sgr0)"
