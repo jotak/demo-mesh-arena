@@ -4,6 +4,11 @@ metadata:
   name: messaging
 spec:
   kafka:
+    template:
+      pod:
+        metadata:
+          annotations:
+            sidecar.istio.io/statsInclusionPrefixes: cluster_manager,listener_manager,broker
     version: 2.5.0
     replicas: 1
     listeners:

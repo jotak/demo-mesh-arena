@@ -86,7 +86,8 @@ help:
 	@echo "- $(bold)scen-outlier$(sgr0):          Set up outlier (error-based circuit breaking) on balls"
 	@echo ""
 	@echo "$(smul)Special targets$(sgr0):"
-	@echo "- $(bold)kafka$(sgr0):                    Deploy a kafka cluster (uses Strimzi); necessary to use with --kafka deploy option"
+	@echo "- $(bold)kafka-se$(sgr0):                 Deploy a kafka (strimzi) cluster external to the mesh; to use with --kafka deploy option"
+	@echo "- $(bold)kafka-meshed$(sgr0):             Deploy a kafka (strimzi) cluster as part of the mesh; to use with --kafka deploy option"
 	@echo "- $(bold)gen-quickstart$(sgr0):           Generate the quickstart templates with latest tag"
 	@echo "- $(bold)expose-jaeger-collector$(sgr0):  In case jaeger-collector isn't exosed by default in Istio, run this target if you use the --tracing deploy option"
 	@echo ""
@@ -111,7 +112,7 @@ help:
 	@echo "$(bold)OCI_USER=myself TAG=$(LATEST) REMOTE=true make build images push$(sgr0)"
 	@echo "  Build everything and push to quay.io"
 	@echo ""
-	@echo "$(bold)make kafka$(sgr0)"
+	@echo "$(bold)make kafka-se$(sgr0)"
 	@echo "# wait until all is ready"
 	@echo "$(bold)kubectl get pods -n kafka -w$(sgr0)"
 	@echo "$(bold)make deploy-kafka$(sgr0)"
@@ -157,7 +158,7 @@ push:
 	done
 
 deploy: .ensure-yq
-	kubectl label namespace ${NAMESPACE} istio-injection=enabled ; \
+	kubectl label namespace ${NAMESPACE} istio-injection=enabled 2> /dev/null ; \
 	for svc in ${TO_DEPLOY} ; do \
 		./gentpl.sh $$svc -v ${GENTPL_VERSION} -pp ${PULL_POLICY} -d "${OCI_DOMAIN_IN_CLUSTER}" -u ${OCI_USER} -t ${TAG} -n ${NAMESPACE} ${GENTPL_OPTS} | kubectl -n ${NAMESPACE} apply -f - ; \
 	done
@@ -244,11 +245,29 @@ scen-outlier:
 expose-jaeger-collector:
 	kubectl apply -f ./istio/jaeger-collector.yml
 
-kafka:
-	kubectl create namespace kafka ; \
+kafka-se:
+	@kubectl create namespace kafka 2> /dev/null ; \
+	kubectl get namespace -l istio-injection=enabled | grep kafka ; \
+	if [ $$? -eq 0 ]; then \
+		echo "Istio injection is enabled, removing it and restarting pods" ; \
+		kubectl label namespace kafka istio-injection- ; \
+		kubectl delete pods --all -n kafka ; \
+	fi ; \
 	kubectl apply -f 'https://strimzi.io/install/latest?namespace=kafka' -n kafka ; \
 	kubectl apply -f ./k8s/strimzi.yml -n kafka ; \
 	kubectl apply -f ./istio/kafka-se.yml
+
+kafka-meshed:
+	@kubectl create namespace kafka 2> /dev/null ; \
+	kubectl get namespace -l istio-injection=enabled | grep kafka ; \
+	if [ $$? -eq 1 ]; then \
+		echo "Istio injection is disabled, adding it and restarting pods" ; \
+		kubectl label namespace kafka istio-injection=enabled ; \
+		kubectl delete -f ./istio/kafka-se.yml ; \
+		kubectl delete pods --all -n kafka ; \
+	fi ; \
+	kubectl apply -f 'https://strimzi.io/install/latest?namespace=kafka' -n kafka ; \
+	kubectl apply -f ./k8s/strimzi.yml -n kafka
 
 gen-quickstart:
 	@echo "⚽ Generating quickstart templates..."
