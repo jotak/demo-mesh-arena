@@ -1,6 +1,9 @@
 package demo.mesharena.ai;
 
-import demo.mesharena.common.*;
+import demo.mesharena.common.Commons;
+import demo.mesharena.common.DisplayMessager;
+import demo.mesharena.common.Point;
+import demo.mesharena.common.Segment;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
@@ -14,6 +17,7 @@ import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.micrometer.PrometheusScrapingHandler;
+import io.vertx.tracing.opentracing.OpenTracingUtil;
 
 import java.security.SecureRandom;
 import java.util.Optional;
@@ -166,11 +170,11 @@ public class AI extends AbstractVerticle {
 
     HttpRequest<Buffer> request = client.get(BALL_PORT, BALL_HOST, "/tryGet");
     Optional<Span> tryGetSpan = TRACER.map(tracer -> {
-      Span span = tracer.buildSpan("try_get")
+      Span span = tracer.buildSpan("Try get")
           .withTag("name", NAME)
           .withTag("id", id)
           .start();
-      TracingHeaders.inject(tracer, span.context(), request.headers());
+      OpenTracingUtil.setSpan(span);
       return span;
     });
     request.sendJson(json, ar -> {
@@ -193,7 +197,10 @@ public class AI extends AbstractVerticle {
               currentDestination = defendPoint;
             }
             if (Boolean.TRUE.equals(obj.getBoolean("success"))) {
-              shoot(Boolean.TRUE.equals(obj.getBoolean("takesBall")), tryGetSpan.map(Span::context));
+              // Run on context, so that active span that is set in "shoot" doesn't gets erased too early upon "tryGet" response processed
+              vertx.runOnContext(v ->
+                shoot(Boolean.TRUE.equals(obj.getBoolean("takesBall")), tryGetSpan.map(Span::context))
+              );
             }
           }
           walkToDestination(delta);
@@ -243,17 +250,16 @@ public class AI extends AbstractVerticle {
 
     HttpRequest<Buffer> request = client.put(BALL_PORT, BALL_HOST, "/shoot");
     Optional<Span> shootSpan = spanContext.map(sc -> {
-      Span span = TRACER.get().buildSpan("player_shoot")
+      Span span = TRACER.get().buildSpan("Player shoot")
         .withTag("name", NAME)
         .withTag("id", id)
         .withTag("kind", kind)
         .withTag("strength", shootVector.size())
         .asChildOf(sc)
         .start();
-      TracingHeaders.inject(TRACER.get(), span.context(), request.headers());
+      OpenTracingUtil.setSpan(span);
       return span;
     });
-
     request.sendJson(json, ar -> shootSpan.ifPresent(Span::finish));
   }
 

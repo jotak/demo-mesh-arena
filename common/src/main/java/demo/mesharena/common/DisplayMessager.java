@@ -1,15 +1,18 @@
 package demo.mesharena.common;
 
+import io.opentracing.Span;
 import io.opentracing.Tracer;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.kafka.client.producer.KafkaProducer;
+import io.vertx.kafka.client.producer.KafkaProducerRecord;
+import io.vertx.tracing.opentracing.OpenTracingUtil;
 
 import java.util.Optional;
 
 public class DisplayMessager {
-  public static final String EVENT_NAME = "display";
+  private static final String TOPIC = "display";
 
   private final WebClient client;
   private final Optional<KafkaProducer<String, JsonObject>> kafkaProducer;
@@ -22,8 +25,15 @@ public class DisplayMessager {
   }
 
   public void send(JsonObject json) {
+    // Init Display trace
+    Optional<Span> span = tracer.map(t -> {
+      Span s = t.buildSpan("Display").ignoreActiveSpan().start();
+      OpenTracingUtil.setSpan(s);
+      return s;
+    });
     if (kafkaProducer.isPresent()) {
-      KafkaTracer.send(kafkaProducer.get(), tracer, EVENT_NAME, json);
+      kafkaProducer.get().write(KafkaProducerRecord.create(TOPIC, json))
+          .onFailure(Throwable::printStackTrace);
     } else {
       client.post(Commons.UI_PORT, Commons.UI_HOST, "/display").sendJson(json, ar -> {
         if (!ar.succeeded()) {
@@ -31,5 +41,6 @@ public class DisplayMessager {
         }
       });
     }
+    span.ifPresent(Span::finish);
   }
 }

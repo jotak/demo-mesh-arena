@@ -1,9 +1,6 @@
 package demo.mesharena.ui;
 
 import demo.mesharena.common.Commons;
-import demo.mesharena.common.DisplayMessager;
-import demo.mesharena.common.KafkaTracer;
-import demo.mesharena.common.TracingHeaders;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
 import io.vertx.core.AbstractVerticle;
@@ -21,6 +18,7 @@ import io.vertx.ext.web.handler.StaticHandler;
 import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
 import io.vertx.micrometer.PrometheusScrapingHandler;
+import io.vertx.tracing.opentracing.OpenTracingUtil;
 
 import java.util.HashMap;
 import java.util.List;
@@ -77,8 +75,10 @@ public class UI extends AbstractVerticle {
         .listen(serverOptions.getPort(), serverOptions.getHost());
 
     // Init Kafka to receive display events (can be used instead of the REST endpoint)
-    Commons.kafkaConsumer(vertx, "ui").ifPresent(c ->
-        KafkaTracer.receive(c, TRACER, DisplayMessager.EVENT_NAME, this::display));
+    Commons.kafkaConsumer(vertx, "ui").ifPresent(c -> {
+      c.subscribe("display").onSuccess(v -> c.handler(rec -> display(rec.value())))
+          .onFailure(Throwable::printStackTrace);
+    });
 
     EventBus eb = vertx.eventBus();
     eb.consumer("init-session", msg -> {
@@ -97,10 +97,10 @@ public class UI extends AbstractVerticle {
       msg.reply(new JsonArray(objects));
     });
     eb.consumer("centerBall", msg -> {
-      Optional<Span> span = TRACER.map(tracer -> tracer.buildSpan("centerBall").start());
+      Optional<Span> span = TRACER.map(tracer -> tracer.buildSpan("Center ball").start());
+      span.ifPresent(OpenTracingUtil::setSpan);
       HttpRequest<Buffer> request = WebClient.create(vertx)
           .get(STADIUM_PORT, STADIUM_HOST, "/centerBall");
-      span.ifPresent(s -> TracingHeaders.inject(TRACER.get(), s.context(), request.headers()));
       request.send(ar -> {
         span.ifPresent(Span::finish);
         if (!ar.succeeded()) {
@@ -109,10 +109,10 @@ public class UI extends AbstractVerticle {
       });
     });
     eb.consumer("randomBall", msg -> {
-      Optional<Span> span = TRACER.map(tracer -> tracer.buildSpan("randomBall").start());
+      Optional<Span> span = TRACER.map(tracer -> tracer.buildSpan("Random ball").start());
+      span.ifPresent(OpenTracingUtil::setSpan);
       HttpRequest<Buffer> request = WebClient.create(vertx)
           .get(STADIUM_PORT, STADIUM_HOST, "/randomBall");
-      span.ifPresent(s -> TracingHeaders.inject(TRACER.get(), s.context(), request.headers()));
       request.send(ar -> {
         span.ifPresent(Span::finish);
         if (!ar.succeeded()) {
@@ -138,18 +138,17 @@ public class UI extends AbstractVerticle {
     ctx.request().bodyHandler(buf -> {
       JsonObject json = buf.toJsonObject();
       ctx.response().end();
-      display(json, Optional.empty());
+      display(json);
     });
   }
 
-  private void display(JsonObject data, Optional<Span> span) {
+  private void display(JsonObject data) {
     gameObjects.compute(data.getString("id"), (key, go) -> {
       GameObject out = (go == null) ? new GameObject() : go;
       boolean changed = out.mergeWithJson(data);
       if (changed) {
         vertx.eventBus().publish("displayGameObject", data);
       }
-      span.ifPresent(s -> s.setTag("changed", changed).finish());
       return out;
     });
   }
