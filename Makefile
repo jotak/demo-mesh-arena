@@ -12,7 +12,7 @@ TO_BUILD ?= ai-hotspot ai-openj9 ball-hotspot ball-openj9 stadium-hotspot ui-hot
 TO_DEPLOY ?= ai-hotspot ai-openj9 ball-hotspot stadium-hotspot ui-hotspot
 GENTPL_VERSION ?= base
 
-LATEST = 1.2.1
+LATEST = 1.2.2
 
 ifeq ($(REMOTE),true)
 OCI_DOMAIN ?= quay.io
@@ -109,8 +109,8 @@ help:
 	@echo "$(bold)make deploy-tm$(sgr0)"
 	@echo "  Deploy with app metrics / app traces / both"
 	@echo ""
-	@echo "$(bold)OCI_USER=myself TAG=$(LATEST) REMOTE=true make build images push$(sgr0)"
-	@echo "  Build everything and push to quay.io"
+	@echo "$(bold)OCI_USER=$(OCI_USER) TAG=$(LATEST) REMOTE=true make build images push gen-quickstart$(sgr0)"
+	@echo "  Build everything, push to quay.io and generate quickstart templates"
 	@echo ""
 	@echo "$(bold)make kafka-se$(sgr0)"
 	@echo "# wait until all is ready"
