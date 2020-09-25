@@ -27,7 +27,7 @@ spec:
         vm: hotspot
     spec:
       containers:
-      - image: quay.io/jotak/mesharena-ai-hotspot:1.2.2
+      - image: quay.io/jotak/mesharena-ai-hotspot:1.2.3
         imagePullPolicy: IfNotPresent
         name: ai-hotspot
         ports:
@@ -62,7 +62,7 @@ spec:
         - name: JAEGER_SERVICE_NAME
           value: ai.default
         - name: JAEGER_SAMPLER_TYPE
-          value: const
+          value: ratelimiting
         - name: JAEGER_SAMPLER_PARAM
           value: "1"
         - name: JAEGER_PROPAGATION
@@ -115,7 +115,7 @@ spec:
         vm: openj9
     spec:
       containers:
-      - image: quay.io/jotak/mesharena-ai-openj9:1.2.2
+      - image: quay.io/jotak/mesharena-ai-openj9:1.2.3
         imagePullPolicy: IfNotPresent
         name: ai-openj9
         ports:
@@ -150,7 +150,7 @@ spec:
         - name: JAEGER_SERVICE_NAME
           value: ai.default
         - name: JAEGER_SAMPLER_TYPE
-          value: const
+          value: ratelimiting
         - name: JAEGER_SAMPLER_PARAM
           value: "1"
         - name: JAEGER_PROPAGATION
@@ -203,7 +203,7 @@ spec:
         vm: hotspot
     spec:
       containers:
-      - image: quay.io/jotak/mesharena-ball-hotspot:1.2.2
+      - image: quay.io/jotak/mesharena-ball-hotspot:1.2.3
         imagePullPolicy: IfNotPresent
         name: ball-hotspot
         ports:
@@ -234,7 +234,7 @@ spec:
         - name: JAEGER_SERVICE_NAME
           value: ball.default
         - name: JAEGER_SAMPLER_TYPE
-          value: const
+          value: ratelimiting
         - name: JAEGER_SAMPLER_PARAM
           value: "1"
         - name: JAEGER_PROPAGATION
@@ -287,7 +287,7 @@ spec:
         vm: hotspot
     spec:
       containers:
-      - image: quay.io/jotak/mesharena-stadium-hotspot:1.2.2
+      - image: quay.io/jotak/mesharena-stadium-hotspot:1.2.3
         imagePullPolicy: IfNotPresent
         name: stadium-hotspot
         ports:
@@ -328,7 +328,7 @@ spec:
         - name: JAEGER_SERVICE_NAME
           value: stadium.default
         - name: JAEGER_SAMPLER_TYPE
-          value: const
+          value: ratelimiting
         - name: JAEGER_SAMPLER_PARAM
           value: "1"
         - name: JAEGER_PROPAGATION
@@ -382,7 +382,7 @@ spec:
         vm: hotspot
     spec:
       containers:
-      - image: quay.io/jotak/mesharena-ui-hotspot:1.2.2
+      - image: quay.io/jotak/mesharena-ui-hotspot:1.2.3
         imagePullPolicy: IfNotPresent
         name: ui-hotspot
         ports:
@@ -405,7 +405,7 @@ spec:
         - name: JAEGER_SERVICE_NAME
           value: ui.default
         - name: JAEGER_SAMPLER_TYPE
-          value: const
+          value: ratelimiting
         - name: JAEGER_SAMPLER_PARAM
           value: "1"
         - name: JAEGER_PROPAGATION
