@@ -54,7 +54,7 @@ spec:
         - name: JAEGER_SERVICE_NAME
           value: ball.default
         - name: JAEGER_SAMPLER_TYPE
-          value: const
+          value: ratelimiting
         - name: JAEGER_SAMPLER_PARAM
           value: "1"
         - name: JAEGER_PROPAGATION

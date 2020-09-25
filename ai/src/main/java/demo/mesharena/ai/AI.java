@@ -209,36 +209,41 @@ public class AI extends AbstractVerticle {
     });
   }
 
+  private Point shootVec(Point direction, double baseStrength) {
+    // From 50% to 100% of base strength
+    double strength = baseStrength * (0.5 + rnd.nextDouble() * 0.5);
+    return direction.mult(strength);
+  }
+
   private void shoot(boolean takesBall, Optional<SpanContext> spanContext) {
     final Point shootVector;
     final String kind;
-    Point goal = (arenaInfo == null) ? randomDestination() : arenaInfo.goal;
+    Point direction = randomishSegmentNormalized(
+        new Segment(pos, (arenaInfo == null) ? randomDestination() : arenaInfo.goal));
     if (role == Role.ATTACK) {
-      Point direction = randomishSegmentNormalized(new Segment(pos, goal));
       // Go forward or try to shoot
       int rndNum = rnd.nextInt(100);
       if (rndNum < ATT_SHOOT_FAST) {
         // Try to shoot (if close enough to ball)
-        shootVector = direction.mult(SHOOT_STRENGTH);
+        shootVector = shootVec(direction, SHOOT_STRENGTH);
         kind = "togoal";
       } else {
         // Go forward
-        shootVector = direction.mult(SPEED * 1.8);
+        shootVector = shootVec(direction, SPEED * 1.8);
         kind = takesBall ? "control" : "forward";
       }
     } else {
       // Defensive shoot
-      Point direction = randomishSegmentNormalized(new Segment(pos, goal));
       // Go forward or defensive shoot
       int rndNum = rnd.nextInt(100);
       if (rndNum < DEF_SHOOT_FAST) {
         // Defensive shoot, randomise a second time, shoot stronger
         direction = randomishSegmentNormalized(new Segment(pos, pos.add(direction)));
-        shootVector = direction.mult(SHOOT_STRENGTH * 1.5);
+        shootVector = shootVec(direction, SHOOT_STRENGTH * 1.5);
         kind = "defensive";
       } else {
         // Go forward
-        shootVector = direction.mult(SPEED * 1.8);
+        shootVector = shootVec(direction, SPEED * 1.8);
         kind = takesBall ? "control" : "forward";
       }
     }
