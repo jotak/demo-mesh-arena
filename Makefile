@@ -271,10 +271,12 @@ kafka-meshed:
 
 gen-quickstart:
 	@echo "⚽ Generating quickstart templates..."
-	rm quickstart-naked.yml quickstart-metrics.yml quickstart-tracing.yml quickstart-both.yml ; \
+	rm quickstart-naked.yml quickstart-metrics.yml quickstart-tracing.yml quickstart-both.yml quickstart-kafka.yml ; \
 	for svc in ${TO_DEPLOY} ; do \
 		./gentpl.sh $$svc -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default >> quickstart-naked.yml ; \
 		./gentpl.sh $$svc -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default --tracing >> quickstart-tracing.yml ; \
 		./gentpl.sh $$svc -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default --metrics >> quickstart-metrics.yml ; \
 		./gentpl.sh $$svc -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default --tracing --metrics >> quickstart-both.yml ; \
-	done
+		./gentpl.sh $$svc -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default --tracing --kafka >> quickstart-kafka.yml ; \
+	done ; \
+	cat ./istio/kafka-se.yml >> quickstart-kafka.yml
