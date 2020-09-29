@@ -54,6 +54,9 @@ kubectl create namespace kafka
 kubectl apply -f 'https://strimzi.io/install/latest?namespace=kafka' -n kafka
 kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/k8s/strimzi.yml) -n kafka
 
+# Wait a little bit that everything is ready
+kubectl wait pod messaging-kafka-0 --for=condition=Ready --timeout=600s -n kafka
+
 # Deploy mesh-arena services with Kafka turned on
 kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/quickstart-kafka.yml) -n default
 ```
