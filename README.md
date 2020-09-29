@@ -28,16 +28,16 @@ Run one of the commands below:
 
 ```bash
 # With app metrics enabled:
-kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/quickstart-metrics.yml) -n default
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/zizou/quickstart-metrics.yml) -n default
 
 # With app traces enabled:
-kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/quickstart-tracing.yml) -n default
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/zizou/quickstart-tracing.yml) -n default
 
 # With both enabled:
-kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/quickstart-both.yml) -n default
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/zizou/quickstart-both.yml) -n default
 
 # With none enabled:
-kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/quickstart-naked.yml) -n default
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/zizou/quickstart-naked.yml) -n default
 ```
 
 ## Quick start with Kafka
@@ -52,13 +52,13 @@ kubectl create namespace kafka
 
 # Install Kafka (Strimzi-powered)
 kubectl apply -f 'https://strimzi.io/install/latest?namespace=kafka' -n kafka
-kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/k8s/strimzi.yml) -n kafka
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/zizou/k8s/strimzi.yml) -n kafka
 
 # Wait a little bit that everything is ready
 kubectl wait pod messaging-kafka-0 --for=condition=Ready --timeout=600s -n kafka
 
 # Deploy mesh-arena services with Kafka turned on
-kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/master/quickstart-kafka.yml) -n default
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/zizou/quickstart-kafka.yml) -n default
 ```
 
 This is more or less equivalent to this make command: `make kafka-se deploy-kt`
