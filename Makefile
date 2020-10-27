@@ -280,3 +280,5 @@ gen-quickstart:
 		./gentpl.sh $$svc -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default --tracing --kafka >> quickstart-kafka.yml ; \
 	done ; \
 	cat ./istio/kafka-se.yml >> quickstart-kafka.yml
+
+reload-minikube: push-minikube kill
