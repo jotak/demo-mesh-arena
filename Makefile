@@ -12,7 +12,7 @@ TO_BUILD ?= ai-hotspot ai-openj9 ball-hotspot ball-openj9 stadium-hotspot ui-hot
 TO_DEPLOY ?= ai-hotspot ai-openj9 ball-hotspot stadium-hotspot ui-hotspot
 GENTPL_VERSION ?= base
 
-LATEST = 1.2.3
+LATEST = 1.2.4
 
 ifeq ($(REMOTE),true)
 OCI_DOMAIN ?= quay.io
@@ -46,10 +46,10 @@ help:
 	@echo "Note that you may need a couple of tools depending of which target you run: kubectl, yq, npm, mvn, docker/podman"
 	@echo ""
 	@echo "$(smul)Main options$(sgr0):"
-	@echo "- $(bold)TAG$(sgr0):          Image tag to be used (default: dev)"
-	@echo "- $(bold)OCI_USER$(sgr0):     User to use for image tagging / pulling (default: jotak)"
-	@echo "- $(bold)REMOTE$(sgr0):       When true, options are pre-defined to use quay.io; when false it would default to Minikube (default: false)"
-	@echo "- $(bold)NAMESPACE$(sgr0):    Namespace where to deploy everything (default: default)"
+	@echo "- $(bold)TAG$(sgr0):          Image tag to be used (current: $(TAG))"
+	@echo "- $(bold)OCI_USER$(sgr0):     User to use for image tagging / pulling (current: $(OCI_USER))"
+	@echo "- $(bold)REMOTE$(sgr0):       When true, options are pre-defined to use quay.io; when false it would default to Minikube (current: $(REMOTE))"
+	@echo "- $(bold)NAMESPACE$(sgr0):    Namespace where to deploy everything (current: $(NAMESPACE))"
 	@echo "- $(bold)GENTPL_OPTS$(sgr0):  Deployment options:"
 	@echo "                '--metrics' will enable runtime metrics"
 	@echo "                '--tracing' will add application-defined traces"
