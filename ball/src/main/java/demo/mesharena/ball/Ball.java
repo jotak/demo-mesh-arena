@@ -94,8 +94,8 @@ public class Ball extends AbstractVerticle {
     }
 
     router.get("/health").handler(ctx -> ctx.response().end());
+    router.get("/hasControl").handler(this::hasControl);
     router.put("/shoot").handler(this::shoot);
-    router.get("/tryGet").handler(this::tryGet);
     router.put("/setPosition").handler(this::setPosition);
     vertx.createHttpServer().requestHandler(router)
         .listen(serverOptions.getPort(), serverOptions.getHost());
@@ -107,7 +107,7 @@ public class Ball extends AbstractVerticle {
     vertx.setPeriodic(DELTA_MS, loopId -> this.update((double)DELTA_MS / 1000.0));
   }
 
-  private void tryGet(RoutingContext ctx) {
+  private void hasControl(RoutingContext ctx) {
     ctx.request().bodyHandler(buf -> {
       if (rnd.nextInt(100) < PCT_ERRORS) {
         errorTimer = 0;

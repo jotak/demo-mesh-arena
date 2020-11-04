@@ -11,8 +11,10 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
@@ -24,7 +26,11 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 
-import static demo.mesharena.common.Commons.*;
+import static demo.mesharena.common.Commons.BALL_HOST;
+import static demo.mesharena.common.Commons.BALL_PORT;
+import static demo.mesharena.common.Commons.STADIUM_HOST;
+import static demo.mesharena.common.Commons.STADIUM_PORT;
+import static demo.mesharena.common.Commons.createTracerFromEnv;
 
 public class AI extends AbstractVerticle {
 
@@ -50,6 +56,7 @@ public class AI extends AbstractVerticle {
   private static final int ATT_SHOOT_FAST = Commons.getIntEnv("PLAYER_ATT_SHOOT_FAST", 20);
   // While defending, will shoot quickly? [0, 100]
   private static final int DEF_SHOOT_FAST = Commons.getIntEnv("PLAYER_DEF_SHOOT_FAST", 40);
+  private static final boolean INTERACTIVE_MODE = Commons.getIntEnv("INTERACTIVE_MODE", 0) == 1;
 
   private final Random rnd = new SecureRandom();
   private final WebClient client;
@@ -90,6 +97,7 @@ public class AI extends AbstractVerticle {
 
     Router router = Router.router(vertx);
     router.get("/health").handler(ctx -> ctx.response().end());
+    router.get("/tryShoot").handler(this::tryShoot);
 
     if (Commons.METRICS_ENABLED == 1) {
       router.route("/metrics").handler(PrometheusScrapingHandler.create());
@@ -140,7 +148,7 @@ public class AI extends AbstractVerticle {
         roleTimer = ROLE_TIMER;
         chooseRole();
       }
-      lookForBall(delta);
+      lookForBall(delta, null, false);
     }
   }
 
@@ -159,7 +167,14 @@ public class AI extends AbstractVerticle {
     }
   }
 
-  private void lookForBall(double delta) {
+  private void tryShoot(RoutingContext ctx) {
+    HttpServerRequest req = ctx.request();
+    String name = req.getParam("iam");
+    lookForBall(0, name, true);
+    ctx.response().end();
+  }
+
+  private void lookForBall(double delta, String controllerName, boolean isHumanShot) {
     JsonObject json = new JsonObject()
         .put("playerX", pos.x())
         .put("playerY", pos.y())
@@ -168,45 +183,56 @@ public class AI extends AbstractVerticle {
         .put("playerName", NAME)
         .put("playerTeam", TEAM);
 
-    HttpRequest<Buffer> request = client.get(BALL_PORT, BALL_HOST, "/tryGet");
-    Optional<Span> tryGetSpan = TRACER.map(tracer -> {
-      Span span = tracer.buildSpan("Try get")
+    HttpRequest<Buffer> request = client.get(BALL_PORT, BALL_HOST, "/hasControl");
+    Optional<Span> ballControlSpan = TRACER.map(tracer -> {
+      Span span = tracer.buildSpan("Ball control")
           .withTag("name", NAME)
           .withTag("id", id)
+          .withTag("controllerName", controllerName)
           .start();
       OpenTracingUtil.setSpan(span);
       return span;
     });
-    request.sendJson(json, ar -> {
-      tryGetSpan.ifPresent(Span::finish);
-      if (!ar.succeeded()) {
-        // No ball? What a pity. Walk randomly in sadness.
-        idle();
-      } else {
-        HttpResponse<Buffer> response = ar.result();
-        if (response.statusCode() == 200) {
-          JsonObject obj = response.bodyAsJsonObject();
-          if (obj != null) {
-            double x = obj.getDouble("x");
-            double y = obj.getDouble("y");
-            Point ball = new Point(x, y);
-            if (role == Role.ATTACK || pos.diff(ball).size() < 70) {
-              // Go to the ball
-              currentDestination = ball;
-            } else {
-              currentDestination = defendPoint;
+
+    request.sendJsonObject(json)
+        .map(resp -> {
+          if (resp.statusCode() == 200) {
+            return resp.bodyAsJsonObject();
+          }
+          return null;
+        })
+        .onComplete(ar -> {
+          ballControlSpan.ifPresent(Span::finish);
+          if (!ar.succeeded() || ar.result() == null) {
+            if (!isHumanShot) {
+              // No ball? What a pity. Walk randomly in sadness.
+              idle();
             }
-            if (Boolean.TRUE.equals(obj.getBoolean("success"))) {
-              // Run on context, so that active span that is set in "shoot" doesn't gets erased too early upon "tryGet" response processed
+          } else {
+            JsonObject obj = ar.result();
+            if (!isHumanShot) {
+              double x = obj.getDouble("x");
+              double y = obj.getDouble("y");
+              Point ball = new Point(x, y);
+              if (role == Role.ATTACK || pos.diff(ball).size() < 70) {
+                // Go to the ball
+                currentDestination = ball;
+              } else {
+                currentDestination = defendPoint;
+              }
+            }
+            if (Boolean.TRUE.equals(obj.getBoolean("success"))
+                && (isHumanShot || !INTERACTIVE_MODE)) {
+              // Run on context, so that active span that is set in "shoot" doesn't gets erased too early upon "hasControl" response processed
               vertx.runOnContext(v ->
-                shoot(Boolean.TRUE.equals(obj.getBoolean("takesBall")), tryGetSpan.map(Span::context))
+                  shoot(Boolean.TRUE.equals(obj.getBoolean("takesBall")), ballControlSpan.map(Span::context))
               );
             }
+            if (!isHumanShot) {
+              walkToDestination(delta);
+            }
           }
-          walkToDestination(delta);
-        }
-      }
-    });
+        });
   }
 
   private Point shootVec(Point direction, double baseStrength) {

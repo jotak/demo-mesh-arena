@@ -34,8 +34,8 @@ spec:
                       "output_attribute": "istio_operationId",
                       "match": [
                         {
-                          "value": "TryGet",
-                          "condition": "request.url_path == '/tryGet'"
+                          "value": "TryShoot",
+                          "condition": "request.url_path == '/tryShoot'"
                         },
                         {
                           "value": "Shoot",
