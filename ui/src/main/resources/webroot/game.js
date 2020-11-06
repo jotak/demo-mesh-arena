@@ -4,7 +4,13 @@ eb.enableReconnect(true);
 function displayGameObject(obj) {
   var rawElt = document.getElementById(obj.id);
   if (!rawElt) {
-    $('#board').append('<div id="' + obj.id + '" style="' + obj.style + '">' + obj.text + '</div>');
+    var innerSpan;
+    if (obj.name) {
+      innerSpan = '<span style="position:relative;top:4px;left:9px;" '
+        + ' onclick="selectPlayer(\'' + obj.name + '\', \'' + obj.ip + '\')"'
+        + '>' + obj.name.charAt(0) + '</span>';
+    }
+    $('#board').append('<div id="' + obj.id + '" style="' + obj.style + '">' + (innerSpan || obj.text || '') + '</div>');
   } else {
     if (obj.style) {
       rawElt.style.cssText = obj.style;
@@ -12,10 +18,10 @@ function displayGameObject(obj) {
     if (obj.text) {
       rawElt.innerHTML = obj.text;
     }
-  }
-  if (obj.x) {
-    $('#' + obj.id).css('top', obj.y + 'px')
-      .css('left', obj.x + 'px');
+    if (obj.x) {
+      $('#' + obj.id).css('top', obj.y + 'px')
+        .css('left', obj.x + 'px');
+    }
   }
 }
 
@@ -52,4 +58,17 @@ function centerBall() {
 
 function randomBall() {
   eb.send("randomBall", "");
+}
+
+function selectPlayer(name, ip) {
+  var selected = $('#selected');
+  selected.contents().remove();
+  selected.append("Player selected: " + name + "&nbsp;"
+    + "<input type='text' id='whoareyou' placeholder='Who are you?' />"
+    + "<button type='button' onclick='shoot(\"" + ip + "\")'>Shoot</button>");
+}
+
+function shoot(ip) {
+  var who = document.getElementById("whoareyou").value;
+  eb.send("shoot", {ip: ip, who: who});
 }

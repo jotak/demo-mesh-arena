@@ -65,8 +65,7 @@ public class Ball extends AbstractVerticle {
     json = new JsonObject()
         .put("id", id)
         .put("style", "position: absolute; background-image: url(./" + IMAGE + ".png); width: 20px; height: 20px;"
-            + "z-index: 5; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms;")
-        .put("text", "");
+            + "z-index: 5; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms;");
 
     registry = Optional.ofNullable(BackendRegistries.getDefaultNow());
     registry.ifPresent(reg -> Gauge.builder("mesharena_ball_speed", () -> speed.size())

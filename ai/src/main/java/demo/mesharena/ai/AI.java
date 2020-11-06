@@ -11,7 +11,6 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServerOptions;
-import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -30,17 +29,16 @@ import static demo.mesharena.common.Commons.BALL_HOST;
 import static demo.mesharena.common.Commons.BALL_PORT;
 import static demo.mesharena.common.Commons.STADIUM_HOST;
 import static demo.mesharena.common.Commons.STADIUM_PORT;
-import static demo.mesharena.common.Commons.createTracerFromEnv;
 
 public class AI extends AbstractVerticle {
 
-  private static final Optional<Tracer> TRACER = createTracerFromEnv();
+  private static final Optional<Tracer> TRACER = Commons.createTracerFromEnv();
   private static final long DELTA_MS = 300;
   private static final double IDLE_TIMER = 2.0;
   private static final double ROLE_TIMER = 10.0;
-  private static final String NAME = Commons.getHTMLStringEnv("PLAYER_NAME", "Goat");
-  private static final String COLOR = Commons.getHTMLStringEnv("PLAYER_COLOR", "blue");
-  private static final String TEAM = Commons.getHTMLStringEnv("PLAYER_TEAM", "locals");
+  private static final String NAMES = Commons.getStringEnv("PLAYER_NAMES", "Goat,Sheep,Cow,Chicken,Pig,Lamb");
+  private static final String COLOR = Commons.getStringEnv("PLAYER_COLOR", "blue");
+  private static final String TEAM = Commons.getStringEnv("PLAYER_TEAM", "locals");
   // Speed = open scale
   private static final double SPEED = Commons.getIntEnv("PLAYER_SPEED", 60);
   // Accuracy [0, 1]
@@ -70,6 +68,7 @@ public class AI extends AbstractVerticle {
   private Point defendPoint = null;
   private double idleTimer = -1;
   private double roleTimer = -1;
+  private final String name;
 
   private enum Role { ATTACK, DEFEND }
   private Role role;
@@ -77,11 +76,15 @@ public class AI extends AbstractVerticle {
   public AI(Vertx vertx) {
     client = WebClient.create(vertx);
     id = UUID.randomUUID().toString();
+    String[] names = NAMES.split(",");
+    int i = rnd.nextInt(names.length);
+    name = names[i];
     this.isVisitors = !TEAM.equals("locals");
     json = new JsonObject()
         .put("id", id)
         .put("style", "position: absolute; background-color: " + COLOR + "; transition: top " + DELTA_MS + "ms, left " + DELTA_MS + "ms; height: 30px; width: 30px; border-radius: 50%; z-index: 8;")
-        .put("text", "");
+        .put("name", name)
+        .put("ip", Commons.getIP());
     displayMessager = new DisplayMessager(vertx, client, TRACER);
   }
 
@@ -148,7 +151,7 @@ public class AI extends AbstractVerticle {
         roleTimer = ROLE_TIMER;
         chooseRole();
       }
-      lookForBall(delta, null, false);
+      lookForBall(delta, false, null);
     }
   }
 
@@ -168,27 +171,25 @@ public class AI extends AbstractVerticle {
   }
 
   private void tryShoot(RoutingContext ctx) {
-    HttpServerRequest req = ctx.request();
-    String name = req.getParam("iam");
-    lookForBall(0, name, true);
+    lookForBall(0, true, OpenTracingUtil.getSpan());
     ctx.response().end();
   }
 
-  private void lookForBall(double delta, String controllerName, boolean isHumanShot) {
+  private void lookForBall(double delta, boolean isHumanShot, Span currentSpan) {
     JsonObject json = new JsonObject()
         .put("playerX", pos.x())
         .put("playerY", pos.y())
         .put("playerSkill", SKILL)
         .put("playerID", id)
-        .put("playerName", NAME)
+        .put("playerName", name)
         .put("playerTeam", TEAM);
 
     HttpRequest<Buffer> request = client.get(BALL_PORT, BALL_HOST, "/hasControl");
     Optional<Span> ballControlSpan = TRACER.map(tracer -> {
       Span span = tracer.buildSpan("Ball control")
-          .withTag("name", NAME)
+          .withTag("name", name)
           .withTag("id", id)
-          .withTag("controllerName", controllerName)
+          .asChildOf(currentSpan)
           .start();
       OpenTracingUtil.setSpan(span);
       return span;
@@ -282,7 +283,7 @@ public class AI extends AbstractVerticle {
     HttpRequest<Buffer> request = client.put(BALL_PORT, BALL_HOST, "/shoot");
     Optional<Span> shootSpan = spanContext.map(sc -> {
       Span span = TRACER.get().buildSpan("Player shoot")
-        .withTag("name", NAME)
+        .withTag("name", name)
         .withTag("id", id)
         .withTag("kind", kind)
         .withTag("strength", shootVector.size())

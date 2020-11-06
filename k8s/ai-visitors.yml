@@ -51,12 +51,14 @@ spec:
           value: "8080"
         - name: MESHARENA_STADIUM_HOST
           value: stadiumsvc
+        - name: INTERACTIVE_MODE
+          value: "1"
         - name: PLAYER_TEAM
           value: visitors
         - name: PLAYER_COLOR
-          value: yellow
-        - name: PLAYER_NAME
-          value: yellow goat
+          value: "#F0AB00"
+        - name: PLAYER_NAMES
+          value: Charbonneau,Arthur,Deniaud,Martin,Dufort,Séverin,Girard,Blanchet,Villeneuve,Tillery,Covington,George,Fraley,Hansen,Ramsey,Jennings,Hammond,Barnett,Mazzeo,Albano,Volta,Rosiello,Toscani,Frank,Sauer,Brandt,Krüger,Sedillo,Owen,Floyd,Comey,Gwilliam,Tew,Ordaz,Zambrano,Giron,Bailon
         - name: JAEGER_SERVICE_NAME
           value: ai.default
         - name: JAEGER_SAMPLER_TYPE

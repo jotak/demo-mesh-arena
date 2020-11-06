@@ -17,6 +17,8 @@ import io.vertx.micrometer.VertxPrometheusOptions;
 import io.vertx.micrometer.backends.BackendRegistries;
 import io.vertx.tracing.opentracing.OpenTracingOptions;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +38,14 @@ public final class Commons {
   public static final String STADIUM_HOST = getStringEnv("MESHARENA_STADIUM_HOST", "localhost");
 
   private Commons() {
+  }
+
+  public static String getIP() {
+    try {
+      return InetAddress.getLocalHost().getHostAddress();
+    } catch (UnknownHostException e) {
+      return "unknown";
+    }
   }
 
   public static Optional<Tracer> createTracerFromEnv() {

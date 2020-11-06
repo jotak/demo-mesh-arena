@@ -51,6 +51,7 @@ public class UI extends AbstractVerticle {
         .addOutboundPermitted(new PermittedOptions().setAddress("displayGameObject"))
         .addOutboundPermitted(new PermittedOptions().setAddress("removeGameObject"))
         .addInboundPermitted(new PermittedOptions().setAddress("init-session"))
+        .addInboundPermitted(new PermittedOptions().setAddress("shoot"))
         .addInboundPermitted(new PermittedOptions().setAddress("centerBall"))
         .addInboundPermitted(new PermittedOptions().setAddress("randomBall"));
 
@@ -83,18 +84,24 @@ public class UI extends AbstractVerticle {
     EventBus eb = vertx.eventBus();
     eb.consumer("init-session", msg -> {
       // Send all game objects already registered
-      List<JsonObject> objects = gameObjects.entrySet().stream().map(entry -> {
-        JsonObject json = new JsonObject()
-            .put("id", entry.getKey())
-            .put("style", entry.getValue().style)
-            .put("text", entry.getValue().text);
-        if (entry.getValue().x != null) {
-          json.put("x", entry.getValue().x)
-              .put("y", entry.getValue().y);
-        }
-        return json;
-      }).collect(Collectors.toList());
+      List<JsonObject> objects = gameObjects.entrySet().stream()
+          .map(entry -> entry.getValue().toJson(entry.getKey()))
+          .collect(Collectors.toList());
       msg.reply(new JsonArray(objects));
+    });
+    eb.consumer("shoot", msg -> {
+      JsonObject json = (JsonObject) msg.body();
+      String who = json.getString("who");
+      Optional<Span> span = TRACER.map(tracer -> tracer.buildSpan("Shoot click").withTag("who", who).start());
+      span.ifPresent(OpenTracingUtil::setSpan);
+      HttpRequest<Buffer> request = WebClient.create(vertx)
+          .get(8080, json.getString("ip"), "/tryShoot");
+      request.send(ar -> {
+        span.ifPresent(Span::finish);
+        if (!ar.succeeded()) {
+          ar.cause().printStackTrace();
+        }
+      });
     });
     eb.consumer("centerBall", msg -> {
       Optional<Span> span = TRACER.map(tracer -> tracer.buildSpan("Center ball").start());
@@ -156,11 +163,32 @@ public class UI extends AbstractVerticle {
   private static class GameObject {
     private String style;
     private String text;
+    private String name;
+    private String ip;
     private Double x;
     private Double y;
     private long lastCheck;
 
     GameObject() {
+    }
+
+    JsonObject toJson(String id) {
+      JsonObject json = new JsonObject()
+          .put("id", id)
+          .put("style", style);
+      if (text != null) {
+        json.put("text", text);
+      }
+      if (name != null) {
+        json.put("name", name);
+      }
+      if (ip != null) {
+        json.put("ip", ip);
+      }
+      if (x != null) {
+        json.put("x", x).put("y", y);
+      }
+      return json;
     }
 
     boolean mergeWithJson(JsonObject json) {
@@ -175,6 +203,16 @@ public class UI extends AbstractVerticle {
         String text = json.getString("text");
         changed |= !text.equals(this.text);
         this.text = text;
+      }
+      if (json.containsKey("name")) {
+        String name = json.getString("name");
+        changed |= !name.equals(this.name);
+        this.name = name;
+      }
+      if (json.containsKey("ip")) {
+        String ip = json.getString("ip");
+        changed |= !ip.equals(this.ip);
+        this.ip = ip;
       }
       if (json.containsKey("x")) {
         Double x = json.getDouble("x");

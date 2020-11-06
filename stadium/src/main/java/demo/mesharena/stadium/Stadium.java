@@ -62,13 +62,11 @@ public class Stadium extends AbstractVerticle {
     client = WebClient.create(vertx);
     stadiumJson = new JsonObject()
         .put("id", NAME + "-stadium")
-        .put("style", "position: absolute; top: " + TX_TOP + "px; left: " + TX_LEFT + "px; width: " + TX_WIDTH + "px; height: " + TX_HEIGHT + "px; background-image: url(./football-ground.png); background-size: cover; color: black")
-        .put("text", "");
+        .put("style", "position: absolute; top: " + TX_TOP + "px; left: " + TX_LEFT + "px; width: " + TX_WIDTH + "px; height: " + TX_HEIGHT + "px; background-image: url(./football-ground.png); background-size: cover; color: black");
 
     scoreJson = new JsonObject()
         .put("id", NAME + "-score")
-        .put("style", "position: absolute; top: " + (TX_TOP + 5) + "px; left: " + (TX_LEFT + 5) + "px; color: black; font-weight: bold; z-index: 10;")
-        .put("text", "");
+        .put("style", "position: absolute; top: " + (TX_TOP + 5) + "px; left: " + (TX_LEFT + 5) + "px; color: black; font-weight: bold; z-index: 10;");
 
     displayMessager = new DisplayMessager(vertx, client, TRACER);
   }

@@ -53,7 +53,7 @@ spec:
           value: stadiumsvc
         - name: PLAYER_TEAM
           value: visitors
-        - name: PLAYER_NAME
+        - name: PLAYER_NAMES
           value: Messi
         - name: PLAYER_SPEED
           value: "85"
