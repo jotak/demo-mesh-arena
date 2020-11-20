@@ -27,7 +27,7 @@ spec:
         vm: hotspot
     spec:
       containers:
-      - image: quay.io/jotak/mesharena-ai-hotspot:1.2.4
+      - image: quay.io/jotak/mesharena-ai-hotspot:1.3.0
         imagePullPolicy: IfNotPresent
         name: ai-hotspot
         ports:
@@ -117,7 +117,7 @@ spec:
         vm: openj9
     spec:
       containers:
-      - image: quay.io/jotak/mesharena-ai-openj9:1.2.4
+      - image: quay.io/jotak/mesharena-ai-openj9:1.3.0
         imagePullPolicy: IfNotPresent
         name: ai-openj9
         ports:
@@ -207,7 +207,7 @@ spec:
         vm: hotspot
     spec:
       containers:
-      - image: quay.io/jotak/mesharena-ball-hotspot:1.2.4
+      - image: quay.io/jotak/mesharena-ball-hotspot:1.3.0
         imagePullPolicy: IfNotPresent
         name: ball-hotspot
         ports:
@@ -291,7 +291,7 @@ spec:
         vm: hotspot
     spec:
       containers:
-      - image: quay.io/jotak/mesharena-stadium-hotspot:1.2.4
+      - image: quay.io/jotak/mesharena-stadium-hotspot:1.3.0
         imagePullPolicy: IfNotPresent
         name: stadium-hotspot
         ports:
@@ -386,7 +386,7 @@ spec:
         vm: hotspot
     spec:
       containers:
-      - image: quay.io/jotak/mesharena-ui-hotspot:1.2.4
+      - image: quay.io/jotak/mesharena-ui-hotspot:1.3.0
         imagePullPolicy: IfNotPresent
         name: ui-hotspot
         ports:
