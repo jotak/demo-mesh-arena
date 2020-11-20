@@ -5,10 +5,10 @@ function displayGameObject(obj) {
   var rawElt = document.getElementById(obj.id);
   if (!rawElt) {
     var innerSpan;
-    if (obj.name) {
+    if (obj.playerRef) {
       innerSpan = '<span style="position:relative;top:4px;left:9px;" '
-        + ' onclick="selectPlayer(\'' + obj.name + '\', \'' + obj.ip + '\')"'
-        + '>' + obj.name.charAt(0) + '</span>';
+        + ' onclick="selectPlayer(\'' + obj.playerRef.name + '\', \'' + obj.playerRef.ip + '\')"'
+        + '>' + obj.playerRef.name.charAt(0) + '</span>';
     }
     $('#board').append('<div id="' + obj.id + '" style="' + obj.style + '">' + (innerSpan || obj.text || '') + '</div>');
   } else {

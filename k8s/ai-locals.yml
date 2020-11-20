@@ -52,7 +52,7 @@ spec:
         - name: MESHARENA_STADIUM_HOST
           value: stadiumsvc
         - name: INTERACTIVE_MODE
-          value: "1"
+          value: "0"
         - name: PLAYER_TEAM
           value: locals
         - name: PLAYER_COLOR

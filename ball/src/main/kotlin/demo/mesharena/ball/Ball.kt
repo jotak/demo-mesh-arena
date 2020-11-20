@@ -223,6 +223,7 @@ class Ball(private val client: WebClient, private val tracer: Tracer?, private v
       ?.start()
     OpenTracingUtil.setSpan(checkSpan)
     lastShootRef = checkSpan?.context()
+    val curPlayer = controllingPlayer ?: BallControl.Player("?", 0, "?", "?")
     request.sendJson(StadiumBounce.Rq(seg)) {
       checkSpan?.finish()
       if (!it.succeeded()) {
@@ -232,25 +233,25 @@ class Ball(private val client: WebClient, private val tracer: Tracer?, private v
         val bounce = it.result().bodyAsJsonObject().mapTo(StadiumBounce.Rs::class.java)
         val collision = bounce.collision
         if (bounce.scoredTeam != null) {
-          val isOwn = bounce.scoredTeam != controllingPlayer?.team
+          val isOwn = bounce.scoredTeam != curPlayer.team
           if (isOwn) {
-            comment("Ohhhh own goal from ${controllingPlayer?.name} !!")
+            comment("Ohhhh own goal from ${curPlayer.name} !!")
           } else {
-            comment("Goaaaaaaal by ${controllingPlayer?.name} !!!!")
+            comment("Goaaaaaaal by ${curPlayer.name} !!!!")
           }
           if (registry != null) {
             Counter.builder("mesharena_goals")
               .description("Goals counter")
-              .tag("team", controllingPlayer?.team ?: "")
-              .tag("player", controllingPlayer?.name ?: "")
+              .tag("team", curPlayer.team)
+              .tag("player", curPlayer.name)
               .tag("own_goal", if (isOwn) "yes" else "no")
               .register(registry)
               .increment()
           }
           // Span update
           val goalSpan = tracer?.buildSpan("Goal!")
-            ?.withTag("team", controllingPlayer?.team)
-            ?.withTag("player", controllingPlayer?.name)
+            ?.withTag("team", curPlayer.team)
+            ?.withTag("player", curPlayer.name)
             ?.withTag("own_goal", if (isOwn) "yes" else "no")
             ?.asChildOf(lastShootRef)
           goalSpan?.start()?.finish()
