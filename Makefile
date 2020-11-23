@@ -11,6 +11,7 @@ NAMESPACE ?= default
 TO_BUILD ?= ai-hotspot ai-openj9 ball-hotspot ball-openj9 stadium-hotspot ui-hotspot
 TO_DEPLOY ?= ai-hotspot ai-openj9 ball-hotspot stadium-hotspot ui-hotspot
 GENTPL_VERSION ?= base
+ISTIO ?= true
 
 LATEST = 1.3.0
 
@@ -54,26 +55,29 @@ help:
 	@echo "                '--metrics' will enable runtime metrics"
 	@echo "                '--tracing' will add application-defined traces"
 	@echo "                '--kafka' will use Kafka, instead of HTTP endpoint, for display events"
+	@echo "                '--interactive' will enable the interactive mode, players needing human interaction to shoot the ball"
 	@echo ""
 	@echo "$(smul)Main targets$(sgr0):"
-	@echo "- $(bold)prepare$(sgr0):          Installs frontend dependencies (to run once, before building)"
-	@echo "- $(bold)build$(sgr0):            Builds sources (maven)"
-	@echo "- $(bold)images$(sgr0):           Builds OCI images, eventually prepare them for Minikube (pushing to local registry)"
-	@echo "- $(bold)push-minikube$(sgr0):    Push built images to Minikube and tag for it"
-	@echo "- $(bold)push$(sgr0):             Push to registry (local or remote)"
-	@echo "- $(bold)deploy$(sgr0):           Deploy to Kubernetes"
-	@echo "- $(bold)dry-deploy$(sgr0):       Simulate a full deployment, but just print out the resulting YAML"
-	@echo "- $(bold)kill$(sgr0):             Kill (restart) all pods"
-	@echo "- $(bold)expose$(sgr0):           Expose UI to http://localhost:8080/"
-	@echo "- $(bold)undeploy$(sgr0):         Remove everything deployed"
-	@echo "- $(bold)deploy-tracing$(sgr0):   Shorthand for 'make GENTPL_OPTS=--tracing deploy'"
-	@echo "- $(bold)deploy-metrics$(sgr0):   Shorthand for 'make GENTPL_OPTS=--metrics deploy'"
-	@echo "- $(bold)deploy-kafka$(sgr0):     Shorthand for 'make GENTPL_OPTS=--kafka deploy'"
-	@echo "- $(bold)deploy-km$(sgr0):        Shorthand for 'make GENTPL_OPTS=--kafka --metrics deploy'"
-	@echo "- $(bold)deploy-tm$(sgr0):        Shorthand for 'make GENTPL_OPTS=--tracing --metrics deploy'"
-	@echo "- $(bold)deploy-kt$(sgr0):        Shorthand for 'make GENTPL_OPTS=--kafka --tracing deploy'"
-	@echo "- $(bold)deploy-ktm$(sgr0):       Shorthand for 'make GENTPL_OPTS=--kafka --tracing --metrics deploy'"
-	@echo "- $(bold)deploy-latest$(sgr0):    Deploys by pulling last known images from quay.io, with runtime metrics enabled"
+	@echo "- $(bold)prepare$(sgr0):             Installs frontend dependencies (to run once, before building)"
+	@echo "- $(bold)build$(sgr0):               Builds sources (maven)"
+	@echo "- $(bold)images$(sgr0):              Builds OCI images, eventually prepare them for Minikube (pushing to local registry)"
+	@echo "- $(bold)push-minikube$(sgr0):       Push built images to Minikube and tag for it"
+	@echo "- $(bold)push$(sgr0):                Push to registry (local or remote)"
+	@echo "- $(bold)deploy$(sgr0):              Deploy to Kubernetes"
+	@echo "- $(bold)dry-deploy$(sgr0):          Simulate a full deployment, but just print out the resulting YAML"
+	@echo "- $(bold)kill$(sgr0):                Kill (restart) all pods"
+	@echo "- $(bold)expose$(sgr0):              Expose UI to http://localhost:8080/"
+	@echo "- $(bold)undeploy$(sgr0):            Remove everything deployed"
+	@echo "- $(bold)deploy-tracing$(sgr0):      Shorthand for 'make GENTPL_OPTS=--tracing deploy'"
+	@echo "- $(bold)deploy-metrics$(sgr0):      Shorthand for 'make GENTPL_OPTS=--metrics deploy'"
+	@echo "- $(bold)deploy-kafka$(sgr0):        Shorthand for 'make GENTPL_OPTS=--kafka deploy'"
+	@echo "- $(bold)deploy-interactive$(sgr0):  Shorthand for 'make GENTPL_OPTS=--interactive deploy'"
+	@echo "- $(bold)deploy-km$(sgr0):           Shorthand for 'make GENTPL_OPTS=--kafka --metrics deploy'"
+	@echo "- $(bold)deploy-tm$(sgr0):           Shorthand for 'make GENTPL_OPTS=--tracing --metrics deploy'"
+	@echo "- $(bold)deploy-kt$(sgr0):           Shorthand for 'make GENTPL_OPTS=--kafka --tracing deploy'"
+	@echo "- $(bold)deploy-ktm$(sgr0):          Shorthand for 'make GENTPL_OPTS=--kafka --tracing --metrics deploy'"
+	@echo "- $(bold)deploy-ti$(sgr0):           Shorthand for 'make GENTPL_OPTS=--tracing --interactive deploy'"
+	@echo "- $(bold)deploy-latest$(sgr0):       Deploys by pulling last known images from quay.io, with runtime metrics enabled"
 	@echo ""
 	@echo "$(smul)Scenarios$(sgr0):"
 	@echo "- $(bold)scen-burst-current$(sgr0):    'Burst' the current deployed ball(s): will then randomly return some errors, sometimes, on HTTP calls"
@@ -158,7 +162,11 @@ push:
 	done
 
 deploy: .ensure-yq
-	kubectl label namespace ${NAMESPACE} istio-injection=enabled 2> /dev/null ; \
+ifeq ($(ISTIO),true)
+	kubectl label namespace ${NAMESPACE} istio-injection=enabled 2> /dev/null
+else
+	kubectl label namespace ${NAMESPACE} istio-injection- 2> /dev/null
+endif
 	for svc in ${TO_DEPLOY} ; do \
 		./gentpl.sh $$svc -v ${GENTPL_VERSION} -pp ${PULL_POLICY} -d "${OCI_DOMAIN_IN_CLUSTER}" -u ${OCI_USER} -t ${TAG} -n ${NAMESPACE} ${GENTPL_OPTS} | kubectl -n ${NAMESPACE} apply -f - ; \
 	done
@@ -192,6 +200,9 @@ deploy-metrics: deploy
 deploy-kafka: GENTPL_OPTS=--kafka
 deploy-kafka: deploy
 
+deploy-interactive: GENTPL_OPTS=--interactive
+deploy-interactive: deploy
+
 deploy-km: GENTPL_OPTS=--metrics --kafka
 deploy-km: deploy
 
@@ -203,6 +214,9 @@ deploy-kt: deploy
 
 deploy-ktm: GENTPL_OPTS=--tracing --metrics --kafka
 deploy-ktm: deploy
+
+deploy-ti: GENTPL_OPTS=--tracing --interactive
+deploy-ti: deploy
 
 deploy-latest: TAG=${LATEST}
 deploy-latest: OCI_DOMAIN_IN_CLUSTER=quay.io
@@ -271,13 +285,14 @@ kafka-meshed:
 
 gen-quickstart:
 	@echo "⚽ Generating quickstart templates..."
-	rm quickstart-naked.yml quickstart-metrics.yml quickstart-tracing.yml quickstart-both.yml quickstart-kafka.yml ; \
+	rm quickstart-naked.yml quickstart-metrics.yml quickstart-tracing.yml quickstart-both.yml quickstart-kafka.yml quickstart-interactive.yml ; \
 	for svc in ${TO_DEPLOY} ; do \
 		./gentpl.sh $$svc -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default >> quickstart-naked.yml ; \
 		./gentpl.sh $$svc -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default --tracing >> quickstart-tracing.yml ; \
 		./gentpl.sh $$svc -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default --metrics >> quickstart-metrics.yml ; \
 		./gentpl.sh $$svc -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default --tracing --metrics >> quickstart-both.yml ; \
 		./gentpl.sh $$svc -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default --tracing --kafka >> quickstart-kafka.yml ; \
+		./gentpl.sh $$svc -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default --tracing --interactive >> quickstart-interactive.yml ; \
 	done ; \
 	cat ./istio/kafka-se.yml >> quickstart-kafka.yml
 

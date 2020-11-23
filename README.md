@@ -24,6 +24,8 @@ If not already done, enable istio injection:
 kubectl label namespace default istio-injection=enabled
 ```
 
+*Note: though not mandatory, it's the main purpose of this demo to use Istio networking rules. The demo will still run without Istio.*
+
 Run one of the commands below:
 
 ```bash
@@ -38,7 +40,20 @@ kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-are
 
 # With none enabled:
 kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/zizou/quickstart-naked.yml) -n default
+
+# Interactive mode:
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/zizou/quickstart-interactive.yml) -n default
 ```
+
+In the interactive mode, players won't shoot by themselves, they need a human interaction. To shoot, click on a player, enter your name, then click the "shoot" button.
+
+## Expose UI
+
+```bash
+kubectl -n default port-forward svc/ui 8080:8080
+```
+
+Open http://localhost:8080.
 
 ## Quick start with Kafka
 
