@@ -13,7 +13,7 @@ TO_DEPLOY ?= ai-hotspot ai-openj9 ball-hotspot stadium-hotspot ui-hotspot
 GENTPL_VERSION ?= base
 ISTIO ?= true
 
-LATEST = 1.3.0
+LATEST = 1.3.1
 
 ifeq ($(REMOTE),true)
 OCI_DOMAIN ?= quay.io
