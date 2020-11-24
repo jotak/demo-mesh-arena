@@ -9,7 +9,6 @@ import demo.mesharena.common.Commons.getStringEnv
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.Gauge
 import io.micrometer.core.instrument.MeterRegistry
-import io.opentracing.Span
 import io.opentracing.SpanContext
 import io.opentracing.Tracer
 import io.vertx.core.http.HttpServerOptions
@@ -46,7 +45,7 @@ class Ball(private val client: WebClient, private val tracer: Tracer?, private v
   private var interactTimer = 0.0
   private var errorTimer = 0.0
 
-  private var shootSpan: Span? = null
+  // private var shootSpan: Span? = null
   private var lastShootRef: SpanContext? = null
 
   override suspend fun start() {
@@ -116,49 +115,53 @@ class Ball(private val client: WebClient, private val tracer: Tracer?, private v
   }
 
   private fun shoot(ctx: RoutingContext) {
-    ctx.request().bodyHandler {
-      val rq = it.toJsonObject().mapTo(BallShoot.Rq::class.java)
-      val curPlayer = controllingPlayer
-      if (curPlayer?.id == rq.playerID) {
-        shootSpan?.finish()
-        shootSpan = tracer?.buildSpan("Ball shot")
-          ?.withTag("team", curPlayer.team)
-          ?.withTag("player", curPlayer.name)
-          ?.asChildOf(OpenTracingUtil.getSpan())
-          ?.start()
-        lastShootRef = shootSpan?.context()
-        speed = rq.vec
-        if ("togoal" == rq.kind) {
-          if (rnd.nextInt(2) == 0) {
-            comment("${curPlayer.name} shooting!")
-          } else {
-            comment("Wooow ${curPlayer.name} tries his luck!")
+    val curPlayer = controllingPlayer
+    if (curPlayer != null) {
+      var shootSpan = tracer?.buildSpan("Ball shot")
+        ?.withTag("team", curPlayer.team)
+        ?.withTag("player", curPlayer.name)
+        ?.asChildOf(OpenTracingUtil.getSpan())
+        ?.start()
+      ctx.request().bodyHandler {
+        val rq = it.toJsonObject().mapTo(BallShoot.Rq::class.java)
+        if (curPlayer.id == rq.playerID) {
+          lastShootRef = shootSpan?.context()
+          speed = rq.vec
+          if ("togoal" == rq.kind) {
+            if (rnd.nextInt(2) == 0) {
+              comment("${curPlayer.name} shooting!")
+            } else {
+              comment("Wooow ${curPlayer.name} tries his luck!")
+            }
+            if (registry != null) {
+              Counter.builder("mesharena_shoots")
+                .description("Shoots counter")
+                .tag("team", curPlayer.team)
+                .tag("player", curPlayer.name)
+                .register(registry)
+                .increment()
+            }
+          } else if ("forward" == rq.kind) {
+            if (rnd.nextInt(2) == 0) {
+              comment("Still ${curPlayer.name}...")
+            } else {
+              comment("${curPlayer.name} again...")
+            }
+          } else if ("defensive" == rq.kind) {
+            if (rnd.nextInt(2) == 0) {
+              comment("Defensive shooting from ${curPlayer.name}")
+            } else {
+              comment("${curPlayer.name} takes the ball and shoots!")
+            }
+          } else if ("control" == rq.kind) {
+            comment("${curPlayer.name} takes the ball back")
           }
-          if (registry != null) {
-            Counter.builder("mesharena_shoots")
-              .description("Shoots counter")
-              .tag("team", curPlayer.team)
-              .tag("player", curPlayer.name)
-              .register(registry)
-              .increment()
-          }
-        } else if ("forward" == rq.kind) {
-          if (rnd.nextInt(2) == 0) {
-            comment("Still ${curPlayer.name}...")
-          } else {
-            comment("${curPlayer.name} again...")
-          }
-        } else if ("defensive" == rq.kind) {
-          if (rnd.nextInt(2) == 0) {
-            comment("Defensive shooting from ${curPlayer.name}")
-          } else {
-            comment("${curPlayer.name} takes the ball and shoots!")
-          }
-        } else if ("control" == rq.kind) {
-          comment("${curPlayer.name} takes the ball back")
+        } else {
+          shootSpan = null
         }
+        ctx.response().end()
       }
-      ctx.response().end()
+      shootSpan?.finish()
     }
   }
 
@@ -198,9 +201,8 @@ class Ball(private val client: WebClient, private val tracer: Tracer?, private v
           display()
         }
       }
-    } else { // Shoot finished
-      shootSpan?.finish()
-      shootSpan = null
+    } else {
+      // Shoot finished
       lastShootRef = null
     }
     // Decrease controlling skill
@@ -255,8 +257,6 @@ class Ball(private val client: WebClient, private val tracer: Tracer?, private v
             ?.withTag("own_goal", if (isOwn) "yes" else "no")
             ?.asChildOf(lastShootRef)
           goalSpan?.start()?.finish()
-          shootSpan?.finish()
-          shootSpan = null
           lastShootRef = null
           // Do not update position, Stadium will do it
           controllingPlayer = null
