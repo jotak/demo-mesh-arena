@@ -4,13 +4,19 @@ eb.enableReconnect(true);
 function displayGameObject(obj) {
   var rawElt = document.getElementById(obj.id);
   if (!rawElt) {
-    var innerSpan;
     if (obj.playerRef) {
-      innerSpan = '<span style="position:relative;top:4px;left:9px;" '
+      var innerSpan = '<span style="position:relative;top:4px;left:9px;">'
+        + obj.playerRef.name.charAt(0)
+        + '</span>';
+      $('#right-pane').append('<div id="players-' + obj.id + '" '
         + ' onclick="selectPlayer(\'' + obj.playerRef.name + '\', \'' + obj.playerRef.ip + '\')"'
-        + '>' + obj.playerRef.name.charAt(0) + '</span>';
+        + '><div style="' + obj.style + ' position:relative">' + innerSpan
+        + '<span style="position:relative;top:4px;left:25px;">' + obj.playerRef.name + '</span>'
+        + '</div></div>');
+      $('#board').append('<div id="' + obj.id + '" style="' + obj.style + '">' + innerSpan + '</div>');
+    } else {
+      $('#board').append('<div id="' + obj.id + '" style="' + obj.style + '">' + (obj.text || '') + '</div>');
     }
-    $('#board').append('<div id="' + obj.id + '" style="' + obj.style + '">' + (innerSpan || obj.text || '') + '</div>');
   } else {
     if (obj.style) {
       rawElt.style.cssText = obj.style;
@@ -38,6 +44,7 @@ eb.onopen = function () {
         console.log(err);
     }
     $('#' + msg.body).remove();
+    $('#players-' + msg.body).remove();
   });
 
   eb.send("init-session", "", function (err, msg) {

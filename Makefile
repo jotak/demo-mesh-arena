@@ -34,6 +34,12 @@ ifeq ($(OCI_BIN_SHORT),podman)
 PUSH_OPTS ?= --tls-verify=false
 endif
 
+ifeq ($(ISTIO),true)
+ISTIO_LABEL = "istio-injection=enabled"
+else
+ISTIO_LABEL = "istio-injection-"
+endif
+
 bold := $(shell tput bold)
 smul := $(shell tput smul)
 sgr0 := $(shell tput sgr0)
@@ -162,11 +168,7 @@ push:
 	done
 
 deploy: .ensure-yq
-ifeq ($(ISTIO),true)
-	kubectl label namespace ${NAMESPACE} istio-injection=enabled 2> /dev/null
-else
-	kubectl label namespace ${NAMESPACE} istio-injection- 2> /dev/null
-endif
+	kubectl label namespace ${NAMESPACE} ${ISTIO_LABEL} 2> /dev/null ; \
 	for svc in ${TO_DEPLOY} ; do \
 		./gentpl.sh $$svc -v ${GENTPL_VERSION} -pp ${PULL_POLICY} -d "${OCI_DOMAIN_IN_CLUSTER}" -u ${OCI_USER} -t ${TAG} -n ${NAMESPACE} ${GENTPL_OPTS} | kubectl -n ${NAMESPACE} apply -f - ; \
 	done
