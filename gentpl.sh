@@ -72,7 +72,7 @@ for v in ${VERSION} ; do
     cat "./k8s/$BASE_NAME-$v.yml" \
         | yq w - metadata.labels.version $v \
         | yq w - metadata.labels.vm $VM \
-        | yq w - metadata.name "$BASE_NAME-$VERSION" \
+        | yq w - metadata.name "$BASE_NAME-$v" \
         | yq w - spec.selector.matchLabels.version $v \
         | yq w - spec.selector.matchLabels.vm $VM \
         | yq w - spec.template.metadata.labels.version $v \

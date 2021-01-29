@@ -241,9 +241,11 @@ scen-75-25:
 	kubectl apply -f ./istio/virtualservice-75-25.yml -n ${NAMESPACE}
 
 scen-add-players: GENTPL_VERSION="mbappe messi"
-scen-add-players: TO_DEPLOY=ai-hotspot ai-openj9
+scen-add-players: TO_DEPLOY=ai-hotspot
 scen-add-players: deploy
 	kubectl apply -f ./istio/destrule.yml -n ${NAMESPACE} ; \
+	kubectl apply -f ./istio/virtualservice-to-ball-v1.yml -n ${NAMESPACE} ; \
+	kubectl apply -f ./istio/virtualservice-to-ball-v2.yml -n ${NAMESPACE} ; \
 	kubectl apply -f ./istio/virtualservice-by-label.yml -n ${NAMESPACE}
 
 scen-add-burst: GENTPL_VERSION=burst
