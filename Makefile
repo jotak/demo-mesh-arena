@@ -99,7 +99,8 @@ help:
 	@echo "- $(bold)kafka-se$(sgr0):                 Deploy a kafka (strimzi) cluster external to the mesh; to use with --kafka deploy option"
 	@echo "- $(bold)kafka-meshed$(sgr0):             Deploy a kafka (strimzi) cluster as part of the mesh; to use with --kafka deploy option"
 	@echo "- $(bold)gen-quickstart$(sgr0):           Generate the quickstart templates with latest tag"
-	@echo "- $(bold)expose-jaeger-collector$(sgr0):  In case jaeger-collector isn't exosed by default in Istio, run this target if you use the --tracing deploy option"
+	@echo "- $(bold)jaeger-service$(sgr0):           In case jaeger-collector isn't exosed by default in Istio, run this target if you use the --tracing deploy option"
+	@echo "- $(bold)istio-enable$(sgr0):             Enable istio on namespace '${NAMESPACE}'"
 	@echo ""
 	@echo "$(smul)Examples$(sgr0):"
 	@echo ""
@@ -260,7 +261,11 @@ scen-outlier:
 	kubectl delete -f ./istio/virtualservice-mirrored.yml -n ${NAMESPACE} ; \
     kubectl apply -f ./istio/destrule-outlier.yml -n ${NAMESPACE}
 
-expose-jaeger-collector:
+istio-enable:
+	kubectl label namespace ${NAMESPACE} ${ISTIO_LABEL} ; \
+	kubectl -n ${NAMESPACE} delete pods -l "project=mesh-arena"
+
+jaeger-service:
 	kubectl apply -f ./istio/jaeger-collector.yml
 
 kafka-se:
