@@ -49,6 +49,8 @@ In the interactive mode, players won't shoot by themselves, they need a human in
 
 ## Expose UI
 
+<img align="right" src="doc-assets/preview.gif">
+
 ```bash
 kubectl -n default port-forward svc/ui 8080:8080
 ```
