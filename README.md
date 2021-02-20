@@ -2,7 +2,7 @@
 
 ## Slides
 
-This demo was presented at [DevopsDday](http://2018.devops-dday.com/) in the Velodrome, Marseilles' famous stadium.
+This demo was presented at the [Devops D-Day 2018](https://www.youtube.com/watch?v=xRIKThyltno) in the Velodrome, Marseilles' famous stadium.
 [Here are the slides](https://docs.google.com/presentation/d/1PzRD3BquEI3Al6y2_vSrZqUY0AlJF54_uuWYhr81t5g), in French. Or a similar [English version](https://docs.google.com/presentation/d/1WZDmIcfzKC9GMqz8Cvcb0_mJK_hIH-JxEDROZLnEnng).
 
 ## Step-by-step
