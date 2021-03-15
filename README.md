@@ -13,7 +13,6 @@ For a step-by-step walk-through, [read this](./STEP-BY-STEP.md) (outdated - you 
 
 - Kubernetes cluster running
 - Istio installed (much better with Kiali!)
-- `yq` might be needed at some point, if you use deploy targets; grab it from there: https://github.com/mikefarah/yq/releases (Last version known to work here: 3.1.1)
 
 ## Quick start
 

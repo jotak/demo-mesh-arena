@@ -13,6 +13,13 @@ TO_DEPLOY ?= ai-hotspot ai-openj9 ball-hotspot stadium-hotspot ui-hotspot
 GENTPL_VERSION ?= base
 ISTIO ?= true
 
+# URL used to download yq, which is used to generate YAML files.
+# Last tested version: 3.1.2
+# Version 4.x is known to NOT work here (too many breaking changes).
+# If not on linux_amd64 architecture, adapt the ARCH value below (see also assets in https://github.com/mikefarah/yq/releases/tag/3.1.2)
+ARCH ?= linux_amd64
+YQ_URL ?= https://github.com/mikefarah/yq/releases/download/3.1.2/yq_${ARCH}
+
 LATEST = 1.3.1
 
 ifeq ($(REMOTE),true)
@@ -62,6 +69,7 @@ help:
 	@echo "                '--tracing' will add application-defined traces"
 	@echo "                '--kafka' will use Kafka, instead of HTTP endpoint, for display events"
 	@echo "                '--interactive' will enable the interactive mode, players needing human interaction to shoot the ball"
+	@echo "- $(bold)ARCH$(sgr0):         Architecture for binaries, currently only used to download 'yq' (see assets in https://github.com/mikefarah/yq/releases/tag/3.1.2) (current: $(ARCH))"
 	@echo ""
 	@echo "$(smul)Main targets$(sgr0):"
 	@echo "- $(bold)prepare$(sgr0):             Installs frontend dependencies (to run once, before building)"
@@ -132,7 +140,12 @@ help:
 	@echo "Enjoy! ⚽"
 
 .ensure-yq:
-	@command -v yq >/dev/null 2>&1 || { echo >&2 "yq is required. Grab it on https://github.com/mikefarah/yq"; exit 1; }
+ifeq (,$(wildcard ./yq))
+	@echo "yq binary not found, downloading it"
+	curl -L -o yq ${YQ_URL} && chmod +x yq
+else
+	@echo "yq binary found, using it"
+endif
 
 prepare:
 	@echo "⚽ Installing frontend dependencies..."

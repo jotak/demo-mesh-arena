@@ -70,22 +70,22 @@ IMAGE="${DOMAIN}${USER}/mesharena-$FULL_NAME:$TAG"
 for v in ${VERSION} ; do
   if [[ -f "./k8s/$BASE_NAME-$v.yml" ]] ; then
     cat "./k8s/$BASE_NAME-$v.yml" \
-        | yq w - metadata.labels.version $v \
-        | yq w - metadata.labels.vm $VM \
-        | yq w - metadata.name "$BASE_NAME-$v" \
-        | yq w - spec.selector.matchLabels.version $v \
-        | yq w - spec.selector.matchLabels.vm $VM \
-        | yq w - spec.template.metadata.labels.version $v \
-        | yq w - spec.template.metadata.labels.vm $VM \
-        | yq w - spec.template.spec.containers[0].imagePullPolicy $PULL_POLICY \
-        | yq w - spec.template.spec.containers[0].image $IMAGE \
-        | yq w - spec.template.spec.containers[0].name $FULL_NAME \
-        | ( [ "$METRICS_ENABLED" = "1" ] && yq w - --tag '!!str' "spec.template.metadata.annotations.(prometheus.io/scrape)" "true" || cat ) \
-        | yq w - --tag '!!str' "spec.template.spec.containers[0].env.(name==METRICS_ENABLED).value" $METRICS_ENABLED \
-        | yq w - --tag '!!str' "spec.template.spec.containers[0].env.(name==TRACING_ENABLED).value" $TRACING_ENABLED \
-        | yq w - --tag '!!str' "spec.template.spec.containers[0].env.(name==INTERACTIVE_MODE).value" $INTERACTIVE_MODE \
-        | ( [ "$KAFKA_ADDRESS" != "" ] && yq w - --tag '!!str' "spec.template.spec.containers[0].env.(name==KAFKA_ADDRESS).value" $KAFKA_ADDRESS || cat ) \
-        | yq w - "spec.template.spec.containers[0].env.(name==JAEGER_SERVICE_NAME).value" $BASE_NAME.$NAMESPACE
+        | ./yq w - metadata.labels.version $v \
+        | ./yq w - metadata.labels.vm $VM \
+        | ./yq w - metadata.name "$BASE_NAME-$v" \
+        | ./yq w - spec.selector.matchLabels.version $v \
+        | ./yq w - spec.selector.matchLabels.vm $VM \
+        | ./yq w - spec.template.metadata.labels.version $v \
+        | ./yq w - spec.template.metadata.labels.vm $VM \
+        | ./yq w - spec.template.spec.containers[0].imagePullPolicy $PULL_POLICY \
+        | ./yq w - spec.template.spec.containers[0].image $IMAGE \
+        | ./yq w - spec.template.spec.containers[0].name $FULL_NAME \
+        | ( [ "$METRICS_ENABLED" = "1" ] && ./yq w - --tag '!!str' "spec.template.metadata.annotations.(prometheus.io/scrape)" "true" || cat ) \
+        | ./yq w - --tag '!!str' "spec.template.spec.containers[0].env.(name==METRICS_ENABLED).value" $METRICS_ENABLED \
+        | ./yq w - --tag '!!str' "spec.template.spec.containers[0].env.(name==TRACING_ENABLED).value" $TRACING_ENABLED \
+        | ./yq w - --tag '!!str' "spec.template.spec.containers[0].env.(name==INTERACTIVE_MODE).value" $INTERACTIVE_MODE \
+        | ( [ "$KAFKA_ADDRESS" != "" ] && ./yq w - --tag '!!str' "spec.template.spec.containers[0].env.(name==KAFKA_ADDRESS).value" $KAFKA_ADDRESS || cat ) \
+        | ./yq w - "spec.template.spec.containers[0].env.(name==JAEGER_SERVICE_NAME).value" $BASE_NAME.$NAMESPACE
     echo "---"
   fi
 done
