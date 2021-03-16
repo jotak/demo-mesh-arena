@@ -5,7 +5,7 @@ metadata:
 spec:
   workloadSelector:
     labels:
-      project: mesh-arena
+      app.kubernetes.io/part-of: mesh-arena
   configPatches:
   - applyTo: HTTP_FILTER
     match:

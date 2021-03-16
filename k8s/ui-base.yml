@@ -2,16 +2,16 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    project: mesh-arena
-    app: ui
-    version: base
+    app.kubernetes.io/part-of: mesh-arena
+    app.kubernetes.io/name: ui
+    app.kubernetes.io/version: base
   name: ui
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ui
-      version: base
+      app.kubernetes.io/name: ui
+      app.kubernetes.io/version: base
   template:
     metadata:
       annotations:
@@ -19,9 +19,9 @@ spec:
         prometheus.io/path: "/metrics"
         sidecar.istio.io/statsInclusionPrefixes: cluster_manager,listener_manager,broker
       labels:
-        project: mesh-arena
-        app: ui
-        version: base
+        app.kubernetes.io/part-of: mesh-arena
+        app.kubernetes.io/name: ui
+        app.kubernetes.io/version: base
     spec:
       containers:
       - image:
@@ -62,11 +62,11 @@ kind: Service
 metadata:
   name: ui
   labels:
-    project: mesh-arena
-    app: ui
+    app.kubernetes.io/part-of: mesh-arena
+    app.kubernetes.io/name: ui
 spec:
   ports:
   - name: http
     port: 8080
   selector:
-    app: ui
+    app.kubernetes.io/name: ui

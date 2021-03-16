@@ -193,7 +193,7 @@ dry-deploy: .ensure-yq
 	done
 
 kill:
-	kubectl -n ${NAMESPACE} delete pods -l "project=mesh-arena"
+	kubectl -n ${NAMESPACE} delete pods -l "app.kubernetes.io/part-of=mesh-arena"
 
 expose:
 	@echo "⚽ URL: http://localhost:8080/"
@@ -201,11 +201,11 @@ expose:
 	kubectl -n ${NAMESPACE} port-forward svc/ui 8080:8080
 
 undeploy:
-	kubectl -n ${NAMESPACE} delete all -l "project=mesh-arena" ; \
-	kubectl -n ${NAMESPACE} delete destinationrule -l "project=mesh-arena" ; \
-	kubectl -n ${NAMESPACE} delete virtualservice -l "project=mesh-arena" ; \
-	kubectl -n ${NAMESPACE} delete gateway -l "project=mesh-arena" ; \
-	kubectl -n ${NAMESPACE} delete envoyfilter -l "project=mesh-arena"
+	kubectl -n ${NAMESPACE} delete all -l "app.kubernetes.io/part-of=mesh-arena" ; \
+	kubectl -n ${NAMESPACE} delete destinationrule -l "app.kubernetes.io/part-of=mesh-arena" ; \
+	kubectl -n ${NAMESPACE} delete virtualservice -l "app.kubernetes.io/part-of=mesh-arena" ; \
+	kubectl -n ${NAMESPACE} delete gateway -l "app.kubernetes.io/part-of=mesh-arena" ; \
+	kubectl -n ${NAMESPACE} delete envoyfilter -l "app.kubernetes.io/part-of=mesh-arena"
 
 deploy-tracing: GENTPL_OPTS=--tracing
 deploy-tracing: deploy
@@ -276,7 +276,7 @@ scen-outlier:
 
 istio-enable:
 	kubectl label namespace ${NAMESPACE} ${ISTIO_LABEL} ; \
-	kubectl -n ${NAMESPACE} delete pods -l "project=mesh-arena"
+	kubectl -n ${NAMESPACE} delete pods -l "app.kubernetes.io/part-of=mesh-arena"
 
 jaeger-service:
 	kubectl apply -f ./istio/jaeger-collector.yml

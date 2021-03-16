@@ -3,7 +3,7 @@ kind: ServiceEntry
 metadata:
   name: kafka
   labels:
-    project: mesh-arena
+    app.kubernetes.io/part-of: mesh-arena
 spec:
   hosts:
     - messaging-kafka-brokers.kafka.svc.cluster.local

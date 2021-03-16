@@ -5,21 +5,21 @@ kind: VirtualService
 metadata:
   name: ball-vs
   labels:
-    project: mesh-arena
+    app.kubernetes.io/part-of: mesh-arena
 spec:
   hosts:
   - ball
   http:
   - match:
     - sourceLabels:
-        version: locals
+        app.kubernetes.io/version: locals
     route:
     - destination:
         host: ball
         subset: ball-v1
   - match:
     - sourceLabels:
-        version: visitors
+        app.kubernetes.io/version: visitors
     route:
       - destination:
           host: ball

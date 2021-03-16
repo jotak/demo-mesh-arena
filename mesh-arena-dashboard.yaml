@@ -3,7 +3,7 @@ kind: MonitoringDashboard
 metadata:
   name: mesh-arena
   labels:
-    project: mesh-arena
+    app.kubernetes.io/part-of: mesh-arena
 spec:
   title: Mesh Arena Metrics
   discoverOn: "mesharena_goals_total"

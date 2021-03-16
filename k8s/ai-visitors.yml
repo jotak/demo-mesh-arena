@@ -2,26 +2,28 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    project: mesh-arena
-    app: ai
-    version: visitors
+    app.kubernetes.io/part-of: mesh-arena
+    app.kubernetes.io/name: ai
+    app.kubernetes.io/instance: ai-visitors
+    app.kubernetes.io/version: visitors
     vm: unknown
   name: ai-visitors
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: ai
-      version: visitors
+      app.kubernetes.io/name: ai
+      app.kubernetes.io/version: visitors
   template:
     metadata:
       annotations:
         prometheus.io/port: "8080"
         prometheus.io/path: "/metrics"
       labels:
-        project: mesh-arena
-        app: ai
-        version: visitors
+        app.kubernetes.io/part-of: mesh-arena
+        app.kubernetes.io/name: ai
+        app.kubernetes.io/instance: ai-visitors
+        app.kubernetes.io/version: visitors
         vm: unknown
     spec:
       containers:
@@ -77,11 +79,11 @@ kind: Service
 metadata:
   name: ai
   labels:
-    project: mesh-arena
-    app: ai
+    app.kubernetes.io/part-of: mesh-arena
+    app.kubernetes.io/name: ai
 spec:
   ports:
   - name: http
     port: 8080
   selector:
-    app: ai
+    app.kubernetes.io/name: ai

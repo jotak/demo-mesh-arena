@@ -3,7 +3,7 @@ kind: Gateway
 metadata:
   name: mesh-arena-gateway
   labels:
-    project: mesh-arena
+    app.kubernetes.io/part-of: mesh-arena
 spec:
   selector:
     istio: ingressgateway # use istio default controller

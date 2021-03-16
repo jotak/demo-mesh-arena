@@ -3,16 +3,16 @@ kind: DestinationRule
 metadata:
   name: ball-dr
   labels:
-    project: mesh-arena
+    app.kubernetes.io/part-of: mesh-arena
 spec:
   host: ball
   subsets:
   - name: ball-v1
     labels:
-      version: base
+      app.kubernetes.io/version: base
   - name: ball-v2
     labels:
-      version: burst
+      app.kubernetes.io/version: burst
 # Scenario 3: With outlier detection
   trafficPolicy:
     outlierDetection:
