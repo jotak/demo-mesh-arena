@@ -13,7 +13,6 @@ spec:
   - name: ball-v2
     labels:
       version: burst
-# Scenario 3: With outlier detection
   trafficPolicy:
     connectionPool:
       tcp:

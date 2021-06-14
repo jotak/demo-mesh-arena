@@ -15,19 +15,12 @@ Check the slides, [in French](https://docs.google.com/presentation/d/1PzRD3BquEI
 ### Example of Istio + Kiali install:
 
 ```bash
-istioctl manifest apply --set profile=demo
-bash <(curl -L https://git.io/getLatestKialiOperator)
+istioctl install --set profile=demo
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.10/samples/addons/prometheus.yaml
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.10/samples/addons/kiali.yaml
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.10/samples/addons/jaeger.yaml
+istioctl dashboard kiali
 ```
-
-In a new terminal, you can forward Kiali's route:
-
-```bash
-kubectl port-forward svc/kiali 20001:20001 -n istio-system
-```
-
-Open https://localhost:20001/kiali
-
-(Might be an insecure connection / invalid certificate, to allow in Chrome go to chrome://flags/#allow-insecure-localhost )
 
 ## Get the yml files locally
 
@@ -62,36 +55,14 @@ steps performed at the beginning of the game.
 ## Deploy microservice UI
 
 ```bash
-kubectl apply -f <(istioctl kube-inject -f ./services/ui/Deployment.yml)
-kubectl apply -f ./services/ui/Service.yml
-kubectl apply -f mesh-arena-gateway.yaml 
+kubectl label namespace default istio-injection=enabled
+make scen-init-ui
 ```
 
-## Open in browser
-
-(Wait a little bit because port-forward?)
+## Deploy stadium, ball, 2x2 players
 
 ```bash
-kubectl port-forward svc/istio-ingressgateway 8080:80 -n istio-system
-```
-
-Open http://localhost:8080 in a browser.
-
-## Deploy stadium & ball
-
-```bash
-kubectl apply -f <(istioctl kube-inject -f ./services/stadium/Deployment-Smaller.yml)
-kubectl apply -f ./services/stadium/Service.yml
-kubectl apply -f <(istioctl kube-inject -f ./services/ball/Deployment.yml)
-kubectl apply -f ./services/ball/Service.yml
-```
-
-## Deploy 2x2 players
-
-```bash
-kubectl apply -f <(istioctl kube-inject -f ./services/ai/Deployment-2-locals.yml)
-kubectl apply -f <(istioctl kube-inject -f ./services/ai/Deployment-2-visitors.yml)
-kubectl apply -f ./services/ai/Service.yml
+make scen-init-rest
 ```
 
 <details><summary>Kiali TIP</summary>
@@ -104,11 +75,11 @@ In Kiali Graph, we may want to disable the Service Node display
 ## Second ball
 
 ```bash
-kubectl apply -f <(istioctl kube-inject -f ./services/ball/Deployment-v2.yml)
-````
+make scen-add-ball
+```
 
 In this state, the usual K8S load balancer is in use.
-Players can't decide whether to go to ball v1 or v2.
+Players can't seem to decide whether to go to first or second ball. The round-robin algorithm makes them change their target on every request.
 
 <details><summary>Kiali TIP</summary>
 <p>
@@ -123,8 +94,7 @@ Also, you can type `app=ui OR app=stadium` in the Hide box to reduce noise.
 ## Ponderate ball v1 and v2
 
 ```bash
-kubectl apply -f ./services/ball/destrule.yml
-kubectl apply -f ./services/ball/virtualservice-75-25.yml
+make scen-75-25
 ```
 
 Players know a little bit better where to go, but still unsure.
@@ -140,8 +110,7 @@ In Kiali Graph, distribution will be slowly moving close to 75/25.
 ## Messi / Mbappé
 
 ```bash
-kubectl apply -f <(istioctl kube-inject -f ./services/ai/Deployment-Messi.yml)
-kubectl apply -f <(istioctl kube-inject -f ./services/ai/Deployment-Mbappe.yml)
+make scen-add-players
 ```
 
 Two new players.
@@ -149,7 +118,7 @@ Two new players.
 ## Each his ball
 
 ```bash
-kubectl apply -f ./services/ball/virtualservice-by-label.yml
+make scen-by-source-label
 ```
 
 Now they know. Clean state.
@@ -166,17 +135,13 @@ This is how it should looks like: 100% to a ball.
 ## Reset
 
 ```bash
-kubectl delete -f ./services/ai/Deployment-Messi.yml
-kubectl delete -f ./services/ai/Deployment-Mbappe.yml
-kubectl delete -f ./services/ball/virtualservice-by-label.yml
-kubectl delete -f ./services/ball/Deployment-v2.yml
+make scen-reset
 ```
 
 ## Burst ball (500 errors) with shadowing
 
 ```bash
-kubectl apply -f ./services/ball/virtualservice-mirrored.yml
-kubectl apply -f <(istioctl kube-inject -f ./services/ball/Deployment-burst.yml)
+make scen-mirroring
 ```
 
 A new ball, v2 is deployed "for fake": all requests sent to v1 are duplicated to v2.
@@ -204,9 +169,8 @@ But if you double-click on ai app, Kiali displays metrics emitted by AI => there
 ## Remove shadowing, put circuit breaking
 
 ```bash
-kubectl delete -f ./services/ball/virtualservice-mirrored.yml
-kubectl apply -f ./services/ball/destrule-outlier.yml
-````
+make scen-outlier
+```
 
 CB is configured to evict failing workload for 10s upon error.
 Then it's put back into the LB pool, and will be evicted again, and again, and again.
@@ -226,5 +190,5 @@ corresponding to the time when it's put back in LB pool.
 ## To clean up everything
 
 ```bash
-kubectl delete all -l project=mesh-arena
+make undeploy
 ```

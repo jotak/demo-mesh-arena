@@ -51,6 +51,8 @@ spec:
           value: "8080"
         - name: MESHARENA_STADIUM_HOST
           value: stadiumsvc
+        - name: INTERACTIVE_MODE
+          value: "0"
         - name: PLAYER_TEAM
           value: locals
         - name: PLAYER_NAMES
@@ -64,7 +66,7 @@ spec:
         - name: PLAYER_SHOOT
           value: "300"
         - name: PLAYER_ATTACKING
-          value: "90"
+          value: "100"
         - name: PLAYER_ATT_SHOOT_FAST
           value: "20"
         - name: PLAYER_DEF_SHOOT_FAST

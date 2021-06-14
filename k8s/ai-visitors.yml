@@ -55,6 +55,8 @@ spec:
           value: "0"
         - name: PLAYER_TEAM
           value: visitors
+        - name: PLAYER_ATTACKING
+          value: "100"
         - name: PLAYER_COLOR
           value: "#F0AB00"
         - name: PLAYER_NAMES

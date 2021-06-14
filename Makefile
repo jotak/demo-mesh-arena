@@ -94,6 +94,7 @@ help:
 	@echo "- $(bold)deploy-latest$(sgr0):       Deploys by pulling last known images from quay.io, with runtime metrics enabled"
 	@echo ""
 	@echo "$(smul)Scenarios$(sgr0):"
+	@echo "- $(bold)scen-init-ui$(sgr0):          Init scenario with just the UI"
 	@echo "- $(bold)scen-burst-current$(sgr0):    'Burst' the current deployed ball(s): will then randomly return some errors, sometimes, on HTTP calls"
 	@echo "- $(bold)scen-unburst-current$(sgr0):  Make current ball(s) clean again"
 	@echo "- $(bold)scen-add-ball$(sgr0):         Add a second ball"
@@ -241,30 +242,44 @@ deploy-latest: TAG_MINIKUBE=false
 deploy-latest: GENTPL_OPTS=--metrics
 deploy-latest: deploy
 
+scen-init-ui:
+	./gentpl.sh ui-hotspot -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f - ; \
+	kubectl apply -f istio/mesh-arena-gateway.yml
+	xdg-open http://localhost:8080/ && kubectl port-forward svc/istio-ingressgateway 8080:80 -n istio-system
+
+scen-init-rest:
+	./gentpl.sh stadium-hotspot -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f - ; \
+	./gentpl.sh ball-hotspot -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f - ; \
+	./gentpl.sh ai-hotspot -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f - ; \
+	./gentpl.sh ai-openj9 -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f -
+
 scen-burst-current:
 	kubectl -n ${NAMESPACE} set env deployment -l app=ball PCT_ERRORS=20
 
 scen-unburst-current:
 	kubectl -n ${NAMESPACE} set env deployment -l app=ball PCT_ERRORS=0
 
-scen-add-ball: TO_DEPLOY=ball-openj9
-scen-add-ball: deploy
+scen-add-ball:
+	./gentpl.sh ball-openj9 -v burst -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f - ; \
 
 scen-75-25:
 	kubectl apply -f ./istio/destrule.yml -n ${NAMESPACE} ; \
 	kubectl apply -f ./istio/virtualservice-75-25.yml -n ${NAMESPACE}
 
-scen-add-players: GENTPL_VERSION="mbappe messi"
-scen-add-players: TO_DEPLOY=ai-hotspot
-scen-add-players: deploy
+scen-add-players:
+	./gentpl.sh ai-hotspot -v mbappe -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f - ; \
+	./gentpl.sh ai-openj9 -v messi -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f - ; \
 	kubectl apply -f ./istio/destrule.yml -n ${NAMESPACE} ; \
-	kubectl apply -f ./istio/virtualservice-to-ball-v1.yml -n ${NAMESPACE} ; \
-	kubectl apply -f ./istio/virtualservice-to-ball-v2.yml -n ${NAMESPACE} ; \
+	kubectl delete -f ./istio/virtualservice-75-25.yml -n ${NAMESPACE}
+
+scen-by-source-label:
 	kubectl apply -f ./istio/virtualservice-by-label.yml -n ${NAMESPACE}
 
-scen-add-burst: GENTPL_VERSION=burst
-scen-add-burst: TO_DEPLOY=ball-openj9
-scen-add-burst: deploy
+scen-reset:
+	kubectl delete destinationrule ball-dr -n ${NAMESPACE} ; \
+	kubectl delete virtualservice ball-vs -n ${NAMESPACE} ; \
+	kubectl delete deployment ai-mbappe -n ${NAMESPACE} ; \
+	kubectl delete deployment ai-messi -n ${NAMESPACE}
 
 scen-mirroring:
 	kubectl apply -f ./istio/destrule.yml -n ${NAMESPACE} ; \
@@ -272,7 +287,7 @@ scen-mirroring:
 
 scen-outlier:
 	kubectl delete -f ./istio/virtualservice-mirrored.yml -n ${NAMESPACE} ; \
-    kubectl apply -f ./istio/destrule-outlier.yml -n ${NAMESPACE}
+  kubectl apply -f ./istio/destrule-outlier.yml -n ${NAMESPACE}
 
 istio-enable:
 	kubectl label namespace ${NAMESPACE} ${ISTIO_LABEL} ; \

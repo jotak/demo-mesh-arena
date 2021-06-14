@@ -13,9 +13,9 @@ spec:
   - name: ball-v2
     labels:
       version: burst
-# Scenario 3: With outlier detection
   trafficPolicy:
     outlierDetection:
-      consecutiveErrors: 1
-      baseEjectionTime: 10s
+      consecutive5xxErrors: 1
+      interval: 1s
+      baseEjectionTime: 5s
       maxEjectionPercent: 50

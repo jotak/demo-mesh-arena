@@ -55,6 +55,8 @@ spec:
           value: "0"
         - name: PLAYER_TEAM
           value: locals
+        - name: PLAYER_ATTACKING
+          value: "100"
         - name: PLAYER_COLOR
           value: "#0066CC"
         - name: PLAYER_NAMES
