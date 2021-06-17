@@ -116,53 +116,55 @@ class Ball(private val client: WebClient, private val tracer: Tracer?, private v
 
   private fun shoot(ctx: RoutingContext) {
     val curPlayer = controllingPlayer
-    if (curPlayer != null) {
-      var shootSpan = tracer?.buildSpan("Ball shot")
-        ?.withTag("team", curPlayer.team)
-        ?.withTag("player", curPlayer.name)
+    // Remove null check for mirroring mode: mirrored ball has to be shot even if it wasn't controlled before
+    // if (/*curPlayer != null*/) {
+      val shootSpan = tracer?.buildSpan("Ball shot")
+        ?.withTag("team", curPlayer?.team)
+        ?.withTag("player", curPlayer?.name)
         ?.asChildOf(OpenTracingUtil.getSpan())
         ?.start()
       ctx.request().bodyHandler {
         val rq = it.toJsonObject().mapTo(BallShoot.Rq::class.java)
-        if (curPlayer.id == rq.playerID) {
+        // Remove identity check for mirroring mode: mirrored ball has to be shot even if it wasn't controlled before
+        // if (/*curPlayer.id == rq.playerID*/) {
           lastShootRef = shootSpan?.context()
           speed = rq.vec
           if ("togoal" == rq.kind) {
             if (rnd.nextInt(2) == 0) {
-              comment("${curPlayer.name} shooting!")
+              comment("${curPlayer?.name} shooting!")
             } else {
-              comment("Wooow ${curPlayer.name} tries his luck!")
+              comment("Wooow ${curPlayer?.name} tries his luck!")
             }
             if (registry != null) {
               Counter.builder("mesharena_shoots")
                 .description("Shoots counter")
-                .tag("team", curPlayer.team)
-                .tag("player", curPlayer.name)
+                .tag("team", curPlayer?.team ?: "")
+                .tag("player", curPlayer?.name ?: "")
                 .register(registry)
                 .increment()
             }
           } else if ("forward" == rq.kind) {
             if (rnd.nextInt(2) == 0) {
-              comment("Still ${curPlayer.name}...")
+              comment("Still ${curPlayer?.name}...")
             } else {
-              comment("${curPlayer.name} again...")
+              comment("${curPlayer?.name} again...")
             }
           } else if ("defensive" == rq.kind) {
             if (rnd.nextInt(2) == 0) {
-              comment("Defensive shooting from ${curPlayer.name}")
+              comment("Defensive shooting from ${curPlayer?.name}")
             } else {
-              comment("${curPlayer.name} takes the ball and shoots!")
+              comment("${curPlayer?.name} takes the ball and shoots!")
             }
           } else if ("control" == rq.kind) {
-            comment("${curPlayer.name} takes the ball back")
+            comment("${curPlayer?.name} takes the ball back")
           }
-        } else {
-          shootSpan = null
-        }
+//        } else {
+//          shootSpan = null
+//        }
         ctx.response().end()
       }
       shootSpan?.finish()
-    }
+//    }
   }
 
   private fun comment(text: String) {
