@@ -104,7 +104,7 @@ class Stadium(private val client: WebClient, private val tracer: Tracer?, privat
             .put("x", left + rnd.nextInt(width))
             .put("y", top + rnd.nextInt(height))
     val request = client.put(BALL_PORT, BALL_HOST, "/setPosition")
-    request.sendJson(json) {
+    request.timeout(1000).sendJson(json) {
       if (!it.succeeded()) {
         it.cause().printStackTrace()
       }
@@ -117,7 +117,7 @@ class Stadium(private val client: WebClient, private val tracer: Tracer?, privat
             .put("x", left + width / 2)
             .put("y", top + height / 2)
     val request = client.put(BALL_PORT, BALL_HOST, "/setPosition")
-    request.sendJson(json) { ar: AsyncResult<HttpResponse<Buffer?>?> ->
+    request.timeout(1000).sendJson(json) { ar: AsyncResult<HttpResponse<Buffer?>?> ->
       if (!ar.succeeded()) {
         ar.cause().printStackTrace()
       }

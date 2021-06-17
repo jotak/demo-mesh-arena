@@ -98,12 +98,19 @@ class AI(private val client: WebClient, private val tracer: Tracer?, private val
   }
 
   private fun checkArenaInfo() {
-    client[STADIUM_PORT, STADIUM_HOST, "/info"].sendJson(JsonObject().put("isVisitors", isVisitors)) {
+    client[STADIUM_PORT, STADIUM_HOST, "/info"].timeout(1000).sendJson(JsonObject().put("isVisitors", isVisitors)) {
       arenaInfo = if (!it.succeeded()) {
         it.cause().printStackTrace()
         null
       } else {
         it.result().bodyAsJsonObject().mapTo(ArenaInfo::class.java)
+//        val r = it.result()
+//        try {
+//          r.bodyAsJsonObject().mapTo(ArenaInfo::class.java)
+//        } catch (e: Exception) {
+//          println("${r.statusCode()}/${r.statusMessage()}")
+//          null
+//        }
       }
     }
   }
@@ -185,10 +192,18 @@ class AI(private val client: WebClient, private val tracer: Tracer?, private val
       ?.asChildOf(currentSpan)
       ?.start()
     OpenTracingUtil.setSpan(ballControlSpan)
-    request.sendJson(rq)
+    request
+      .timeout(1000)
+      .sendJson(rq)
+      .onFailure { it.printStackTrace() }
       .map {
         if (it.statusCode() == 200) {
           return@map it.bodyAsJsonObject()
+//          try {
+//            return@map it.bodyAsJsonObject()
+//          } catch (e: Exception) {
+//            e.printStackTrace()
+//          }
         }
         null
       }
@@ -268,6 +283,6 @@ class AI(private val client: WebClient, private val tracer: Tracer?, private val
       ?.asChildOf(spanContext)
       ?.start()
     OpenTracingUtil.setSpan(shootSpan)
-    request.sendJson(JsonObject.mapFrom(rq)) { shootSpan?.finish() }
+    request.timeout(1000).sendJson(JsonObject.mapFrom(rq)) { shootSpan?.finish() }
   }
 }

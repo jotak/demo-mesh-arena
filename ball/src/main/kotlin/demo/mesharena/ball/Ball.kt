@@ -226,56 +226,62 @@ class Ball(private val client: WebClient, private val tracer: Tracer?, private v
     OpenTracingUtil.setSpan(checkSpan)
     lastShootRef = checkSpan?.context()
     val curPlayer = controllingPlayer ?: BallControl.Player("?", 0, "?", "?")
-    request.sendJson(StadiumBounce.Rq(seg)) {
+    request.timeout(1000).sendJson(StadiumBounce.Rq(seg)) {
       checkSpan?.finish()
       if (!it.succeeded()) {
         // No stadium => no bounce
         handler(false)
       } else {
-        val bounce = it.result().bodyAsJsonObject().mapTo(StadiumBounce.Rs::class.java)
-        val collision = bounce.collision
-        if (bounce.scoredTeam != null) {
-          val isOwn = bounce.scoredTeam != curPlayer.team
-          if (isOwn) {
-            comment("Ohhhh own goal from ${curPlayer.name} !!")
+        val r = it.result()
+        try {
+          val bounce = r.bodyAsJsonObject().mapTo(StadiumBounce.Rs::class.java)
+          val collision = bounce.collision
+          if (bounce.scoredTeam != null) {
+            val isOwn = bounce.scoredTeam != curPlayer.team
+            if (isOwn) {
+              comment("Ohhhh own goal from ${curPlayer.name} !!")
+            } else {
+              comment("Goaaaaaaal by ${curPlayer.name} !!!!")
+            }
+            if (registry != null) {
+              Counter.builder("mesharena_goals")
+                .description("Goals counter")
+                .tag("team", curPlayer.team)
+                .tag("player", curPlayer.name)
+                .tag("own_goal", if (isOwn) "yes" else "no")
+                .register(registry)
+                .increment()
+            }
+            // Span update
+            val goalSpan = tracer?.buildSpan("Goal!")
+              ?.withTag("team", curPlayer.team)
+              ?.withTag("player", curPlayer.name)
+              ?.withTag("own_goal", if (isOwn) "yes" else "no")
+              ?.asChildOf(lastShootRef)
+            goalSpan?.start()?.finish()
+            lastShootRef = null
+            // Do not update position, Stadium will do it
+            controllingPlayer = null
+            speed = zero
+            handler(true)
+          } else if (collision != null) {
+            pos = collision.pos
+            speed = collision.vec.mult(newSpeed)
+            // Span update
+            val bounceSpan = tracer?.buildSpan("Bounce")
+              ?.withTag("x", pos.x)
+              ?.withTag("y", pos.y)
+              ?.asChildOf(lastShootRef)
+              ?.start()
+            lastShootRef = bounceSpan?.context()
+            bounceSpan?.finish()
+            handler(true)
           } else {
-            comment("Goaaaaaaal by ${curPlayer.name} !!!!")
+            handler(false)
           }
-          if (registry != null) {
-            Counter.builder("mesharena_goals")
-              .description("Goals counter")
-              .tag("team", curPlayer.team)
-              .tag("player", curPlayer.name)
-              .tag("own_goal", if (isOwn) "yes" else "no")
-              .register(registry)
-              .increment()
-          }
-          // Span update
-          val goalSpan = tracer?.buildSpan("Goal!")
-            ?.withTag("team", curPlayer.team)
-            ?.withTag("player", curPlayer.name)
-            ?.withTag("own_goal", if (isOwn) "yes" else "no")
-            ?.asChildOf(lastShootRef)
-          goalSpan?.start()?.finish()
-          lastShootRef = null
-          // Do not update position, Stadium will do it
-          controllingPlayer = null
-          speed = zero
-          handler(true)
-        } else if (collision != null) {
-          pos = collision.pos
-          speed = collision.vec.mult(newSpeed)
-          // Span update
-          val bounceSpan = tracer?.buildSpan("Bounce")
-            ?.withTag("x", pos.x)
-            ?.withTag("y", pos.y)
-            ?.asChildOf(lastShootRef)
-            ?.start()
-          lastShootRef = bounceSpan?.context()
-          bounceSpan?.finish()
-          handler(true)
-        } else {
+        } catch (e: Exception) {
           handler(false)
+          println("${r.statusCode()}/${r.statusMessage()}")
         }
       }
     }

@@ -24,7 +24,7 @@ class Displayer(vertx: Vertx, private val client: WebClient, private val tracer:
             kafkaProducer.write(KafkaProducerRecord.create(TOPIC, json))
                     .onFailure { it.printStackTrace() }
         } else {
-            client.post(Commons.UI_PORT, Commons.UI_HOST, "/display").sendJson(json) {
+            client.post(Commons.UI_PORT, Commons.UI_HOST, "/display").timeout(1000).sendJson(json) {
                 if (!it.succeeded()) {
                     it.cause().printStackTrace()
                 }

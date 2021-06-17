@@ -9,9 +9,9 @@
   <version>0.0.1</version>
 
   <properties>
-    <vertx.version>4.0.0-SNAPSHOT</vertx.version>
+    <vertx.version>4.1.0</vertx.version>
     <slf4j.version>1.7.21</slf4j.version>
-    <kotlin.version>1.3.61</kotlin.version>
+    <kotlin.version>1.5.10</kotlin.version>
     <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
   </properties>
 
