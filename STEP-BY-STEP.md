@@ -44,6 +44,7 @@ Tracing data generated from microservices and Istio can be viewed in Jaeger by p
 
 ```bash
 istioctl dashboard jaeger
+make jaeger-service
 ```
 
 AI service generates trace named `new_game` for each game. This way we are able to trace player's
@@ -63,6 +64,14 @@ make scen-init-ui
 
 ```bash
 make scen-init-rest
+```
+
+or, one by one:
+
+```bash
+make scen-init-stadium
+make scen-init-ball
+make scen-init-ai
 ```
 
 <details><summary>Kiali TIP</summary>
@@ -141,6 +150,7 @@ make scen-reset
 ## Burst ball (500 errors) with shadowing
 
 ```bash
+make scen-add-burst
 make scen-mirroring
 ```
 

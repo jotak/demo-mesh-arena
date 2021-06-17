@@ -13,9 +13,3 @@ spec:
   - name: ball-v2
     labels:
       version: burst
-  trafficPolicy:
-    outlierDetection:
-      consecutive5xxErrors: 1
-      interval: 1s
-      baseEjectionTime: 15s
-      maxEjectionPercent: 50
