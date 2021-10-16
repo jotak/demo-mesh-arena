@@ -88,10 +88,10 @@ if [[ -f "./k8s/$BASE_NAME-$VERSION.yml" ]] ; then
       | yq eval ".spec.template.spec.containers[0].image=\"$IMAGE\"" - \
       | yq eval ".spec.template.spec.containers[0].name=\"$FULL_NAME\"" - \
       | ( [ "$METRICS_ENABLED" = "1" ] && yq e '.spec.template.metadata.annotations."prometheus.io/scrape"="true"' - || cat ) \
-      | yq e ".spec.template.spec.containers[0].env[] | select(.name==\"METRICS_ENABLED\") | .value=\"$METRICS_ENABLED\"" - \
-      | yq e ".spec.template.spec.containers[0].env[] | select(.name==\"TRACING_ENABLED\") | .value=\"$TRACING_ENABLED\"" - \
-      | yq e ".spec.template.spec.containers[0].env[] | select(.name==\"INTERACTIVE_MODE\") | .value=\"$INTERACTIVE_MODE\"" - \
+      | yq e ". | select(.spec.template.spec.containers[0].env[].name==\"METRICS_ENABLED\") | .value=\"$METRICS_ENABLED\"" - \
+      | yq e ". | select(.spec.template.spec.containers[0].env[].name==\"TRACING_ENABLED\") | .value=\"$TRACING_ENABLED\"" - \
+      | yq e ". | select(.spec.template.spec.containers[0].env[].name==\"INTERACTIVE_MODE\") | .value=\"$INTERACTIVE_MODE\"" - \
       | ( [ "$KAFKA_ADDRESS" != "" ] && yq e ".spec.template.spec.containers[0].env[] | select(.name==\"KAFKA_ADDRESS\")|.value=\"$KAFKA_ADDRESS\"" - || cat ) \
-      | yq e ".spec.template.spec.containers[0].env[] | select(.name==\"JAEGER_SERVICE_NAME\") | .value=\"$BASE_NAME.$NAMESPACE\"" -
+      | yq e ". | select(.spec.template.spec.containers[0].env[].name==\"JAEGER_SERVICE_NAME\") | .value=\"$BASE_NAME.$NAMESPACE\"" -
   echo "---"
 fi
