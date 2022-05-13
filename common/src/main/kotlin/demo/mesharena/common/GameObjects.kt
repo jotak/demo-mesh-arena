@@ -13,6 +13,6 @@ data class GameObject @JsonCreator constructor(
 ) : Jsonisable
 
 data class PlayerRef @JsonCreator constructor(
-        @JsonProperty("name") val name: String,
+        @JsonProperty("name") var name: String,
         @JsonProperty("ip") val ip: String
 ) : Jsonisable

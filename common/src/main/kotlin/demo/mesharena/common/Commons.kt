@@ -106,6 +106,15 @@ object Commons {
     }
   }
 
+  fun getBoolEnv(varname: String, def: Boolean): Boolean {
+    val v = System.getenv(varname)
+    return if (v == null || v.isEmpty()) {
+      def
+    } else {
+      v.toBoolean()
+    }
+  }
+
   fun getDoubleEnv(varname: String, def: Double): Double {
     val v = System.getenv(varname)
     return if (v == null || v.isEmpty()) {

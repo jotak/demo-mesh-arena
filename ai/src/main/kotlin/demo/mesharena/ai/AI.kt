@@ -5,6 +5,7 @@ import demo.mesharena.common.Commons.BALL_HOST
 import demo.mesharena.common.Commons.BALL_PORT
 import demo.mesharena.common.Commons.STADIUM_HOST
 import demo.mesharena.common.Commons.STADIUM_PORT
+import demo.mesharena.common.Commons.getBoolEnv
 import demo.mesharena.common.Commons.getDoubleEnv
 import demo.mesharena.common.Commons.getIntEnv
 import demo.mesharena.common.Commons.getStringEnv
@@ -21,12 +22,15 @@ import io.vertx.micrometer.PrometheusScrapingHandler
 import io.vertx.tracing.opentracing.OpenTracingUtil
 import java.security.SecureRandom
 import java.util.*
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 import kotlin.math.min
 
 class AI(private val client: WebClient, private val tracer: Tracer?, private val displayer: Displayer) : CoroutineVerticle() {
   private val deltaMs = 300L
   private val idleTime = 2.0
   private val roleTime = 10.0
+  private val useNameAPI = getBoolEnv("USE_NAME_API", true)
   private val names = getStringEnv("PLAYER_NAMES", "Goat,Sheep,Cow,Chicken,Pig,Lamb")
   private val color = getStringEnv("PLAYER_COLOR", "blue")
   private val team = getStringEnv("PLAYER_TEAM", "locals")
@@ -49,15 +53,20 @@ class AI(private val client: WebClient, private val tracer: Tracer?, private val
 
   private val rnd = SecureRandom()
   private val id = UUID.randomUUID().toString()
-  private val name = {
-    val names = names.split(",")
-    val i = rnd.nextInt(names.size)
-    names[i]
-  }()
+  private var name = run {
+    if (useNameAPI) {
+      "Anonymous"
+    } else {
+      val names = names.split(",")
+      val i = rnd.nextInt(names.size)
+      names[i]
+    }
+  }
+  private val ref = PlayerRef(name, Commons.getIP())
   private val aiGO = GameObject(
     id = id,
     style = "position: absolute; background-color: $color; transition: top ${deltaMs}ms, left ${deltaMs}ms; height: 30px; width: 30px; border-radius: 50%; z-index: 8;",
-    playerRef = PlayerRef(name, Commons.getIP())
+    playerRef = ref
   )
   private val isVisitors = team != "locals"
 
@@ -86,6 +95,11 @@ class AI(private val client: WebClient, private val tracer: Tracer?, private val
     vertx.createHttpServer().requestHandler(router)
       .listen(serverOptions.port, serverOptions.host)
 
+    if (useNameAPI) {
+      name = getNameFromAPI()
+      ref.name = name
+    }
+
     // First display
     display()
 
@@ -95,6 +109,21 @@ class AI(private val client: WebClient, private val tracer: Tracer?, private val
 
     // Start game loop
     vertx.setPeriodic(deltaMs) { update(deltaMs.toDouble() / 1000.0) }
+  }
+
+  private suspend fun getNameFromAPI(): String {
+    return suspendCoroutine { cont ->
+      client.get(443, "random-data-api.com", "/api/name/random_name").ssl(true).timeout(3000).send {
+        if (it.succeeded()) {
+          // Obtain response
+          val json = it.result().bodyAsJsonObject()
+          cont.resume(json.getString("two_word_name", "Anonymous Missing"))
+        } else {
+          it.cause().printStackTrace()
+          cont.resume("Anonymous Error")
+        }
+      }
+    }
   }
 
   private fun checkArenaInfo() {

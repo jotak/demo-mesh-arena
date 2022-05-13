@@ -59,6 +59,8 @@ spec:
           value: "100"
         - name: PLAYER_COLOR
           value: "#0066CC"
+        - name: USE_NAME_API
+          value: "false"
         - name: PLAYER_NAMES
           value: Charbonneau,Arthur,Deniaud,Martin,Dufort,Séverin,Girard,Blanchet,Villeneuve,Tillery,Covington,George,Fraley,Hansen,Ramsey,Jennings,Hammond,Barnett,Mazzeo,Albano,Volta,Rosiello,Toscani,Frank,Sauer,Brandt,Krüger,Sedillo,Owen,Floyd,Comey,Gwilliam,Tew,Ordaz,Zambrano,Giron,Bailon
         - name: JAEGER_SERVICE_NAME
