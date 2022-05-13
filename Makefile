@@ -326,7 +326,7 @@ kafka-meshed:
 	kubectl apply -f 'https://strimzi.io/install/latest?namespace=kafka' -n kafka ; \
 	kubectl apply -f ./k8s/strimzi.yml -n kafka
 
-gen-quickstart:
+gen-quickstart: .ensure-yq
 	@echo "⚽ Generating quickstart templates..."
 	rm quickstart-naked.yml quickstart-metrics.yml quickstart-tracing.yml quickstart-both.yml quickstart-kafka.yml quickstart-interactive.yml ; \
 	for svc in ${TO_DEPLOY} ; do \
