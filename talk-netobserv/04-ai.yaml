@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mesharena-ai-policy
+  namespace: mesh-arena
+spec:
+  podSelector:
+    matchLabels:
+      app: ai
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: 138.197.158.178/32
+      ports:
+        - port: 8080
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 138.197.158.178/32
