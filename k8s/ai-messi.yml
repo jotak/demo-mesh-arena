@@ -18,6 +18,7 @@ spec:
       annotations:
         prometheus.io/port: "8080"
         prometheus.io/path: "/metrics"
+        io.cilium.proxy-visibility: "<Egress/53/UDP/DNS>,<Egress/8080/TCP/HTTP>"
       labels:
         project: mesh-arena
         app: ai
