@@ -1,0 +1,14 @@
+apiVersion: "cilium.io/v2"
+kind: CiliumNetworkPolicy
+metadata:
+  name: "cilium-health-checks"
+  namespace: mesh-arena
+spec:
+  endpointSelector:
+    matchLabels: {}
+  ingress:
+    - fromEntities:
+        - remote-node
+  egress:
+    - toEntities:
+        - remote-node

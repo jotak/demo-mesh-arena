@@ -9,12 +9,11 @@ spec:
       app: ui
   ingress:
     - from:
-        - podSelector: {}
-    - from:
         - ipBlock:
             cidr: 0.0.0.0/0
       ports:
         - port: 8080
+
   egress:
     - to:
         - ipBlock:
