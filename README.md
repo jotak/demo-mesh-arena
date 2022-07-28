@@ -60,18 +60,18 @@ Open http://localhost:8080.
 
 By default, the mesh-arena services use simple HTTP endpoint to communicate.
 There's a Kafka switch that turns on using Kafka messaging for some communications.
-Run the following instructions to turn it on: 
+Run the following instructions to turn it on:
 
 ```bash
 # Create a namespace for Kafka
 kubectl create namespace kafka
 
 # Install Kafka (Strimzi-powered)
-kubectl apply -f 'https://strimzi.io/install/latest?namespace=kafka' -n kafka
+wget -O - -o /dev/null  https://github.com/strimzi/strimzi-kafka-operator/releases/download/0.30.0/strimzi-cluster-operator-0.30.0.yaml | sed -e 's/namespace: myproject/namespace: kafka/g' | kubectl apply -n kafka -f -
 kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/zizou/k8s/strimzi.yml) -n kafka
 
 # Wait a little bit that everything is ready
-kubectl wait pod messaging-kafka-0 --for=condition=Ready --timeout=600s -n kafka
+kubectl wait --timeout=300s --for=condition=ready kafka messaging -n kafka
 
 # Deploy mesh-arena services with Kafka turned on
 kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/zizou/quickstart-kafka.yml) -n default
