@@ -243,9 +243,13 @@ deploy-latest: GENTPL_OPTS=--metrics
 deploy-latest: deploy
 
 scen-init-ui:
-	./gentpl.sh ui-hotspot -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f - ; \
-	kubectl apply -f istio/mesh-arena-gateway.yml ; \
+	./gentpl.sh ui-hotspot -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f -
+ifeq ($(ISTIO),true)
+	kubectl apply -f istio/mesh-arena-gateway.yml
 	xdg-open http://localhost:8080/ && kubectl port-forward svc/istio-ingressgateway 8080:80 -n istio-system
+else
+	xdg-open http://localhost:8080/ && kubectl port-forward svc/ui 8080:8080 -n ${NAMESPACE}
+endif
 
 scen-init-stadium:
 	./gentpl.sh stadium-hotspot -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f -
