@@ -10,7 +10,7 @@ function displayGameObject(obj) {
         + '</span>';
       $('#right-pane').append('<div id="players-' + obj.id + '" '
         + ' onclick="selectPlayer(\'' + obj.playerRef.name + '\', \'' + obj.playerRef.ip + '\')"'
-        + '><div style="' + obj.style + ' position:relative">' + innerSpan
+        + '><div style="' + obj.style + ' position:relative; transform:none;">' + innerSpan
         + '<span style="position:relative;top:4px;left:25px;">' + obj.playerRef.name + '</span>'
         + '</div></div>');
       $('#board').append('<div id="' + obj.id + '" style="' + obj.style + '">' + innerSpan + '</div>');
