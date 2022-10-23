@@ -1,5 +1,7 @@
 
 public class Style {
+  private static final boolean NO_TRANSITION = Commons.getBoolEnv("NO_TRANSITION", false);
+
   private String position;
   private String dimensions;
   private String zIndex;
@@ -82,7 +84,7 @@ public class Style {
     if (bgColor != null) {
       sb.append(bgColor);
     }
-    if (transition != null) {
+    if (transition != null && !NO_TRANSITION) {
       sb.append(transition);
     }
     if (transform != null) {

@@ -3,15 +3,15 @@ kind: Deployment
 metadata:
   labels:
     project: mesh-arena
-    app: ai
+    app: player
     version: locals
     vm: unknown
-  name: ai-locals
+  name: player-locals
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: ai
+      app: player
       version: locals
   template:
     metadata:
@@ -21,14 +21,14 @@ spec:
         io.cilium.proxy-visibility: "<Egress/53/UDP/DNS>,<Egress/8080/TCP/HTTP>"
       labels:
         project: mesh-arena
-        app: ai
+        app: player
         version: locals
         vm: unknown
     spec:
       containers:
       - image:
         imagePullPolicy: Never
-        name: ai
+        name: player
         ports:
         - containerPort: 8080
           name: http
@@ -56,37 +56,37 @@ spec:
           value: "0"
         - name: PLAYER_TEAM
           value: locals
-        - name: PLAYER_ATTACKING
-          value: "100"
-        - name: PLAYER_COLOR
-          value: "#0066CC"
+        - name: NO_TRANSITION
+          value: "false"
+        - name: DELTA_MS
+          value: "300"
+        - name: PLAYER_HUE
+          value: "-120"
         - name: USE_NAME_API
           value: "false"
-        - name: PLAYER_NAMES
+        - name: NAMES
           value: Charbonneau,Arthur,Deniaud,Martin,Dufort,Séverin,Girard,Blanchet,Villeneuve,Tillery,Covington,George,Fraley,Hansen,Ramsey,Jennings,Hammond,Barnett,Mazzeo,Albano,Volta,Rosiello,Toscani,Frank,Sauer,Brandt,Krüger,Sedillo,Owen,Floyd,Comey,Gwilliam,Tew,Ordaz,Zambrano,Giron,Bailon
-        - name: JAEGER_SERVICE_NAME
-          value: ai.default
-        - name: JAEGER_SAMPLER_TYPE
-          value: ratelimiting
-        - name: JAEGER_SAMPLER_PARAM
-          value: "1"
-        - name: JAEGER_PROPAGATION
-          value: b3
-        - name: JAEGER_ENDPOINT
-          value: http://jaeger-collector.istio-system:14268/api/traces
         securityContext:
           privileged: false
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: ai
+  name: player
   labels:
     project: mesh-arena
-    app: ai
+    app: player
 spec:
   ports:
   - name: http
     port: 8080
   selector:
-    app: ai
+    app: player

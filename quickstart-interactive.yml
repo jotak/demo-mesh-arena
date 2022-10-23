@@ -3,6 +3,194 @@ kind: Deployment
 metadata:
   labels:
     project: mesh-arena
+    app: player
+    version: locals
+    vm: temurin-17
+  name: player-locals
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: player
+      version: locals
+      vm: temurin-17
+  template:
+    metadata:
+      annotations:
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+        io.cilium.proxy-visibility: "<Egress/53/UDP/DNS>,<Egress/8080/TCP/HTTP>"
+      labels:
+        project: mesh-arena
+        app: player
+        version: locals
+        vm: temurin-17
+    spec:
+      containers:
+      - image: quay.io/jotak/mesharena-player:1.4.0
+        imagePullPolicy: IfNotPresent
+        name: player-locals
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: METRICS_ENABLED
+          value: "0"
+        - name: TRACING_ENABLED
+          value: "1"
+        - name: KAFKA_ADDRESS
+          value: ""
+        - name: MESHARENA_UI_PORT
+          value: "8080"
+        - name: MESHARENA_UI_HOST
+          value: ui
+        - name: MESHARENA_BALL_PORT
+          value: "8080"
+        - name: MESHARENA_BALL_HOST
+          value: ball
+        - name: MESHARENA_STADIUM_PORT
+          value: "8080"
+        - name: MESHARENA_STADIUM_HOST
+          value: stadiumsvc
+        - name: INTERACTIVE_MODE
+          value: "1"
+        - name: PLAYER_TEAM
+          value: locals
+        - name: NO_TRANSITION
+          value: "false"
+        - name: DELTA_MS
+          value: "300"
+        - name: PLAYER_HUE
+          value: "-120"
+        - name: USE_NAME_API
+          value: "false"
+        - name: NAMES
+          value: Charbonneau,Arthur,Deniaud,Martin,Dufort,Séverin,Girard,Blanchet,Villeneuve,Tillery,Covington,George,Fraley,Hansen,Ramsey,Jennings,Hammond,Barnett,Mazzeo,Albano,Volta,Rosiello,Toscani,Frank,Sauer,Brandt,Krüger,Sedillo,Owen,Floyd,Comey,Gwilliam,Tew,Ordaz,Zambrano,Giron,Bailon
+        securityContext:
+          privileged: false
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: player
+  labels:
+    project: mesh-arena
+    app: player
+spec:
+  ports:
+  - name: http
+    port: 8080
+  selector:
+    app: player
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    project: mesh-arena
+    app: player
+    version: visitors
+    vm: temurin-17
+  name: player-visitors
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: player
+      version: visitors
+      vm: temurin-17
+  template:
+    metadata:
+      annotations:
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+        io.cilium.proxy-visibility: "<Egress/53/UDP/DNS>,<Egress/8080/TCP/HTTP>"
+      labels:
+        project: mesh-arena
+        app: player
+        version: visitors
+        vm: temurin-17
+    spec:
+      containers:
+      - image: quay.io/jotak/mesharena-player:1.4.0
+        imagePullPolicy: IfNotPresent
+        name: player-visitors
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: METRICS_ENABLED
+          value: "0"
+        - name: TRACING_ENABLED
+          value: "1"
+        - name: KAFKA_ADDRESS
+          value: ""
+        - name: MESHARENA_UI_PORT
+          value: "8080"
+        - name: MESHARENA_UI_HOST
+          value: ui
+        - name: MESHARENA_BALL_PORT
+          value: "8080"
+        - name: MESHARENA_BALL_HOST
+          value: ball
+        - name: MESHARENA_STADIUM_PORT
+          value: "8080"
+        - name: MESHARENA_STADIUM_HOST
+          value: stadiumsvc
+        - name: INTERACTIVE_MODE
+          value: "1"
+        - name: PLAYER_TEAM
+          value: visitors
+        - name: NO_TRANSITION
+          value: "false"
+        - name: DELTA_MS
+          value: "300"
+        - name: PLAYER_HUE
+          value: "0"
+        - name: USE_NAME_API
+          value: "false"
+        - name: NAMES
+          value: Charbonneau,Arthur,Deniaud,Martin,Dufort,Séverin,Girard,Blanchet,Villeneuve,Tillery,Covington,George,Fraley,Hansen,Ramsey,Jennings,Hammond,Barnett,Mazzeo,Albano,Volta,Rosiello,Toscani,Frank,Sauer,Brandt,Krüger,Sedillo,Owen,Floyd,Comey,Gwilliam,Tew,Ordaz,Zambrano,Giron,Bailon
+        securityContext:
+          privileged: false
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: player
+  labels:
+    project: mesh-arena
+    app: player
+spec:
+  ports:
+  - name: http
+    port: 8080
+  selector:
+    app: player
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    project: mesh-arena
     app: ball
     version: base
     vm: temurin-17
@@ -55,18 +243,20 @@ spec:
           value: "8080"
         - name: MESHARENA_STADIUM_HOST
           value: stadiumsvc
-        - name: JAEGER_SERVICE_NAME
-          value: ball.default
-        - name: JAEGER_SAMPLER_TYPE
-          value: ratelimiting
-        - name: JAEGER_SAMPLER_PARAM
-          value: "1"
-        - name: JAEGER_PROPAGATION
-          value: b3
-        - name: JAEGER_ENDPOINT
-          value: http://jaeger-collector.istio-system:14268/api/traces
+        - name: NO_TRANSITION
+          value: "false"
+        - name: DELTA_MS
+          value: "200"
         securityContext:
           privileged: false
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
 ---
 apiVersion: v1
 kind: Service
@@ -149,18 +339,16 @@ spec:
           value: "1.0"
         - name: STADIUM_MATCH_TIME
           value: "120"
-        - name: JAEGER_SERVICE_NAME
-          value: stadium.default
-        - name: JAEGER_SAMPLER_TYPE
-          value: ratelimiting
-        - name: JAEGER_SAMPLER_PARAM
-          value: "1"
-        - name: JAEGER_PROPAGATION
-          value: b3
-        - name: JAEGER_ENDPOINT
-          value: http://jaeger-collector.istio-system:14268/api/traces
         securityContext:
           privileged: false
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
 ---
 apiVersion: v1
 kind: Service
@@ -226,18 +414,16 @@ spec:
           value: "8080"
         - name: MESHARENA_STADIUM_HOST
           value: stadiumsvc
-        - name: JAEGER_SERVICE_NAME
-          value: ui.default
-        - name: JAEGER_SAMPLER_TYPE
-          value: ratelimiting
-        - name: JAEGER_SAMPLER_PARAM
-          value: "1"
-        - name: JAEGER_PROPAGATION
-          value: b3
-        - name: JAEGER_ENDPOINT
-          value: http://jaeger-collector.istio-system:14268/api/traces
         securityContext:
           privileged: false
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
 ---
 apiVersion: v1
 kind: Service

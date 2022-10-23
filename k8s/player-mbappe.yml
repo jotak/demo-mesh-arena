@@ -3,15 +3,15 @@ kind: Deployment
 metadata:
   labels:
     project: mesh-arena
-    app: ai
+    app: player
     version: mbappe
     vm: unknown
-  name: ai-mbappe
+  name: player-mbappe
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ai
+      app: player
       version: mbappe
   template:
     metadata:
@@ -21,14 +21,14 @@ spec:
         io.cilium.proxy-visibility: "<Egress/53/UDP/DNS>,<Egress/8080/TCP/HTTP>"
       labels:
         project: mesh-arena
-        app: ai
+        app: player
         version: mbappe
         vm: unknown
     spec:
       containers:
       - image:
         imagePullPolicy: Never
-        name: ai
+        name: player
         ports:
         - containerPort: 8080
           name: http
@@ -56,7 +56,13 @@ spec:
           value: "0"
         - name: PLAYER_TEAM
           value: locals
-        - name: PLAYER_NAMES
+        - name: NO_TRANSITION
+          value: "false"
+        - name: DELTA_MS
+          value: "200"
+        - name: USE_NAME_API
+          value: "false"
+        - name: NAMES
           value: "Mbappé"
         - name: PLAYER_SPEED
           value: "95"
@@ -66,23 +72,19 @@ spec:
           value: "11"
         - name: PLAYER_SHOOT
           value: "300"
-        - name: PLAYER_ATTACKING
-          value: "100"
         - name: PLAYER_ATT_SHOOT_FAST
           value: "20"
-        - name: PLAYER_DEF_SHOOT_FAST
-          value: "40"
-        - name: PLAYER_COLOR
-          value: cyan
-        - name: JAEGER_SERVICE_NAME
-          value: ai.default
-        - name: JAEGER_SAMPLER_TYPE
-          value: ratelimiting
-        - name: JAEGER_SAMPLER_PARAM
-          value: "0.5"
-        - name: JAEGER_PROPAGATION
-          value: b3
-        - name: JAEGER_ENDPOINT
-          value: http://jaeger-collector.istio-system:14268/api/traces
+        - name: PLAYER_HUE
+          value: "-140"
+        - name: PLAYER_BRIGHTNESS
+          value: "80"
         securityContext:
           privileged: false
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault

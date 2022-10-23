@@ -11,7 +11,9 @@ import java.util.UUID;
 public class PlayerVerticle extends AbstractVerticle {
   private final int deltaMs = Commons.getIntEnv("DELTA_MS", 300);
   private final String team = Commons.getStringEnv("PLAYER_TEAM", "locals");
-  private final int hue = Commons.getIntEnv("PLAYER_HUE", 0);
+  private final int hue = Commons.getIntEnv("PLAYER_HUE", -120);
+  private final int brightness = Commons.getIntEnv("PLAYER_BRIGHTNESS", 100);
+  private final int saturation = Commons.getIntEnv("PLAYER_SATURATION", 100);
   // Speed = open scale
   private final double speed = Commons.getDoubleEnv("PLAYER_SPEED", 60);
   // Accuracy [0, 1]
@@ -46,6 +48,7 @@ public class PlayerVerticle extends AbstractVerticle {
       .transition(deltaMs)
       .dimensions(32, 32)
       .zIndex(8)
+      .brightHueSat(brightness, hue, saturation, 0)
       .other("animation: player-sprite 1.2s steps(7) infinite;");
 
       aiGO = new GameObject(id, style.toString(), 0, 0, "", new PlayerRef(name, Commons.getIP(), Commons.PLAYER_PORT));
@@ -124,7 +127,6 @@ public class PlayerVerticle extends AbstractVerticle {
       var speed = delta * (minSpeed + rnd.nextDouble() * (maxSpeed - minSpeed));
       Point direction = randomishSegmentNormalized(segToDest);
       Point relativeMove = direction.mult(speed);
-      System.out.println(relativeMove.size());
       pos = pos.add(relativeMove);
       angle = -Math.acos(direction.x());
       if (direction.y() > 0) {

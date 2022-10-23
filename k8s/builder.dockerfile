@@ -10,5 +10,11 @@ ADD ./stadium/pom.xml /tmp/app/stadium/pom.xml
 ADD ./ui/pom.xml /tmp/app/ui/pom.xml
 RUN mvn verify --fail-never
 
-ADD . /tmp/app
+ADD ./common/src /tmp/app/common/src
+ADD ./ball/src /tmp/app/ball/src
+ADD ./player/src /tmp/app/player/src
+ADD ./stadium/src /tmp/app/stadium/src
+ADD ./ui/src /tmp/app/ui/src
 RUN mvn package dependency:copy-dependencies
+
+RUN ls -al /tmp/app/ui/
