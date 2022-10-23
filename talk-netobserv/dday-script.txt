@@ -1,0 +1,49 @@
+X: développeur/se
+Y: patron/ne
+
+Planter le décor : X bosse dans une boite de (?) et a un patron Y un peu fantasque
+
+Y: "Je veux que tu développes un nouveau jeu vidéo pour faire le show au Vélodrome. Un jeu de foot, du coup.
+C'est pour un événement tech ... donc faudra utiliser des technos à la mode, comme kubeten... kurbate..."
+
+X: "Kubernetes?"
+
+Y: Oui, voilà! Et puis, ça doit être des migroservices là, tu sais
+
+X: Des microservice? Ok patron, pas de souci
+
+Y: Génial. Bon, c'est pour la semaine prochaine. Ah, et je veux ce truc dont tout le monde parle, là, l'ebsp...
+
+X: eBPF? mais.. pour quoi faire?
+
+Y: Je sais pas, c'est toi le magicien, tu vas trouver un truc. Ah, et dernière chose:
+faudra de l'IA aussi! C'est important, l'IA.
+
+gloups
+
+X se met au travail... ebpf... idée de génie, on va pas *faire* de l'eBPF, mais on va *l'utiliser*
+=> installation de NetObserv sur un cluster kube
+
+Très bien.. maintenant, il lui faut une UI. Pas le temps de fignoler, on va droit au but
+(droit au but... vous l'avez?)
+
+Jour 2 => déploiement UI => visualisation sur netobserv
+Jour 3 => développement du stade => netobserv
+Jour 4 => développement du ballon => netobserv
+Jour 5 => Bon, les IA maintenant, c'est chaud, il me reste plus que deux jours! Comment faire...
+cf "meme-AI.jpg" => ouf! on est dans les temps
+Jour 6:
+Y: Alors X, comment ça se passe? Tout est prêt?
+X: Oui patron! *montre le résultat*
+Y: Ah, bravo, c'est génial!
+...
+Y: Bon, y'a quand même un souci, je trouve. C'est beaucoup trop saccadé. Un jeu vidéo, faut du 60 fps. Tu peux faire ça, j'espère?
+X: Oh... oui, on peu certainement ajuster ça.
+
+=> passage DELTA_MS à 17
+=> check CPU/mem .. et traffic (ah, mon patron a été inspiré à vouloir qu'on utilise eBPF!)
+=> problème!
+
+Jour 7: la nuit portant conseil, on est repassé à 12 fps, mais avec des transitions CSS
+=> check CPU/mem .. et traffic
+=> problème réglé!
