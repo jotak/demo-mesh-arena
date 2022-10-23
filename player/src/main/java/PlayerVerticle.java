@@ -11,7 +11,7 @@ import java.util.UUID;
 public class PlayerVerticle extends AbstractVerticle {
   private final int deltaMs = Commons.getIntEnv("DELTA_MS", 300);
   private final String team = Commons.getStringEnv("PLAYER_TEAM", "locals");
-  private final String color = Commons.getStringEnv("PLAYER_COLOR", "blue");
+  private final int hue = Commons.getIntEnv("PLAYER_HUE", 0);
   // Speed = open scale
   private final double speed = Commons.getDoubleEnv("PLAYER_SPEED", 60);
   // Accuracy [0, 1]
@@ -28,10 +28,12 @@ public class PlayerVerticle extends AbstractVerticle {
   private final SecureRandom rnd = new SecureRandom();
   private final String id = UUID.randomUUID().toString();
   private final GameObject aiGO;
+  private final Style style;
   private final boolean isVisitors = !team.equals("locals");
   private final WebClient client;
   private final Displayer displayer;
   private Point pos = new Point(0.0, 0.0);
+  private double angle = 0;
   private ArenaInfo arenaInfo = null;
   private Point currentDestination = null;
   private double idleTimer = -1.0;
@@ -39,16 +41,14 @@ public class PlayerVerticle extends AbstractVerticle {
   public PlayerVerticle(WebClient client, Displayer displayer, String name) {
     this.client = client;
     this.displayer = displayer;
-    aiGO = new GameObject(
-      id,
-      new Style()
-        .bgColor(color)
-        .transition(deltaMs)
-        .dimensions(30, 30)
-        .zIndex(8)
-        .other("border-radius: 50%;")
-        .toString(),
-      0, 0, "", new PlayerRef(name, Commons.getIP(), Commons.PLAYER_PORT));
+    style = new Style()
+      .image("./player.png")
+      .transition(deltaMs)
+      .dimensions(32, 32)
+      .zIndex(8)
+      .other("animation: player-sprite 1.2s steps(7) infinite;");
+
+      aiGO = new GameObject(id, style.toString(), 0, 0, "", new PlayerRef(name, Commons.getIP(), Commons.PLAYER_PORT));
   }
 
   @Override
@@ -122,8 +122,15 @@ public class PlayerVerticle extends AbstractVerticle {
       // minSpeed must be kept <= maxSpeed
       var minSpeed = Math.min(maxSpeed, this.minSpeed);
       var speed = delta * (minSpeed + rnd.nextDouble() * (maxSpeed - minSpeed));
-      Point relativeMove = randomishSegmentNormalized(segToDest).mult(speed);
+      Point direction = randomishSegmentNormalized(segToDest);
+      Point relativeMove = direction.mult(speed);
+      System.out.println(relativeMove.size());
       pos = pos.add(relativeMove);
+      angle = -Math.acos(direction.x());
+      if (direction.y() > 0) {
+        angle = 2 * Math.PI - angle;
+      }
+      angle += Math.PI / 2d;
       display();
     }
   }
@@ -137,7 +144,11 @@ public class PlayerVerticle extends AbstractVerticle {
   }
 
   private void display() {
-    displayer.send(aiGO.withX(pos.x() - 15).withY(pos.y() - 15));
+    displayer.send(aiGO
+      .withX(pos.x() - 16)
+      .withY(pos.y() - 16)
+      .withStyle(style.rotate(angle).toString())
+    );
   }
 
   private void tryShoot(RoutingContext ctx) {
