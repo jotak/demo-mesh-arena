@@ -8,8 +8,8 @@ OCI_USER ?= jotak
 REMOTE ?= false
 NAMESPACE ?= default
 # List of images
-TO_BUILD ?= ai-hotspot ai-openj9 ball-hotspot ball-openj9 stadium-hotspot ui-hotspot
-TO_DEPLOY ?= ai-hotspot ai-openj9 ball-hotspot stadium-hotspot ui-hotspot
+TO_BUILD ?= player ball stadium ui
+TO_DEPLOY ?= player-locals player-visitors ball-base stadium-base ui-base
 GENTPL_VERSION ?= base
 ISTIO ?= true
 
@@ -20,7 +20,7 @@ ISTIO ?= true
 ARCH ?= linux_amd64
 YQ_URL ?= https://github.com/mikefarah/yq/releases/download/3.1.2/yq_${ARCH}
 
-LATEST = 1.3.3
+LATEST = 1.4.0
 
 ifeq ($(REMOTE),true)
 OCI_DOMAIN ?= quay.io
@@ -66,7 +66,7 @@ help:
 	@echo "- $(bold)NAMESPACE$(sgr0):    Namespace where to deploy everything (current: $(NAMESPACE))"
 	@echo "- $(bold)GENTPL_OPTS$(sgr0):  Deployment options:"
 	@echo "                '--metrics' will enable runtime metrics"
-	@echo "                '--tracing' will add application-defined traces"
+	@echo "                '--tracing' will add application-defined traces (CURRENTLY UNAVAILABLE)"
 	@echo "                '--kafka' will use Kafka, instead of HTTP endpoint, for display events"
 	@echo "                '--interactive' will enable the interactive mode, players needing human interaction to shoot the ball"
 	@echo "- $(bold)ARCH$(sgr0):         Architecture for binaries, currently only used to download 'yq' (see assets in https://github.com/mikefarah/yq/releases/tag/3.1.2) (current: $(ARCH))"
@@ -119,9 +119,9 @@ help:
 	@echo "$(bold)NAMESPACE=mesh-arena TAG=$(LATEST) REMOTE=true GENTPL_OPTS="--tracing --metrics" make deploy$(sgr0)"
 	@echo "  Deploy images from quay.io, tagged $(LATEST), to namespace 'mesh-arena', with application traces & metrics enabled"
 	@echo ""
-	@echo "$(bold)make prepare build images deploy$(sgr0)"
-	@echo "$(bold)make build images deploy$(sgr0)"
-	@echo "$(bold)make build images deploy kill$(sgr0)"
+	@echo "$(bold)make prepare images deploy$(sgr0)"
+	@echo "$(bold)make images deploy$(sgr0)"
+	@echo "$(bold)make images deploy kill$(sgr0)"
 	@echo "  Build everything, deploy to Minikube. Use with 'prepare' for the first time you build. Use with 'kill' if you need to redeploy with code change only."
 	@echo ""
 	@echo "$(bold)make deploy-tracing$(sgr0)"
@@ -129,7 +129,7 @@ help:
 	@echo "$(bold)make deploy-tm$(sgr0)"
 	@echo "  Deploy with app metrics / app traces / both"
 	@echo ""
-	@echo "$(bold)OCI_USER=$(OCI_USER) TAG=$(LATEST) REMOTE=true make build images push gen-quickstart$(sgr0)"
+	@echo "$(bold)OCI_USER=$(OCI_USER) TAG=$(LATEST) REMOTE=true make images push gen-quickstart$(sgr0)"
 	@echo "  Build everything, push to quay.io and generate quickstart templates"
 	@echo ""
 	@echo "$(bold)make kafka-se$(sgr0)"
@@ -164,6 +164,7 @@ endif
 
 images-build:
 	@echo "⚽ Building images..."
+	${OCI_BIN_SHORT} build -t mesharena-builder -f ./k8s/builder.dockerfile .
 	for svc in ${TO_BUILD} ; do \
 		echo "Building $$svc:" ; \
 		${OCI_BIN_SHORT} build -t ${OCI_DOMAIN}/${OCI_USER}/mesharena-$$svc:${TAG} -f ./k8s/$$svc.dockerfile . ; \

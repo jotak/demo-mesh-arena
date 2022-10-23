@@ -3,199 +3,9 @@ kind: Deployment
 metadata:
   labels:
     project: mesh-arena
-    app: ai
-    version: locals
-    vm: hotspot
-  name: ai-locals
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: ai
-      version: locals
-      vm: hotspot
-  template:
-    metadata:
-      annotations:
-        prometheus.io/port: "8080"
-        prometheus.io/path: "/metrics"
-        io.cilium.proxy-visibility: "<Egress/53/UDP/DNS>,<Egress/8080/TCP/HTTP>"
-        prometheus.io/scrape: "true"
-      labels:
-        project: mesh-arena
-        app: ai
-        version: locals
-        vm: hotspot
-    spec:
-      containers:
-      - image: quay.io/jotak/mesharena-ai-hotspot:1.3.3
-        imagePullPolicy: IfNotPresent
-        name: ai-hotspot
-        ports:
-        - containerPort: 8080
-          name: http
-          protocol: TCP
-        env:
-        - name: METRICS_ENABLED
-          value: "1"
-        - name: TRACING_ENABLED
-          value: "1"
-        - name: KAFKA_ADDRESS
-          value: ""
-        - name: MESHARENA_UI_PORT
-          value: "8080"
-        - name: MESHARENA_UI_HOST
-          value: ui
-        - name: MESHARENA_BALL_PORT
-          value: "8080"
-        - name: MESHARENA_BALL_HOST
-          value: ball
-        - name: MESHARENA_STADIUM_PORT
-          value: "8080"
-        - name: MESHARENA_STADIUM_HOST
-          value: stadiumsvc
-        - name: INTERACTIVE_MODE
-          value: "0"
-        - name: PLAYER_TEAM
-          value: locals
-        - name: PLAYER_ATTACKING
-          value: "100"
-        - name: PLAYER_COLOR
-          value: "#0066CC"
-        - name: USE_NAME_API
-          value: "false"
-        - name: PLAYER_NAMES
-          value: Charbonneau,Arthur,Deniaud,Martin,Dufort,Séverin,Girard,Blanchet,Villeneuve,Tillery,Covington,George,Fraley,Hansen,Ramsey,Jennings,Hammond,Barnett,Mazzeo,Albano,Volta,Rosiello,Toscani,Frank,Sauer,Brandt,Krüger,Sedillo,Owen,Floyd,Comey,Gwilliam,Tew,Ordaz,Zambrano,Giron,Bailon
-        - name: JAEGER_SERVICE_NAME
-          value: ai.default
-        - name: JAEGER_SAMPLER_TYPE
-          value: ratelimiting
-        - name: JAEGER_SAMPLER_PARAM
-          value: "1"
-        - name: JAEGER_PROPAGATION
-          value: b3
-        - name: JAEGER_ENDPOINT
-          value: http://jaeger-collector.istio-system:14268/api/traces
-        securityContext:
-          privileged: false
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: ai
-  labels:
-    project: mesh-arena
-    app: ai
-spec:
-  ports:
-  - name: http
-    port: 8080
-  selector:
-    app: ai
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    project: mesh-arena
-    app: ai
-    version: visitors
-    vm: openj9
-  name: ai-visitors
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: ai
-      version: visitors
-      vm: openj9
-  template:
-    metadata:
-      annotations:
-        prometheus.io/port: "8080"
-        prometheus.io/path: "/metrics"
-        io.cilium.proxy-visibility: "<Egress/53/UDP/DNS>,<Egress/8080/TCP/HTTP>"
-        prometheus.io/scrape: "true"
-      labels:
-        project: mesh-arena
-        app: ai
-        version: visitors
-        vm: openj9
-    spec:
-      containers:
-      - image: quay.io/jotak/mesharena-ai-openj9:1.3.3
-        imagePullPolicy: IfNotPresent
-        name: ai-openj9
-        ports:
-        - containerPort: 8080
-          name: http
-          protocol: TCP
-        env:
-        - name: METRICS_ENABLED
-          value: "1"
-        - name: TRACING_ENABLED
-          value: "1"
-        - name: KAFKA_ADDRESS
-          value: ""
-        - name: MESHARENA_UI_PORT
-          value: "8080"
-        - name: MESHARENA_UI_HOST
-          value: ui
-        - name: MESHARENA_BALL_PORT
-          value: "8080"
-        - name: MESHARENA_BALL_HOST
-          value: ball
-        - name: MESHARENA_STADIUM_PORT
-          value: "8080"
-        - name: MESHARENA_STADIUM_HOST
-          value: stadiumsvc
-        - name: INTERACTIVE_MODE
-          value: "0"
-        - name: PLAYER_TEAM
-          value: visitors
-        - name: PLAYER_ATTACKING
-          value: "100"
-        - name: PLAYER_COLOR
-          value: "#F0AB00"
-        - name: USE_NAME_API
-          value: "false"
-        - name: PLAYER_NAMES
-          value: Charbonneau,Arthur,Deniaud,Martin,Dufort,Séverin,Girard,Blanchet,Villeneuve,Tillery,Covington,George,Fraley,Hansen,Ramsey,Jennings,Hammond,Barnett,Mazzeo,Albano,Volta,Rosiello,Toscani,Frank,Sauer,Brandt,Krüger,Sedillo,Owen,Floyd,Comey,Gwilliam,Tew,Ordaz,Zambrano,Giron,Bailon
-        - name: JAEGER_SERVICE_NAME
-          value: ai.default
-        - name: JAEGER_SAMPLER_TYPE
-          value: ratelimiting
-        - name: JAEGER_SAMPLER_PARAM
-          value: "1"
-        - name: JAEGER_PROPAGATION
-          value: b3
-        - name: JAEGER_ENDPOINT
-          value: http://jaeger-collector.istio-system:14268/api/traces
-        securityContext:
-          privileged: false
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: ai
-  labels:
-    project: mesh-arena
-    app: ai
-spec:
-  ports:
-  - name: http
-    port: 8080
-  selector:
-    app: ai
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    project: mesh-arena
     app: ball
     version: base
-    vm: hotspot
+    vm: temurin-17
   name: ball-base
 spec:
   replicas: 1
@@ -203,7 +13,7 @@ spec:
     matchLabels:
       app: ball
       version: base
-      vm: hotspot
+      vm: temurin-17
   template:
     metadata:
       annotations:
@@ -215,12 +25,12 @@ spec:
         project: mesh-arena
         app: ball
         version: base
-        vm: hotspot
+        vm: temurin-17
     spec:
       containers:
-      - image: quay.io/jotak/mesharena-ball-hotspot:1.3.3
+      - image: quay.io/jotak/mesharena-ball:1.4.0
         imagePullPolicy: IfNotPresent
-        name: ball-hotspot
+        name: ball-base
         ports:
         - containerPort: 8080
           name: http
@@ -280,7 +90,7 @@ metadata:
     project: mesh-arena
     app: stadium
     version: base
-    vm: hotspot
+    vm: temurin-17
   name: stadium-base
 spec:
   replicas: 1
@@ -288,7 +98,7 @@ spec:
     matchLabels:
       app: stadium
       version: base
-      vm: hotspot
+      vm: temurin-17
   template:
     metadata:
       annotations:
@@ -300,12 +110,12 @@ spec:
         project: mesh-arena
         app: stadium
         version: base
-        vm: hotspot
+        vm: temurin-17
     spec:
       containers:
-      - image: quay.io/jotak/mesharena-stadium-hotspot:1.3.3
+      - image: quay.io/jotak/mesharena-stadium:1.4.0
         imagePullPolicy: IfNotPresent
-        name: stadium-hotspot
+        name: stadium-base
         ports:
         - containerPort: 8080
           name: http
@@ -375,7 +185,7 @@ metadata:
     project: mesh-arena
     app: ui
     version: base
-    vm: hotspot
+    vm: temurin-17
   name: ui-base
 spec:
   replicas: 1
@@ -383,7 +193,7 @@ spec:
     matchLabels:
       app: ui
       version: base
-      vm: hotspot
+      vm: temurin-17
   template:
     metadata:
       annotations:
@@ -396,12 +206,12 @@ spec:
         project: mesh-arena
         app: ui
         version: base
-        vm: hotspot
+        vm: temurin-17
     spec:
       containers:
-      - image: quay.io/jotak/mesharena-ui-hotspot:1.3.3
+      - image: quay.io/jotak/mesharena-ui:1.4.0
         imagePullPolicy: IfNotPresent
-        name: ui-hotspot
+        name: ui-base
         ports:
         - containerPort: 8080
           name: http

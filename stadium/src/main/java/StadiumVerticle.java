@@ -262,6 +262,6 @@ public class StadiumVerticle extends AbstractVerticle {
         var vertx = Commons.vertx();
         var client = WebClient.create(vertx);
         var displayer = new Displayer(vertx, client);
-        Commons.vertx().deployVerticle(new StadiumVerticle(client, displayer));
+        vertx.deployVerticle(new StadiumVerticle(client, displayer));
     }
 }

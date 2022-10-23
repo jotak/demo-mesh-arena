@@ -290,6 +290,6 @@ public class BallVerticle extends AbstractVerticle {
         var vertx = Commons.vertx();
         var client = WebClient.create(vertx);
         var displayer = new Displayer(vertx, client);
-        Commons.vertx().deployVerticle(new BallVerticle(client, displayer));
+        vertx.deployVerticle(new BallVerticle(client, displayer));
     }
 }

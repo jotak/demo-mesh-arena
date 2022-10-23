@@ -29,19 +29,19 @@ Run one of the commands below:
 
 ```bash
 # With app metrics enabled:
-kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/zizou/quickstart-metrics.yml) -n default
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/main/quickstart-metrics.yml) -n default
 
 # With app traces enabled:
-kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/zizou/quickstart-tracing.yml) -n default
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/main/quickstart-tracing.yml) -n default
 
 # With both enabled:
-kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/zizou/quickstart-both.yml) -n default
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/main/quickstart-both.yml) -n default
 
 # With none enabled:
-kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/zizou/quickstart-naked.yml) -n default
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/main/quickstart-naked.yml) -n default
 
 # Interactive mode:
-kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/zizou/quickstart-interactive.yml) -n default
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/main/quickstart-interactive.yml) -n default
 ```
 
 In the interactive mode, players won't shoot by themselves, they need a human interaction. To shoot, click on a player, enter your name, then click the "shoot" button.
@@ -68,13 +68,13 @@ kubectl create namespace kafka
 
 # Install Kafka (Strimzi-powered)
 wget -O - -o /dev/null  https://github.com/strimzi/strimzi-kafka-operator/releases/download/0.30.0/strimzi-cluster-operator-0.30.0.yaml | sed -e 's/namespace: myproject/namespace: kafka/g' | kubectl apply -n kafka -f -
-kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/zizou/k8s/strimzi.yml) -n kafka
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/main/k8s/strimzi.yml) -n kafka
 
 # Wait a little bit that everything is ready
 kubectl wait --timeout=300s --for=condition=ready kafka messaging -n kafka
 
 # Deploy mesh-arena services with Kafka turned on
-kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/zizou/quickstart-kafka.yml) -n default
+kubectl apply -f <(curl -L https://raw.githubusercontent.com/jotak/demo-mesh-arena/main/quickstart-kafka.yml) -n default
 ```
 
 This is more or less equivalent to this make command: `make kafka-se deploy-kt`
