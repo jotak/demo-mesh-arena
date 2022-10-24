@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Mesh Arena</title>
+  <link rel="icon" type="image/x-icon" href="ball.png">
   <style>
     @keyframes player-sprite {
       from { background-position: 0px; }
@@ -13,7 +14,7 @@
   <button type="button" onclick="centerBall()">Center ball</button>
   <button type="button" onclick="randomBall()">Randomize ball pos</button>
   <div id="selected" style="display:inline;"></div>
-  <div id="board"></div>
+  <div id="board"><img id="loading" src="./loading.png" style="width: 200px;"></div>
   <div id="right-pane" style="position: absolute; left: 600px; padding-top: 10px"></div>
 
   <script src="node_modules/jquery/dist/jquery.min.js"></script>

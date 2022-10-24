@@ -1,7 +1,12 @@
 var eb = new EventBus('/eventbus/');
 eb.enableReconnect(true);
 
+setTimeout(function() {
+  $('#loading').attr("src", "./next.png");
+}, 4000);
+
 function displayGameObject(obj) {
+  $('#loading').remove();
   var rawElt = document.getElementById(obj.id);
   if (!rawElt) {
     if (obj.playerRef) {

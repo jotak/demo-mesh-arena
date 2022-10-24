@@ -20,7 +20,7 @@ public class BallVerticle extends AbstractVerticle {
 
     private final SecureRandom rnd = new SecureRandom();
     private final Style style = new Style()
-            .dimensions(20, 20)
+            .dimensions(16, 16)
             .image("./" + image + ".png")
             .zIndex(5)
             .transition(deltaMs);
@@ -258,8 +258,8 @@ public class BallVerticle extends AbstractVerticle {
 
     private void display() {
         displayer.send(ballGO
-                .withX(pos.x() - 10)
-                .withY(pos.y() - 10)
+                .withX(pos.x() - 8)
+                .withY(pos.y() - 8)
                 .withStyle(getStyle()));
     }
 
