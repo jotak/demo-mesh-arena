@@ -6,12 +6,12 @@ TAG ?= dev
 OCI_USER ?= jotak
 # Set REMOTE=true if you want to use remote (quay.io) images
 REMOTE ?= false
-NAMESPACE ?= default
+NAMESPACE ?= mesh-arena
 # List of images
 TO_BUILD ?= player ball stadium ui
 TO_DEPLOY ?= player-locals player-visitors ball-base stadium-base ui-base
 GENTPL_VERSION ?= base
-ISTIO ?= true
+ISTIO ?= false
 
 # URL used to download yq, which is used to generate YAML files.
 # Last tested version: 3.1.2
@@ -20,7 +20,7 @@ ISTIO ?= true
 ARCH ?= linux_amd64
 YQ_URL ?= https://github.com/mikefarah/yq/releases/download/3.1.2/yq_${ARCH}
 
-LATEST = 1.4.0
+LATEST = 1.4.1
 
 ifeq ($(REMOTE),true)
 OCI_DOMAIN ?= quay.io
@@ -258,9 +258,9 @@ scen-init-stadium:
 scen-init-ball:
 	./gentpl.sh ball-hotspot -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f -
 
-scen-init-ai:
-	./gentpl.sh ai-hotspot -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f - ; \
-	./gentpl.sh ai-openj9 -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f -
+scen-init-players:
+	./gentpl.sh player-locals -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f - ; \
+	./gentpl.sh player-visitors -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f -
 
 scen-init-rest:
 	./gentpl.sh stadium-hotspot -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f - ; \
