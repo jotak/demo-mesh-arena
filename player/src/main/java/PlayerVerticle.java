@@ -51,7 +51,7 @@ public class PlayerVerticle extends AbstractVerticle {
       .brightHueSat(brightness, hue, saturation, 0)
       .other("animation: player-sprite 1.2s steps(7) infinite;");
 
-      aiGO = new GameObject(id, style.toString(), 0, 0, "", new PlayerRef(name, Commons.getIP(), Commons.PLAYER_PORT));
+    aiGO = new GameObject(id, style.toString(), 0, 0, "", new PlayerRef(name, Commons.getIP(), Commons.PLAYER_PORT));
   }
 
   @Override
@@ -69,8 +69,9 @@ public class PlayerVerticle extends AbstractVerticle {
       .requestHandler(router)
       .listen(Commons.PLAYER_PORT)
       .onSuccess(server ->
-        System.out.println("HTTP server started on port " + server.actualPort())
-      );
+        System.out.println("HTTP server started on http://localhost:" + server.actualPort())
+      )
+      .onFailure(Throwable::printStackTrace);
 
     // First display
     display();

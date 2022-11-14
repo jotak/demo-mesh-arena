@@ -20,7 +20,7 @@ ISTIO ?= false
 ARCH ?= linux_amd64
 YQ_URL ?= https://github.com/mikefarah/yq/releases/download/3.1.2/yq_${ARCH}
 
-LATEST = 1.4.1
+LATEST = 1.4.2
 
 ifeq ($(REMOTE),true)
 OCI_DOMAIN ?= quay.io
@@ -173,6 +173,7 @@ images-build:
 push-minikube:
 	@echo "⚽ Tagging for Minikube..."
 	for svc in ${TO_BUILD} ; do \
+		echo "Pushing $$svc:" ; \
 		${OCI_BIN_SHORT} push ${PUSH_OPTS} ${OCI_DOMAIN}/${OCI_USER}/mesharena-$$svc:${TAG} ; \
 		${OCI_BIN_SHORT} tag ${OCI_DOMAIN}/${OCI_USER}/mesharena-$$svc:${TAG} ${OCI_DOMAIN_IN_CLUSTER}/${OCI_USER}/mesharena-$$svc:${TAG} ; \
 	done
@@ -180,6 +181,7 @@ push-minikube:
 push:
 	@echo "⚽ Pushing images..."
 	for svc in ${TO_BUILD} ; do \
+		echo "Pushing $$svc:" ; \
 		${OCI_BIN_SHORT} push ${PUSH_OPTS} ${OCI_DOMAIN}/${OCI_USER}/mesharena-$$svc:${TAG} ; \
 	done
 
@@ -199,8 +201,8 @@ kill:
 
 expose:
 	@echo "⚽ URL: http://localhost:8080/"
-	kubectl wait pod -l app=ui --for=condition=Ready --timeout=300s -n ${NAMESPACE} ; \
-	kubectl -n ${NAMESPACE} port-forward svc/ui 8080:8080
+	kubectl wait pod -l app=ui --for=condition=Ready --timeout=300s -n ${NAMESPACE}
+	xdg-open http://localhost:8080/ && sleep 1 && kubectl -n ${NAMESPACE} port-forward svc/ui 8080:8080
 
 undeploy:
 	kubectl -n ${NAMESPACE} delete all -l "project=mesh-arena" ; \
@@ -243,69 +245,9 @@ deploy-latest: TAG_MINIKUBE=false
 deploy-latest: GENTPL_OPTS=--metrics
 deploy-latest: deploy
 
-scen-init-ui:
-	./gentpl.sh ui-hotspot -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f -
-ifeq ($(ISTIO),true)
-	kubectl apply -f istio/mesh-arena-gateway.yml
-	xdg-open http://localhost:8080/ && kubectl port-forward svc/istio-ingressgateway 8080:80 -n istio-system
-else
-	xdg-open http://localhost:8080/ && kubectl port-forward svc/ui 8080:8080 -n ${NAMESPACE}
-endif
-
-scen-init-stadium:
-	./gentpl.sh stadium-hotspot -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f -
-
-scen-init-ball:
-	./gentpl.sh ball-hotspot -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f -
-
-scen-init-players:
-	./gentpl.sh player-locals -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f - ; \
-	./gentpl.sh player-visitors -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f -
-
-scen-init-rest:
-	./gentpl.sh stadium-hotspot -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f - ; \
-	./gentpl.sh ball-hotspot -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f - ; \
-	./gentpl.sh ai-hotspot -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f - ; \
-	./gentpl.sh ai-openj9 -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f -
-
-scen-add-ball:
-	kubectl apply -f ./istio/destrule.yml -n ${NAMESPACE} ; \
-	./gentpl.sh ball-openj9 -v base -vo oopsie -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f -
-
-scen-add-burst:
-	kubectl apply -f ./istio/destrule-burst.yml -n ${NAMESPACE} ; \
-	kubectl delete deployment ball-oopsie -n ${NAMESPACE} ; \
-	./gentpl.sh ball-openj9 -v burst -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f -
-
-scen-75-25:
-	kubectl apply -f ./istio/virtualservice-75-25.yml -n ${NAMESPACE}
-
-scen-add-players:
-	./gentpl.sh ai-hotspot -v mbappe -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f - ; \
-	./gentpl.sh ai-openj9 -v messi -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f - ; \
-	kubectl delete -f ./istio/virtualservice-75-25.yml -n ${NAMESPACE}
-
-scen-by-source-label:
-	kubectl apply -f ./istio/virtualservice-by-label.yml -n ${NAMESPACE}
-
-scen-reset:
-	kubectl delete virtualservice ball-vs -n ${NAMESPACE} ; \
-	kubectl delete deployment ai-mbappe -n ${NAMESPACE} ; \
-	kubectl delete deployment ai-messi -n ${NAMESPACE}
-
-scen-mirroring:
-	kubectl apply -f ./istio/virtualservice-mirrored.yml -n ${NAMESPACE}
-
-scen-outlier:
-	kubectl delete -f ./istio/virtualservice-mirrored.yml -n ${NAMESPACE} ; \
-  kubectl apply -f ./istio/destrule-outlier.yml -n ${NAMESPACE}
-
-istio-enable:
-	kubectl label namespace ${NAMESPACE} ${ISTIO_LABEL} ; \
-	kubectl -n ${NAMESPACE} delete pods -l "project=mesh-arena"
-
-jaeger-service:
-	kubectl apply -f ./istio/jaeger-collector.yml
+include scenario/common.mk
+include scenario/istio.mk
+include scenario/dday2022.mk
 
 kafka-se:
 	@kubectl create namespace kafka 2> /dev/null ; \

@@ -56,8 +56,8 @@ spec:
           value: "0"
         - name: PLAYER_TEAM
           value: locals
-        - name: NO_TRANSITION
-          value: "false"
+        - name: CSS_TRANSITION
+          value: "true"
         - name: DELTA_MS
           value: "300"
         - name: PLAYER_HUE

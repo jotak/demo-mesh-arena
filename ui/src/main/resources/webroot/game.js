@@ -1,8 +1,16 @@
 var eb = new EventBus('/eventbus/');
 eb.enableReconnect(true);
 
+var loadingStep = 0;
+var loadingIntvl = setInterval(function() {
+  loadingStep++;
+  $('#loading').css("width", (100 + loadingStep*10)+"px");
+}, 500);
+
 setTimeout(function() {
-  $('#loading').attr("src", "./next.png");
+  clearInterval(loadingIntvl);
+  $('#loading').css("width", "200px");
+  $('#loading img').attr("src", "./next.png");
 }, 4000);
 
 function displayGameObject(obj) {
@@ -61,7 +69,9 @@ eb.onopen = function () {
 
 eb.onreconnect = function() {
   console.log('onreconnect')
-  $('#board').contents().remove();
+  if ($('#loading').length === 0) {
+    $('#board').contents().remove();
+  }
 };
 
 function centerBall() {

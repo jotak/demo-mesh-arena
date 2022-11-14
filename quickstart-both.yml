@@ -28,7 +28,7 @@ spec:
         vm: temurin-17
     spec:
       containers:
-      - image: quay.io/jotak/mesharena-player:1.4.1
+      - image: quay.io/jotak/mesharena-player:1.4.2
         imagePullPolicy: IfNotPresent
         name: player-locals
         ports:
@@ -58,8 +58,8 @@ spec:
           value: "0"
         - name: PLAYER_TEAM
           value: locals
-        - name: NO_TRANSITION
-          value: "false"
+        - name: CSS_TRANSITION
+          value: "true"
         - name: DELTA_MS
           value: "300"
         - name: PLAYER_HUE
@@ -123,7 +123,7 @@ spec:
         vm: temurin-17
     spec:
       containers:
-      - image: quay.io/jotak/mesharena-player:1.4.1
+      - image: quay.io/jotak/mesharena-player:1.4.2
         imagePullPolicy: IfNotPresent
         name: player-visitors
         ports:
@@ -153,8 +153,8 @@ spec:
           value: "0"
         - name: PLAYER_TEAM
           value: visitors
-        - name: NO_TRANSITION
-          value: "false"
+        - name: CSS_TRANSITION
+          value: "true"
         - name: DELTA_MS
           value: "300"
         - name: PLAYER_HUE
@@ -218,7 +218,7 @@ spec:
         vm: temurin-17
     spec:
       containers:
-      - image: quay.io/jotak/mesharena-ball:1.4.1
+      - image: quay.io/jotak/mesharena-ball:1.4.2
         imagePullPolicy: IfNotPresent
         name: ball-base
         ports:
@@ -246,8 +246,8 @@ spec:
           value: "8080"
         - name: MESHARENA_STADIUM_HOST
           value: stadiumsvc
-        - name: NO_TRANSITION
-          value: "false"
+        - name: CSS_TRANSITION
+          value: "true"
         - name: DELTA_MS
           value: "200"
         securityContext:
@@ -305,7 +305,7 @@ spec:
         vm: temurin-17
     spec:
       containers:
-      - image: quay.io/jotak/mesharena-stadium:1.4.1
+      - image: quay.io/jotak/mesharena-stadium:1.4.2
         imagePullPolicy: IfNotPresent
         name: stadium-base
         ports:
@@ -399,7 +399,7 @@ spec:
         vm: temurin-17
     spec:
       containers:
-      - image: quay.io/jotak/mesharena-ui:1.4.1
+      - image: quay.io/jotak/mesharena-ui:1.4.2
         imagePullPolicy: IfNotPresent
         name: ui-base
         ports:

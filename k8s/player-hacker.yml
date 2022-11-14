@@ -4,15 +4,15 @@ metadata:
   labels:
     project: mesh-arena
     app: player
-    version: visitors
+    version: maradona
     vm: unknown
-  name: player-visitors
+  name: player-maradona
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: player
-      version: visitors
+      version: maradona
   template:
     metadata:
       annotations:
@@ -22,7 +22,7 @@ spec:
       labels:
         project: mesh-arena
         app: player
-        version: visitors
+        version: maradona
         vm: unknown
     spec:
       containers:
@@ -43,29 +43,41 @@ spec:
         - name: MESHARENA_UI_PORT
           value: "8080"
         - name: MESHARENA_UI_HOST
-          value: ui
+          value: ui.mesh-arena
         - name: MESHARENA_BALL_PORT
           value: "8080"
         - name: MESHARENA_BALL_HOST
-          value: ball
+          value: ball.mesh-arena
         - name: MESHARENA_STADIUM_PORT
           value: "8080"
         - name: MESHARENA_STADIUM_HOST
-          value: stadiumsvc
+          value: stadiumsvc.mesh-arena
         - name: INTERACTIVE_MODE
           value: "0"
         - name: PLAYER_TEAM
-          value: visitors
+          value: locals
         - name: CSS_TRANSITION
           value: "true"
         - name: DELTA_MS
-          value: "300"
-        - name: PLAYER_HUE
-          value: "0"
+          value: "200"
         - name: USE_NAME_API
           value: "false"
         - name: NAMES
-          value: Charbonneau,Arthur,Deniaud,Martin,Dufort,Séverin,Girard,Blanchet,Villeneuve,Tillery,Covington,George,Fraley,Hansen,Ramsey,Jennings,Hammond,Barnett,Mazzeo,Albano,Volta,Rosiello,Toscani,Frank,Sauer,Brandt,Krüger,Sedillo,Owen,Floyd,Comey,Gwilliam,Tew,Ordaz,Zambrano,Giron,Bailon
+          value: "Maradona"
+        - name: PLAYER_SPEED
+          value: "100"
+        - name: PLAYER_ACCURACY
+          value: "0.99"
+        - name: PLAYER_SKILL
+          value: "30"
+        - name: PLAYER_SHOOT
+          value: "800"
+        - name: PLAYER_ATT_SHOOT_FAST
+          value: "50"
+        - name: PLAYER_HUE
+          value: "-140"
+        - name: PLAYER_BRIGHTNESS
+          value: "80"
         securityContext:
           privileged: false
           allowPrivilegeEscalation: false
@@ -76,17 +88,3 @@ spec:
           runAsNonRoot: true
           seccompProfile:
             type: RuntimeDefault
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: player
-  labels:
-    project: mesh-arena
-    app: player
-spec:
-  ports:
-  - name: http
-    port: 8080
-  selector:
-    app: player

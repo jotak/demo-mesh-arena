@@ -56,8 +56,8 @@ spec:
           value: "0"
         - name: PLAYER_TEAM
           value: visitors
-        - name: NO_TRANSITION
-          value: "false"
+        - name: CSS_TRANSITION
+          value: "true"
         - name: DELTA_MS
           value: "200"
         - name: USE_NAME_API

@@ -52,8 +52,8 @@ spec:
           value: "8080"
         - name: MESHARENA_STADIUM_HOST
           value: stadiumsvc
-        - name: NO_TRANSITION
-          value: "false"
+        - name: CSS_TRANSITION
+          value: "true"
         - name: DELTA_MS
           value: "200"
         securityContext:

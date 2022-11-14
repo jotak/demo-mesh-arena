@@ -1,6 +1,6 @@
 
 public class Style {
-  private static final boolean NO_TRANSITION = Commons.getBoolEnv("NO_TRANSITION", false);
+  private static final boolean CSS_TRANSITION = Commons.getBoolEnv("CSS_TRANSITION", true);
 
   private String position;
   private String dimensions;
@@ -84,7 +84,7 @@ public class Style {
     if (bgColor != null) {
       sb.append(bgColor);
     }
-    if (transition != null && !NO_TRANSITION) {
+    if (transition != null && CSS_TRANSITION) {
       sb.append(transition);
     }
     if (transform != null) {
