@@ -24,4 +24,4 @@ dday-delete-policy:
 	kubectl delete -n ${NAMESPACE} -f ./scenario/dday2022/network-policy.yaml
 
 dday-undeploy: undeploy
-	kubectl delete namespace hacker
+	kubectl delete --ignore-not-found namespace hacker

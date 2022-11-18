@@ -210,7 +210,7 @@ undeploy:
 	kubectl -n ${NAMESPACE} delete destinationrule -l "project=mesh-arena" ; \
 	kubectl -n ${NAMESPACE} delete virtualservice -l "project=mesh-arena" ; \
 	kubectl -n ${NAMESPACE} delete gateway -l "project=mesh-arena" ; \
-	kubectl -n ${NAMESPACE} delete envoyfilter -l "project=mesh-arena"
+	kubectl -n ${NAMESPACE} delete envoyfilter -l "project=mesh-arena" || true
 
 deploy-tracing: GENTPL_OPTS=--tracing
 deploy-tracing: deploy
