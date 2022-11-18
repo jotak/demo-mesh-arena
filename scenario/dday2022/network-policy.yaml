@@ -2,6 +2,8 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: mesharena-global
+  labels:
+    project: mesh-arena
 spec:
   podSelector: {}
   ingress:
@@ -17,4 +19,6 @@ spec:
           podSelector: {}
       ports:
         - port: 53
+          protocol: UDP
+        - port: 5353
           protocol: UDP

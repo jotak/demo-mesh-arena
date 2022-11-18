@@ -206,6 +206,7 @@ expose:
 
 undeploy:
 	kubectl -n ${NAMESPACE} delete all -l "project=mesh-arena" ; \
+	kubectl -n ${NAMESPACE} delete networkpolicy -l "project=mesh-arena" ; \
 	kubectl -n ${NAMESPACE} delete destinationrule -l "project=mesh-arena" ; \
 	kubectl -n ${NAMESPACE} delete virtualservice -l "project=mesh-arena" ; \
 	kubectl -n ${NAMESPACE} delete gateway -l "project=mesh-arena" ; \
