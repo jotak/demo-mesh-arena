@@ -1,0 +1,77 @@
+apiVersion: flows.netobserv.io/v1alpha1
+kind: FlowCollector
+metadata:
+  name: cluster
+spec:
+  namespace: netobserv
+  deploymentModel: DIRECT
+  agent:
+    type: EBPF
+    ebpf:
+      imagePullPolicy: IfNotPresent
+      sampling: 1
+      cacheActiveTimeout: 5s
+      cacheMaxFlows: 100000
+      interfaces: [ ]
+      excludeInterfaces: [ "lo" ]
+      logLevel: info
+      privileged: false
+      resources:
+        requests:
+          memory: 50Mi
+          cpu: 100m
+        limits:
+          memory: 800Mi
+  processor:
+    port: 2055
+    imagePullPolicy: IfNotPresent
+    logLevel: info
+    enableKubeProbes: true
+    healthPort: 8080
+    profilePort: 6060
+    metrics:
+      server:
+        port: 9102
+      ignoreTags:
+        - egress
+        - packets
+    dropUnusedFields: true
+    resources:
+      requests:
+        memory: 100Mi
+        cpu: 100m
+      limits:
+        memory: 800Mi
+  loki:
+    url: 'http://loki.netobserv.svc:3100/'
+    batchWait: 1s
+    batchSize: 10485760
+    minBackoff: 1s
+    maxBackoff: 5s
+    maxRetries: 2
+    staticLabels:
+      app: netobserv-flowcollector
+  consolePlugin:
+    register: true
+    portNaming:
+      enable: true
+      portNames:
+        "3100": loki
+    quickFilters:
+    - name: Applications
+      filter:
+        src_namespace!: 'openshift-,netobserv'
+        dst_namespace!: 'openshift-,netobserv'
+      default: true
+    - name: Infrastructure
+      filter:
+        src_namespace: 'openshift-,netobserv'
+        dst_namespace: 'openshift-,netobserv'
+    - name: Pods network
+      filter:
+        src_kind: 'Pod'
+        dst_kind: 'Pod'
+      default: true
+    - name: Services network
+      filter:
+        dst_kind: 'Service'
