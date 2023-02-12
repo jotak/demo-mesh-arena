@@ -14,7 +14,7 @@
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <vertx.version>4.3.4</vertx.version>
+        <vertx.version>4.3.8</vertx.version>
         <jackson-annotations.version>2.13.4</jackson-annotations.version>
     </properties>
 
