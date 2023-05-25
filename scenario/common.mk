@@ -1,6 +1,6 @@
 scen-init-ui:
 	kubectl create namespace ${NAMESPACE} || true && ./gentpl.sh ui-hotspot -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f -
-	make expose
+	make expose-route
 
 scen-init-stadium:
 	./gentpl.sh stadium-hotspot -v base -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n ${NAMESPACE} | kubectl -n ${NAMESPACE} apply -f -

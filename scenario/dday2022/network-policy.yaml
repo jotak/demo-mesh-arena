@@ -8,6 +8,11 @@ spec:
   ingress:
   - from:
     - podSelector: {}
+  - from:
+    - podSelector: {}
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: openshift-ingress
   podSelector: {}
   policyTypes:
   - Ingress

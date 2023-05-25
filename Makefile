@@ -204,6 +204,14 @@ expose:
 	kubectl wait pod -l app=ui --for=condition=Ready --timeout=300s -n ${NAMESPACE}
 	xdg-open http://localhost:8080/ && sleep 1 && kubectl -n ${NAMESPACE} port-forward svc/ui 8080:8080
 
+expose-route:
+	oc expose svc/ui -n ${NAMESPACE}
+	sleep 1
+	url=`oc get route ui -n ${NAMESPACE} -o=jsonpath='{.status.ingress[0].host}'`; \
+	echo "⚽ URL: http://$$url"; \
+	kubectl wait pod -l app=ui --for=condition=Ready --timeout=300s -n ${NAMESPACE}; \
+	xdg-open http://$$url
+
 undeploy:
 	kubectl -n ${NAMESPACE} delete all -l "project=mesh-arena" ; \
 	kubectl -n ${NAMESPACE} delete networkpolicy -l "project=mesh-arena" ; \
