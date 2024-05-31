@@ -70,6 +70,7 @@ spec:
               - ALL
           readOnlyRootFilesystem: false
           runAsNonRoot: true
+          runAsUser: 9000
           seccompProfile:
             type: RuntimeDefault
 ---
