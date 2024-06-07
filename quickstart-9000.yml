@@ -74,8 +74,10 @@ spec:
             drop:
             - ALL
           readOnlyRootFilesystem: false
+          runAsNonRoot: true
           seccompProfile:
             type: RuntimeDefault
+          runAsUser: 9000
 ---
 apiVersion: v1
 kind: Service
@@ -167,8 +169,10 @@ spec:
             drop:
             - ALL
           readOnlyRootFilesystem: false
+          runAsNonRoot: true
           seccompProfile:
             type: RuntimeDefault
+          runAsUser: 9000
 ---
 apiVersion: v1
 kind: Service
@@ -252,8 +256,10 @@ spec:
             drop:
             - ALL
           readOnlyRootFilesystem: false
+          runAsNonRoot: true
           seccompProfile:
             type: RuntimeDefault
+          runAsUser: 9000
 ---
 apiVersion: v1
 kind: Service
@@ -343,8 +349,10 @@ spec:
             drop:
             - ALL
           readOnlyRootFilesystem: false
+          runAsNonRoot: true
           seccompProfile:
             type: RuntimeDefault
+          runAsUser: 9000
 ---
 apiVersion: v1
 kind: Service
@@ -417,8 +425,10 @@ spec:
             drop:
             - ALL
           readOnlyRootFilesystem: false
+          runAsNonRoot: true
           seccompProfile:
             type: RuntimeDefault
+          runAsUser: 9000
 ---
 apiVersion: v1
 kind: Service

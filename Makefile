@@ -287,6 +287,7 @@ gen-quickstart: .ensure-yq
 	rm quickstart-naked.yml quickstart-metrics.yml quickstart-tracing.yml quickstart-both.yml quickstart-kafka.yml quickstart-interactive.yml ; \
 	for svc in ${TO_DEPLOY} ; do \
 		./gentpl.sh $$svc -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default >> quickstart-naked.yml ; \
+		./gentpl.sh $$svc -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default --user9000 >> quickstart-9000.yml ; \
 		./gentpl.sh $$svc -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default --tracing >> quickstart-tracing.yml ; \
 		./gentpl.sh $$svc -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default --metrics >> quickstart-metrics.yml ; \
 		./gentpl.sh $$svc -pp IfNotPresent -d "quay.io" -u jotak -t ${LATEST} -n default --tracing --metrics >> quickstart-both.yml ; \

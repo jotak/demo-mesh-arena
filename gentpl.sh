@@ -23,6 +23,7 @@ NAMESPACE="default"
 VERSION_OVERRIDE=""
 METRICS_ENABLED="0"
 TRACING_ENABLED="0"
+USER_9000="0"
 KAFKA_ADDRESS=""
 INTERACTIVE_MODE="0"
 LAST_ARG=""
@@ -33,6 +34,8 @@ do
         METRICS_ENABLED="1"
     elif [[ "$arg" = "--tracing" ]]; then
         TRACING_ENABLED="1"
+    elif [[ "$arg" = "--user9000" ]]; then
+        USER_9000="1"
     elif [[ "$arg" = "--kafka" ]]; then
         KAFKA_ADDRESS="messaging-kafka-bootstrap.kafka:9092"
     elif [[ "$arg" = "--interactive" ]]; then
@@ -82,6 +85,7 @@ if [[ -f "./k8s/$NAME-$VERSION.yml" ]] ; then
       | ./yq w - spec.template.spec.containers[0].image $IMAGE \
       | ./yq w - spec.template.spec.containers[0].name $FULL_NAME \
       | ( [ "$METRICS_ENABLED" = "1" ] && ./yq w - --tag '!!str' "spec.template.metadata.annotations.(prometheus.io/scrape)" "true" || cat ) \
+      | ( [ "$USER_9000" = "1" ] && ./yq w - spec.template.spec.containers[0].securityContext.runAsUser 9000 || cat ) \
       | ./yq w - --tag '!!str' "spec.template.spec.containers[0].env.(name==METRICS_ENABLED).value" $METRICS_ENABLED \
       | ./yq w - --tag '!!str' "spec.template.spec.containers[0].env.(name==TRACING_ENABLED).value" $TRACING_ENABLED \
       | ./yq w - --tag '!!str' "spec.template.spec.containers[0].env.(name==INTERACTIVE_MODE).value" $INTERACTIVE_MODE \
