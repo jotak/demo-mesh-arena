@@ -20,7 +20,7 @@ ISTIO ?= false
 ARCH ?= linux_amd64
 YQ_URL ?= https://github.com/mikefarah/yq/releases/download/3.1.2/yq_${ARCH}
 
-LATEST = 1.4.2
+LATEST = multiarch
 
 ifeq ($(REMOTE),true)
 OCI_DOMAIN ?= quay.io

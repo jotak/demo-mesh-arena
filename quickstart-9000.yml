@@ -445,3 +445,450 @@ spec:
   selector:
     app: ui
 ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    project: mesh-arena
+    app: player
+    version: locals
+    vm: temurin-17
+  name: player-locals
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: player
+      version: locals
+      vm: temurin-17
+  template:
+    metadata:
+      annotations:
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+        io.cilium.proxy-visibility: "<Egress/53/UDP/DNS>,<Egress/8080/TCP/HTTP>"
+      labels:
+        project: mesh-arena
+        app: player
+        version: locals
+        vm: temurin-17
+    spec:
+      containers:
+      - image: quay.io/jotak/mesharena-player:multiarch
+        imagePullPolicy: IfNotPresent
+        name: player-locals
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: METRICS_ENABLED
+          value: "0"
+        - name: TRACING_ENABLED
+          value: "0"
+        - name: KAFKA_ADDRESS
+          value: ""
+        - name: MESHARENA_UI_PORT
+          value: "8080"
+        - name: MESHARENA_UI_HOST
+          value: ui
+        - name: MESHARENA_BALL_PORT
+          value: "8080"
+        - name: MESHARENA_BALL_HOST
+          value: ball
+        - name: MESHARENA_STADIUM_PORT
+          value: "8080"
+        - name: MESHARENA_STADIUM_HOST
+          value: stadiumsvc
+        - name: INTERACTIVE_MODE
+          value: "0"
+        - name: PLAYER_TEAM
+          value: locals
+        - name: CSS_TRANSITION
+          value: "true"
+        - name: DELTA_MS
+          value: "300"
+        - name: PLAYER_HUE
+          value: "-120"
+        - name: USE_NAME_API
+          value: "false"
+        - name: NAMES
+          value: Charbonneau,Arthur,Deniaud,Martin,Dufort,Séverin,Girard,Blanchet,Villeneuve,Tillery,Covington,George,Fraley,Hansen,Ramsey,Jennings,Hammond,Barnett,Mazzeo,Albano,Volta,Rosiello,Toscani,Frank,Sauer,Brandt,Krüger,Sedillo,Owen,Floyd,Comey,Gwilliam,Tew,Ordaz,Zambrano,Giron,Bailon
+        securityContext:
+          privileged: false
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+          runAsUser: 9000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: player
+  labels:
+    project: mesh-arena
+    app: player
+spec:
+  ports:
+  - name: http
+    port: 8080
+  selector:
+    app: player
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    project: mesh-arena
+    app: player
+    version: visitors
+    vm: temurin-17
+  name: player-visitors
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: player
+      version: visitors
+      vm: temurin-17
+  template:
+    metadata:
+      annotations:
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+        io.cilium.proxy-visibility: "<Egress/53/UDP/DNS>,<Egress/8080/TCP/HTTP>"
+      labels:
+        project: mesh-arena
+        app: player
+        version: visitors
+        vm: temurin-17
+    spec:
+      containers:
+      - image: quay.io/jotak/mesharena-player:multiarch
+        imagePullPolicy: IfNotPresent
+        name: player-visitors
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: METRICS_ENABLED
+          value: "0"
+        - name: TRACING_ENABLED
+          value: "0"
+        - name: KAFKA_ADDRESS
+          value: ""
+        - name: MESHARENA_UI_PORT
+          value: "8080"
+        - name: MESHARENA_UI_HOST
+          value: ui
+        - name: MESHARENA_BALL_PORT
+          value: "8080"
+        - name: MESHARENA_BALL_HOST
+          value: ball
+        - name: MESHARENA_STADIUM_PORT
+          value: "8080"
+        - name: MESHARENA_STADIUM_HOST
+          value: stadiumsvc
+        - name: INTERACTIVE_MODE
+          value: "0"
+        - name: PLAYER_TEAM
+          value: visitors
+        - name: CSS_TRANSITION
+          value: "true"
+        - name: DELTA_MS
+          value: "300"
+        - name: PLAYER_HUE
+          value: "0"
+        - name: USE_NAME_API
+          value: "false"
+        - name: NAMES
+          value: Charbonneau,Arthur,Deniaud,Martin,Dufort,Séverin,Girard,Blanchet,Villeneuve,Tillery,Covington,George,Fraley,Hansen,Ramsey,Jennings,Hammond,Barnett,Mazzeo,Albano,Volta,Rosiello,Toscani,Frank,Sauer,Brandt,Krüger,Sedillo,Owen,Floyd,Comey,Gwilliam,Tew,Ordaz,Zambrano,Giron,Bailon
+        securityContext:
+          privileged: false
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+          runAsUser: 9000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: player
+  labels:
+    project: mesh-arena
+    app: player
+spec:
+  ports:
+  - name: http
+    port: 8080
+  selector:
+    app: player
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    project: mesh-arena
+    app: ball
+    version: base
+    vm: temurin-17
+  name: ball-base
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ball
+      version: base
+      vm: temurin-17
+  template:
+    metadata:
+      annotations:
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+        io.cilium.proxy-visibility: "<Egress/53/UDP/DNS>,<Egress/8080/TCP/HTTP>"
+      labels:
+        project: mesh-arena
+        app: ball
+        version: base
+        vm: temurin-17
+    spec:
+      containers:
+      - image: quay.io/jotak/mesharena-ball:multiarch
+        imagePullPolicy: IfNotPresent
+        name: ball-base
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: PCT_ERRORS
+          value: "0"
+        - name: RESISTANCE
+          value: "80"
+        - name: METRICS_ENABLED
+          value: "0"
+        - name: TRACING_ENABLED
+          value: "0"
+        - name: KAFKA_ADDRESS
+          value: ""
+        - name: MESHARENA_UI_PORT
+          value: "8080"
+        - name: MESHARENA_UI_HOST
+          value: ui
+        - name: MESHARENA_BALL_PORT
+          value: "8080"
+        - name: MESHARENA_STADIUM_PORT
+          value: "8080"
+        - name: MESHARENA_STADIUM_HOST
+          value: stadiumsvc
+        - name: CSS_TRANSITION
+          value: "true"
+        - name: DELTA_MS
+          value: "200"
+        securityContext:
+          privileged: false
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+          runAsUser: 9000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ball
+  labels:
+    project: mesh-arena
+    app: ball
+spec:
+  ports:
+  - name: http
+    port: 8080
+  selector:
+    app: ball
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    project: mesh-arena
+    app: stadium
+    version: base
+    vm: temurin-17
+  name: stadium-base
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stadium
+      version: base
+      vm: temurin-17
+  template:
+    metadata:
+      annotations:
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+        io.cilium.proxy-visibility: "<Egress/53/UDP/DNS>,<Egress/8080/TCP/HTTP>"
+      labels:
+        project: mesh-arena
+        app: stadium
+        version: base
+        vm: temurin-17
+    spec:
+      containers:
+      - image: quay.io/jotak/mesharena-stadium:multiarch
+        imagePullPolicy: IfNotPresent
+        name: stadium-base
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: METRICS_ENABLED
+          value: "0"
+        - name: TRACING_ENABLED
+          value: "0"
+        - name: KAFKA_ADDRESS
+          value: ""
+        - name: MESHARENA_UI_PORT
+          value: "8080"
+        - name: MESHARENA_UI_HOST
+          value: ui
+        - name: MESHARENA_BALL_PORT
+          value: "8080"
+        - name: MESHARENA_BALL_HOST
+          value: ball
+        - name: MESHARENA_STADIUM_PORT
+          value: "8080"
+        - name: STADIUM_LOCALS
+          value: Locals
+        - name: STADIUM_VISITORS
+          value: Visitors
+        - name: STADIUM_NAME
+          value: Commanderie
+        - name: STADIUM_TOP
+          value: "50"
+        - name: STADIUM_LEFT
+          value: "20"
+        - name: STADIUM_SCALE
+          value: "1.0"
+        - name: STADIUM_MATCH_TIME
+          value: "120"
+        securityContext:
+          privileged: false
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+          runAsUser: 9000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stadiumsvc
+  labels:
+    project: mesh-arena
+    app: stadium
+spec:
+  ports:
+  - name: http
+    port: 8080
+  selector:
+    app: stadium
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    project: mesh-arena
+    app: ui
+    version: base
+    vm: temurin-17
+  name: ui-base
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ui
+      version: base
+      vm: temurin-17
+  template:
+    metadata:
+      annotations:
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+        sidecar.istio.io/statsInclusionPrefixes: cluster_manager,listener_manager,broker
+        io.cilium.proxy-visibility: "<Egress/53/UDP/DNS>,<Egress/8080/TCP/HTTP>"
+      labels:
+        project: mesh-arena
+        app: ui
+        version: base
+        vm: temurin-17
+    spec:
+      containers:
+      - image: quay.io/jotak/mesharena-ui:multiarch
+        imagePullPolicy: IfNotPresent
+        name: ui-base
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: METRICS_ENABLED
+          value: "0"
+        - name: TRACING_ENABLED
+          value: "0"
+        - name: KAFKA_ADDRESS
+          value: ""
+        - name: MESHARENA_UI_PORT
+          value: "8080"
+        - name: MESHARENA_STADIUM_PORT
+          value: "8080"
+        - name: MESHARENA_STADIUM_HOST
+          value: stadiumsvc
+        securityContext:
+          privileged: false
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+          runAsUser: 9000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ui
+  labels:
+    project: mesh-arena
+    app: ui
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 8080
+  selector:
+    app: ui
+---

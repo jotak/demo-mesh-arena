@@ -1,5 +1,5 @@
-FROM mesharena-builder as builder
-FROM docker.io/eclipse-temurin:17-alpine
+FROM localhost/mesharena-builder as builder
+FROM docker.io/eclipse-temurin:17-jre
 
 # Copy libs & classes
 COPY --from=builder /tmp/app/player/target/libs/* /deployment/libs/
