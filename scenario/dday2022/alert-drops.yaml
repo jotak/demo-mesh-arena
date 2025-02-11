@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+#apiVersion: monitoring.openshift.io/v1
+#kind: AlertingRule
+metadata:
+  name: netobserv-drops-alerts
+  namespace: netobserv
+spec:
+  groups:
+  - name: NetObservNetpolDrops
+    rules:
+    - alert: NetObserv-Netpol-drops
+      annotations:
+        message: |-
+          {{ $labels.job }}: dropped traffic detected by {{ $labels.direction}} network policy in {{ $labels.namespace }}. Source namespace={{ $labels.SrcK8S_Namespace }}, Destination namespace={{ $labels.DstK8S_Namespace }}.
+        summary: "Drops by policy"
+      expr: sum(rate(netobserv_namespace_network_policy_events_total{type="NetpolNamespace"}[1m])) by (job, direction, namespace, SrcK8S_Namespace, DstK8S_Namespace) > 0.1
+      for: 15s
+      labels:
+        severity: warning
+        app: netobserv
