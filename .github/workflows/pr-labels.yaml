@@ -1,0 +1,22 @@
+name: Pull request labels
+on:
+  pull_request_target:
+    types: [opened,synchronize]
+
+jobs:
+  pr-labels:
+    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' }}
+    permissions:
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+    - name: View PR author
+      run: echo "This PR is opened by ${{ github.event.pull_request.user.login }} ."
+    - name: Debug
+      run: echo "Debug ${{ github.event.pull_request }} ."
+    - run: gh pr edit "$NUMBER" --add-label "$LABELS"
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_REPO: ${{ github.repository }}
+        NUMBER: ${{ github.event.pull_request.number }}
+        LABELS: invalid
